@@ -1,0 +1,6 @@
+Need to implement data structure for joints and blocks shown in fig. 11 from paper - gives complete description and then calls it in supplemental stuff, but not specifically included.
+
+So far the stuff that is drawn from YADE looks like it's actually from Eigen? (Vector3r and Matrix3r)
+They use simple linear algebra vector operations such as cross-product, normalize and matrix-vector multiply
+
+All the LP stuff is done using IBM ILOG CPLEX
