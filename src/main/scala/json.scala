@@ -1,6 +1,5 @@
-package edu.berkeley.ce.rockslicing.json
+package edu.berkeley.ce.rockslicing
 
-import edu.berkeley.ce.rockslicing.types.{Block, Face}
 import play.api.libs.{json => playJson}
 import playJson._
 
@@ -42,13 +41,13 @@ object json {
     * @param blocks A list of Block objects
     * @return A human-readable JSON representation of the blocks, as a string
     */
-  def rockBlocksToReadableJson(blocks: List[Block]): String =
+  def rockBlocksToReadableJson(blocks: Seq[Block]): String =
     Json.prettyPrint(Json.toJson(blocks))
 
   /** Converts a list a rock blocks to human-readable JSON.
     * @param blocks A list of Block objects
     * @return A minimal JSON representation of the blocks, as a string
     */
-  def rockBlocksToMinimalJson(blocks: List[Block]): String =
+  def rockBlocksToMinimalJson(blocks: Seq[Block]): String =
     Json.stringify(Json.toJson(blocks))
 }
