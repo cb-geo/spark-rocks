@@ -31,7 +31,7 @@ case class Discontinuity(normalVec: (Double, Double, Double), center: (Double, D
     */
   def globalCoordinates: List[((Double, Double, Double), Double)] = {
     val Nplane = DenseVector[Double](a, b, c)
-    val strike = (dipDirection + math.Pi / 2) % (2 * math.Pi) // TODO Is this correct?
+    val strike = (dipDirection - math.Pi / 2) % (2 * math.Pi) // CHECKED: stike = dipDirection - pi/2 (US convention)
     val Nstrike = DenseVector[Double](math.cos(strike), math.sin(strike), 0.0)
     val Ndip = cross(Nplane, Nstrike)
 
