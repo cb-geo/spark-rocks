@@ -31,14 +31,14 @@ case class Discontinuity(normalVec: (Double, Double, Double), center: (Double, D
     */
   def globalCoordinates: List[((Double, Double, Double), Double)] = {
     val Nplane = DenseVector[Double](a, b, c)
-    val Ndipdir = DenseVector[Double](math.cos(dipDirection), math.sin(dipDirection), 0.0)
     val strike = (dipDirection + math.Pi / 2) % (2 * math.Pi) // TODO Is this correct?
     val Nstrike = DenseVector[Double](math.cos(strike), math.sin(strike), 0.0)
+    val Ndip = cross(Nplane, Nstrike)
 
     // Q defines the linear transformation to convert to global coordinates
     val Q = DenseMatrix.zeros[Double](3,3)
     Q(::, 0) := Nstrike
-    Q(::, 1) := Ndipdir
+    Q(::, 1) := Ndip
     Q(::, 2) := Nplane
 
     val shapeVectors = shape.map {case (a, b, _) => DenseVector[Double](a, b, 0)}
