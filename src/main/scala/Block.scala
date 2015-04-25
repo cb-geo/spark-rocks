@@ -29,15 +29,16 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
   def intersects(joint: Joint): Boolean = {
     val linProg = new LinearProgram(4)
     // Minimize s
-    linProg.setObjFun(Array[Double](0.0, 0.0, 0.0, 1.0), MIN)
+    linProg.setObjFun(Array[Double](0.0, 0.0, 0.0, 1.0), LinearProgram.MIN)
     // Restrict our attention to plane of joint
-    linProg.addConstraint(Array[Double](joint.a, joint.b, joint.c, 0.0), EQ, joint.d)
+    linProg.addConstraint(Array[Double](joint.a, joint.b, joint.c, 0.0),
+                          LinearProgram.EQ, joint.d)
     // Require s to be within planes defined by faces of block
     faces.foreach { face => linProg.addConstraint(
-        Array[Double](face.a, face.b, face.c, -1.0), LE, face.d) }
+        Array[Double](face.a, face.b, face.c, -1.0), LinearProgram.LE, face.d) }
     // Require s to be within planes defining shape of joint
     joint.globalCoordinates.foreach { case ((a,b,c),d) =>
-        linProg.addConstraint(Array[Double](a, b, c, -1.0), LE, d) }
+        linProg.addConstraint(Array[Double](a, b, c, -1.0), LinearProgram.LE, d) }
 
     linProg.solve() match {
       case None => false

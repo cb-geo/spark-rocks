@@ -2,15 +2,17 @@ package edu.berkeley.ce.rockslicing
 
 import lpsolve._
 
-// Scala's enumerations suck, so we have to do this
-sealed trait Operator { def value: String }
-case object LE extends Operator { val value = "<=" }
-case object EQ extends Operator { val value = "==" }
-case object GE extends Operator { val value = ">=" }
+object LinearProgram {
+  // Scala's enumerations suck, so we have to do this
+  sealed trait Operator { def value: String }
+  case object LE extends Operator { val value = "<=" }
+  case object EQ extends Operator { val value = "==" }
+  case object GE extends Operator { val value = ">=" }
 
-sealed trait ObjectiveType { def value: String }
-case object MIN extends ObjectiveType { val value = "Minimize" }
-case object MAX extends ObjectiveType { val value = "Maximize" }
+  sealed trait ObjectiveType { def value: String }
+  case object MIN extends ObjectiveType { val value = "Minimize" }
+  case object MAX extends ObjectiveType { val value = "Maximize" }
+}
 
 /**
   * A linear program. Maximizes or minimizes the function <c,x> subject to the
@@ -39,10 +41,10 @@ class LinearProgram(val numVars: Int) {
     * than the number of variables, coefficients of 0.0 are added by default.
     * @param objType One of either MIN (to minimize) or MAX (to maximize).
     */
-  def setObjFun(coeffs: Seq[Double], objType: ObjectiveType) : Unit = {
+  def setObjFun(coeffs: Seq[Double], objType: LinearProgram.ObjectiveType) : Unit = {
     val sanitizedCoeffs = sanitizeCoefficients(coeffs)
     solver.setObjFn(sanitizedCoeffs.toArray)
-    if (objType == MIN) {
+    if (objType == LinearProgram.MIN) {
       solver.setMinim()
     } else {
       solver.setMaxim()
@@ -64,12 +66,12 @@ class LinearProgram(val numVars: Int) {
     * @param operator One of LE, for <=, EQ for ==, or GE for =>.
     * @param rhs The right-hand side of the constraint.
     */
-  def addConstraint(coeffs: Seq[Double], operator: Operator, rhs: Double): Unit = {
+  def addConstraint(coeffs: Seq[Double], operator: LinearProgram.Operator, rhs: Double): Unit = {
     val sanitizedCoeffs = sanitizeCoefficients(coeffs)
     val op = operator match {
-      case LE => LpSolve.LE
-      case EQ => LpSolve.EQ
-      case GE => LpSolve.GE
+      case LinearProgram.LE => LpSolve.LE
+      case LinearProgram.EQ => LpSolve.EQ
+      case LinearProgram.GE => LpSolve.GE
     }
 
     solver.addConstraint(sanitizedCoeffs.toArray, op, rhs)
