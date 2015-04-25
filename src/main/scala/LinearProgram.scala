@@ -1,0 +1,94 @@
+package edu.berkeley.ce.rockslicing
+
+import lpsolve._
+
+// Scala's enumerations suck, so we have to do this
+sealed trait Operator { def value: String }
+case object LE extends Operator { val value = "<=" }
+case object EQ extends Operator { val value = "==" }
+case object GE extends Operator { val value = ">=" }
+
+sealed trait ObjectiveType { def value: String }
+case object MIN extends ObjectiveType { val value = "Minimize" }
+case object MAX extends ObjectiveType { val value = "Maximize" }
+
+/**
+  * A linear program. Maximizes or minimizes the function <c,x> subject to the
+  * constraint Ax {<.=,>} b, where b, c, and x are vectors and A is a matrix.
+  *
+  * @constructor Initialize a new linear program.
+  * @param numVars The number of variables in the linear program.
+  */
+class LinearProgram(val numVars: Int) {
+  val solver = LpSolve.makeLp(0, numVars)
+
+  private def sanitizeCoefficients(coeffs: Seq[Double]): Seq[Double] =
+    if (coeffs.length > numVars) {
+      coeffs.slice(0, numVars)
+    } else if (coeffs.length < numVars) {
+      coeffs.padTo(numVars, 0.0)
+    } else {
+      coeffs
+    }
+
+  /**
+    * Set the objective function of the linear program.
+    * @param coeffs The coefficients of the variables in the objective function,
+    * i.e. the entries of c. If the number of entries exceeds the number of
+    * variables, the extra entries are ignored. If the number of entries is less
+    * than the number of variables, coefficients of 0.0 are added by default.
+    * @param objType One of either MIN (to minimize) or MAX (to maximize).
+    */
+  def setObjFun(coeffs: Seq[Double], objType: ObjectiveType) : Unit = {
+    val sanitizedCoeffs = sanitizeCoefficients(coeffs)
+    solver.setObjFn(sanitizedCoeffs.toArray)
+    if (objType == MIN) {
+      solver.setMinim()
+    } else {
+      solver.setMaxim()
+    }
+
+    /*
+     * Variables are always unbounded for our purposes. This means that this
+     * code does not fully generalize to all linear programs
+     */
+    (1 to numVars).foreach { solver.setUnbounded(_) }
+  }
+
+  /**
+    * Add a new constraint to the linear program.
+    * @param coeffs The coefficients of the variables for the constraint.
+    * If the number of entries exceeds the number of variables in the LP, the
+    * extra entries are ignored. If the number of entries is less than the
+    * number of variables, coefficients of 0.0 are added by default.
+    * @param operator One of LE, for <=, EQ for ==, or GE for =>.
+    * @param rhs The right-hand side of the constraint.
+    */
+  def addConstraint(coeffs: Seq[Double], operator: Operator, rhs: Double): Unit = {
+    val sanitizedCoeffs = sanitizeCoefficients(coeffs)
+    val op = operator match {
+      case LE => LpSolve.LE
+      case EQ => LpSolve.EQ
+      case GE => LpSolve.GE
+    }
+
+    solver.addConstraint(sanitizedCoeffs.toArray, op, rhs)
+  }
+
+  /**
+    * Solve the linear program to compute the optimal objective value.
+    * Note that this instance becomes unuseable after this method completes.
+    * @return Some(Optimal Value) upon success, or None if an error occurred.
+    */
+  def solve(): Option[Double] = {
+    try {
+      solver.solve()
+      val objectiveValue = solver.getObjective()
+      Some(objectiveValue)
+    } catch {
+      case _: LpSolveException => None
+    } finally {
+      solver.deleteLp()
+    }
+  }
+}
