@@ -1,22 +1,23 @@
 package edu.berkeley.ce.rockslicing
 
-import breeze.linalg._
+import breeze.linalg
+import breeze.linalg.{DenseVector, DenseMatrix}
 
-/** A simple data structure to represent a discontinuity.
+/** A simple data structure to represent a joint.
   *
-  * @constructor Create a new discontinuity.
-  * @param normalVec The normal vector to the discontinuity. The individual vector components
+  * @constructor Create a new joint.
+  * @param normalVec The normal vector to the joint. The individual vector components
   * can be accessed as 'a', 'b', and 'c'.
-  * @param center Cartesian coordinates for the center of the discontinuity. The individual
+  * @param center Cartesian coordinates for the center of the joint. The individual
            components can be accessed as 'centerX', 'centerY', and 'centerZ'.
-  * @param distance The distance of the discontinuity from the local center, accessed as 'd'.
-  * @param phi The discontinuity's friction angle (phi).
-  * @param cohesion The cohesion along the discontinuity
-  * @param shape A list of lines specifying the shape of the discontinuity. Each item is a
+  * @param distance The distance of the joint from the local center, accessed as 'd'.
+  * @param phi The joint's friction angle (phi).
+  * @param cohesion The cohesion along the joint
+  * @param shape A list of lines specifying the shape of the joint. Each item is a
   * 3-tuple. The first two items specify the line, while the last gives the distance
-  * of the line from the discontinuity's center in the local coordinate system.
+  * of the line from the joint's center in the local coordinate system.
  */
-case class Discontinuity(normalVec: (Double, Double, Double), center: (Double, Double, Double),
+case class Joint(normalVec: (Double, Double, Double), center: (Double, Double, Double),
                          val dipAngle: Double, val dipDirection: Double, distance: Double,
                          val phi: Double, val cohesion: Double,
                          val shape: List[(Double, Double, Double)]) {
@@ -24,16 +25,16 @@ case class Discontinuity(normalVec: (Double, Double, Double), center: (Double, D
   val (centerX, centerY, centerZ) = center
   val d = distance
 
-  /** Converts lines defining shape of discontinuity from local to global coordinates
+  /** Converts lines defining shape of joint from local to global coordinates
     * @return A list of pairs, each representing a plane that specifies a boundary of the
-    * discontinuity in the global coordinate space. The first item of each pair is a normal
+    * joint in the global coordinate space. The first item of each pair is a normal
     * vector for the plane, and the second item is the distance of the plane from the origin.
     */
   def globalCoordinates: List[((Double, Double, Double), Double)] = {
     val Nplane = DenseVector[Double](a, b, c)
     val strike = (dipDirection - math.Pi / 2) % (2 * math.Pi) // CHECKED: stike = dipDirection - pi/2 (US convention)
     val Nstrike = DenseVector[Double](math.cos(strike), math.sin(strike), 0.0)
-    val Ndip = cross(Nplane, Nstrike)
+    val Ndip = linalg.cross(Nplane, Nstrike)
 
     // Q defines the linear transformation to convert to global coordinates
     val Q = DenseMatrix.zeros[Double](3,3)
