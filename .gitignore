@@ -1,1 +1,5 @@
 target/
+*~
+testing.scala
+tester
+ToChangeBack/
