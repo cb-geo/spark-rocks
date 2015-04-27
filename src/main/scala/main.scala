@@ -13,8 +13,12 @@ object RockSlicer {
     /* Open and read input file, producing list of linear inequalities specifying region and
      * list of linear equalities specifying discontinuities
      */
-    val blocks : List[Block] = Nil // Just a placeholder so we can compile
 
+    // Just placeholders so we can compile
+    val joints: List[Joint] = Nil
+    val blocks : List[Block] = Nil
+
+    val broadcastJoints = sc.broadcast(joints)
     // Construct a bounding box for region and introduce articifial "processor joints"
     // Generate a list of initial blocks and change it into an RDD
     val blockRdd = sc.parallelize(blocks)
@@ -24,11 +28,24 @@ object RockSlicer {
      * Iterate through the discontinuities, cutting blocks where appropriate and producing
      * a new list of blocks at each step
      */
+    var cutBlocks = blockRdd
+    for (joint <- broadcastJoints.value) {
+      cutBlocks = cutBlocks.flatMap {
+        case block @ Block(center, faces) =>
+          if (block intersects joint) {
+            List(Block(center, Face((joint.a, joint.b, joint.c), joint.d, joint.phi, joint.cohesion)::faces),
+                 Block(center, Face((-joint.a, -joint.b, -joint.c), joint.d, joint.phi, joint.cohesion)::faces))
+          } else {
+            List(block)
+          }
+      }
+    }
+
     // Merge together blocks that are separated only by a processor joint
 
     // Remove redundant joints as described in the original paper
-    val nonRedundantBlocks = blockRdd.map { case block @ Block(center, _) =>
-                                            Block(center, block.nonRedundantFaces) }
+    val nonRedundantBlocks = cutBlocks.map { case block @ Block(center, _) =>
+                                             Block(center, block.nonRedundantFaces) }
 
     // Convert the list of rock blocks to JSON and save this to an output file
     val finalBlocks = nonRedundantBlocks.collect()
