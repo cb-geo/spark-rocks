@@ -1,5 +1,6 @@
 package edu.berkeley.ce.rockslicing
 
+import scala.collection.mutable.ListBuffer
 import java.io._
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
@@ -13,6 +14,17 @@ object RockSlicer {
     /* Open and read input file, producing list of linear inequalities specifying region and
      * list of linear equalities specifying discontinuities
      */
+    var rockBuffer = new ListBuffer[Face]()
+    var jointBuffer = new ListBuffer[Joint]()
+    val inputFile = "tester" // Input file name
+    inputProcessor.readInput(inputFile, rockBuffer, jointBuffer)
+ 
+    val rockVolume = rockBuffer.toList 
+    val jointList = jointBuffer.toList
+
+    println(rockVolume mkString "\n") // Print input to verify during debugging
+    println(jointBuffer mkString "\n")
+    println("Input has been processed") 
 
     // Just placeholders so we can compile
     val joints: List[Joint] = Nil
