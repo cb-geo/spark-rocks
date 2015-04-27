@@ -3,34 +3,14 @@ package edu.berkeley.ce.rockslicing
 import scala.io.Source
 import java.io.{FileNotFoundException, IOException}
 import scala.collection.mutable.ListBuffer
-import scala.util.control.Breaks.break
 
 object inputProcessor {
-  object AllDone extends Exception { } // For ending loop at end of file
-  // Declare variables for rock volume of interest
-  var transition = false // Rock volume data read first, set to true once all rock face data is read
-  var count: Int = 0 // Counter for determining which part of input is being processed
-                     // Declare variables that will be read for each face that defines
-                     // the volume of rock to be blocked.
-  var a: Double = -1e12
-  var b: Double = -1e12
-  var c: Double = -1e12
-  var d: Double = -1e12
-  var phi: Double = -1e12
-  var cohesion: Double = -1e12
-  // Declare additional variables that are necessary for joints
-  var dipAngle: Double = -1e12
-  var dipDirection: Double = -1e12
-  var centerX: Double = -1e12
-  var centerY: Double = -1e12
-  var centerZ: Double = -1e12
-  var shape = List.empty[(Double, Double, Double)]
-
   // Generates face object from read inputs and adds it to the beginning of the list faces
+  var transition = false
+  var shape = List.empty[(Double, Double, Double)]
   def addFace(normalVec: (Double, Double, Double), distance: Double,
               phi: Double, cohesion: Double, faces: ListBuffer[Face]) : Unit = {
     val currentFace = Face(normalVec, distance, phi, cohesion) 
-    println("Adding face to list")
     faces += currentFace
   }
 
@@ -41,15 +21,7 @@ object inputProcessor {
                joints: ListBuffer[Joint]) : Unit = {
     val  currentJoint = Joint(normalVec, center, dipAngle, dipDirection, 
                               distance, phi, cohesion, shape) 
-    println("Adding joint to list")
     joints += currentJoint
-  }
-
-  // Takes single line of input and returns it as a vector
-  def makeVector(inputLine: String) : (Double, Double, Double) = {
-    val inputArray = inputLine.split(" ").map(_.toDouble)
-    val (a,b,c) = (inputArray(0), inputArray(1), inputArray(2))
-    return (a,b,c)
   }
 
   // Processes input file: Add rock volume faces and joints to respective input list
@@ -57,69 +29,39 @@ object inputProcessor {
                 joints: ListBuffer[Joint]) : Unit = {
     try { 
       val inputSource = Source.fromFile(fileName) // Open input file
-
       for (line <- inputSource.getLines) {
         // Check if transitioning to joint input: % in input indicates end of rock volume inputs
-        println(count)
-        if (line == "end") throw AllDone
-        // println("This is the input: " line)
         if (line == "%") {
           transition = true
-          count = 0
-          println("TRANSITIONING FROM FACES TO JOINTS")
-        }
-        // Process input for rock volume faces
-        if (transition == false) {
-          count match {
-            case 0 => var (a,b,c) = makeVector(line)            
-            case 1 => d = line.toDouble
-            case 2 => phi = line.toDouble
-            case 3 => cohesion = line.toDouble
-            // NOTE: Assumes blank line between faces
-            case 4 => addFace((a, b, c), d, phi, cohesion, rockVolume) 
-          }
-          if (count < 4) {
-            count += 1
-          } else if (count == 4) {
-            count = 0
-          } else {
-            println("ERROR IN ALGORITHM, CHECK CODE IN ROCK VOLUME PROCESSING")
-          }
-          // When done with rock volume input, process joint input
+        } else if (transition == false) {
+          // Process input for rock volume faces
+          val inputLine = line.split(" ").map(_.toDouble)
+          val (a,b,c) = (inputLine(0), inputLine(1), inputLine(2))
+          val d = inputLine(3)
+          val phi = inputLine(4)
+          val cohesion = inputLine(5)
+          addFace((a,b,c), d, phi, cohesion, rockVolume)
         } else {
-          if (line == "#") { 
-            // NOTE: Assumes # at the end of shape definition to indicate end of particular joint
-            println("End of joint, about to add to list")
-            shape = shape.reverse
-            addJoint((a,b,c), (centerX, centerY, centerZ), dipAngle, dipDirection, d,
-                     phi, cohesion, shape, joints)
-            // Reset shape list and counter
-            shape = List.empty[(Double, Double, Double)]
-            count = 0
-          } else if ((line != "%") && (count < 7)) {
-            // Reads all input not associated with joint shape
-            println("Reading joint input")
-            count match {
-              case 0 => var (a,b,c) = makeVector(line)
-              case 1 => var (centerX, centerY, centerZ) = makeVector(line)
-              case 2 => dipAngle = line.toDouble
-              case 3 => dipDirection = line.toDouble
-              case 4 => d = line.toDouble
-              case 5 => phi = line.toDouble
-              case 6 => cohesion = line.toDouble
-            }
-            count += 1
-          } else if (line != "%") { 
-            // Keeps adding shape lines to list until finding # in input file
-            shape :::= List(makeVector(line))
-          }
+          // When done with rock volume input, process joint input
+          shape = List.empty[(Double, Double, Double)]
+          val inputLine = line.split(" ").map(_.toDouble)
+          val (a,b,c) = (inputLine(0), inputLine(1), inputLine(2))
+          val (centerX,centerY,centerZ) = (inputLine(3), inputLine(4), inputLine(5))
+          val dipAngle = inputLine(6)
+          val dipDirection = inputLine(7)
+          val d = inputLine(8)
+          val phi = inputLine(9)
+          val cohesion = inputLine(10)
+          for (i <- 11 until (inputLine.size-3)) shape :::= List((inputLine(i), inputLine(i+1), inputLine(i+2)))
+          shape = shape.reverse
+          addJoint((a,b,c), (centerX, centerY, centerZ), dipAngle, dipDirection, d,
+                    phi, cohesion, shape, joints)
         }
       }
       inputSource.close
     } catch {
       case e: FileNotFoundException => println("Couldn't find that file.")
       case e: IOException => println("Got an IOException!")
-      case AllDone => 
     }
   }
 }
