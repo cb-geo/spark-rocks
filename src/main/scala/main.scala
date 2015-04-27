@@ -25,10 +25,13 @@ object RockSlicer {
      * a new list of blocks at each step
      */
     // Merge together blocks that are separated only by a processor joint
+
     // Remove redundant joints as described in the original paper
+    val nonRedundantBlocks = blockRdd.map { case block @ Block(center, _) =>
+                                            Block(center, block.nonRedundantFaces) }
 
     // Convert the list of rock blocks to JSON and save this to an output file
-    val finalBlocks = blockRdd.collect()
+    val finalBlocks = nonRedundantBlocks.collect()
     val blockJson = json.rockBlocksToReadableJson(finalBlocks)
     val outputFile = "blocks.json"
     val writer = new BufferedWriter(new FileWriter(outputFile))

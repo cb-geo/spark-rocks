@@ -45,4 +45,14 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
       case Some(s: Double) => s > 0
     }
   }
+
+  def nonRedundantFaces: List[Face] =
+    faces.filter { face =>
+      val linProg = new LinearProgram(3)
+      linProg.setObjFun(Array[Double](face.a, face.b, face.c), LinearProgram.MAX)
+      faces.foreach { f => linProg.addConstraint(Array[Double](f.a, f.b, f.c),
+                                                 LinearProgram.LE, f.d) }
+      val s = linProg.solve().get
+      s == face.d // TODO Add tolerance here
+    }
 }
