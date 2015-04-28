@@ -45,6 +45,7 @@ object inputProcessor {
           // When done with rock volume input, process joint input
           shape = List.empty[(Double, Double, Double)]
           val inputLine = line.split(" ").map(_.toDouble)
+          val inputLength = inputLine.size
           val (a,b,c) = (inputLine(0), inputLine(1), inputLine(2))
           val (centerX,centerY,centerZ) = (inputLine(3), inputLine(4), inputLine(5))
           val dipAngle = inputLine(6)
@@ -52,7 +53,12 @@ object inputProcessor {
           val d = inputLine(8)
           val phi = inputLine(9)
           val cohesion = inputLine(10)
-          for (i <- 11 until (inputLine.size-3)) shape :::= List((inputLine(i), inputLine(i+1), inputLine(i+2)))
+          if (inputLength > 11) {
+            for (i <- 0 until (inputLength - 11)/3)  {
+              shape :::= List((inputLine(3*i+11), inputLine(3*i+12), inputLine(3*i+13)))            
+            }
+          }
+          // for (i <- 11 until (inputLine.size-3)) shape :::= List((inputLine(i), inputLine(i+1), inputLine(i+2)))
           shape = shape.reverse
           addJoint((a,b,c), (centerX, centerY, centerZ), dipAngle, dipDirection, d,
                     phi, cohesion, shape, joints)
