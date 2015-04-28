@@ -16,6 +16,13 @@ case class Face(normalVec: (Double,Double,Double), distance: Double,
   val d = distance
 }
 
+object Block {
+  private val EPSILON = 10e-12
+
+  private def applyTolerance(d: Double): Double =
+    if (math.abs(d) >= EPSILON) d else 0.0
+}
+
 /** A rock block.
   *
   * @constructor Create a new rock block
@@ -26,33 +33,58 @@ case class Face(normalVec: (Double,Double,Double), distance: Double,
 case class Block(center: (Double,Double,Double), val faces: List[Face]) {
   val (centerX, centerY, centerZ) = center
 
+  /**
+    * Determine whether or not a joint intersects this rock block.
+    * @param joint The joint to check for intersection.
+    * @return true if there is an intersection between the block and this joint,
+    * false otherwise.
+    */
   def intersects(joint: Joint): Boolean = {
     val linProg = new LinearProgram(4)
     // Minimize s
     linProg.setObjFun(Array[Double](0.0, 0.0, 0.0, 1.0), LinearProgram.MIN)
+
     // Restrict our attention to plane of joint
-    linProg.addConstraint(Array[Double](joint.a, joint.b, joint.c, 0.0),
-                          LinearProgram.EQ, joint.d)
+    val coeffs = Array[Double](joint.a, joint.b, joint.c).map(Block.applyTolerance)
+    val rhs = Block.applyTolerance(joint.d)
+    linProg.addConstraint(coeffs, LinearProgram.EQ, rhs)
+
     // Require s to be within planes defined by faces of block
-    faces.foreach { face => linProg.addConstraint(
-        Array[Double](face.a, face.b, face.c, -1.0), LinearProgram.LE, face.d) }
+    faces.foreach { face =>
+        val faceCoeffs = Array[Double](face.a, face.b, face.c, -1.0).map(Block.applyTolerance)
+        val rhs = Block.applyTolerance(face.d)
+        linProg.addConstraint(faceCoeffs, LinearProgram.LE, rhs)
+    }
+
     // Require s to be within planes defining shape of joint
     joint.globalCoordinates.foreach { case ((a,b,c),d) =>
-        linProg.addConstraint(Array[Double](a, b, c, -1.0), LinearProgram.LE, d) }
+        val jointCoeffs = Array[Double](a, b, c, -1.0).map(Block.applyTolerance)
+        val rhs = Block.applyTolerance(d)
+        linProg.addConstraint(jointCoeffs, LinearProgram.LE, rhs)
+    }
 
     linProg.solve() match {
       case None => false
-      case Some(s: Double) => s > 0
+      case Some(s: Double) => s < 0
     }
   }
 
+  /**
+    * Compute the faces of the rock block that are not geometrically redundant.
+    * @return A list of faces that uniquely determine this rock block and are not
+    * geometrically redundant.
+    */
   def nonRedundantFaces: List[Face] =
     faces.filter { face =>
       val linProg = new LinearProgram(3)
-      linProg.setObjFun(Array[Double](face.a, face.b, face.c), LinearProgram.MAX)
-      faces.foreach { f => linProg.addConstraint(Array[Double](f.a, f.b, f.c),
-                                                 LinearProgram.LE, f.d) }
+      val objCoeffs = Array[Double](face.a, face.b, face.c).map(Block.applyTolerance)
+      linProg.setObjFun(objCoeffs, LinearProgram.MAX)
+      faces.foreach { f =>
+        val faceCoeffs = Array[Double](f.a, f.b, f.c).map(Block.applyTolerance)
+        val rhs = Block.applyTolerance(f.d)
+        linProg.addConstraint(faceCoeffs, LinearProgram.LE, rhs)
+      }
       val s = linProg.solve().get
-      s == face.d // TODO Add tolerance here
+      math.abs(s - face.d) <= Block.EPSILON
     }
 }
