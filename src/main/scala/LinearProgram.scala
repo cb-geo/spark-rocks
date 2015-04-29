@@ -23,6 +23,7 @@ object LinearProgram {
   */
 class LinearProgram(val numVars: Int) {
   val solver = LpSolve.makeLp(0, numVars)
+  solver.setVerbose(LpSolve.IMPORTANT)
 
   private def sanitizeCoefficients(coeffs: Seq[Double]): Seq[Double] =
     if (coeffs.length > numVars) {
@@ -43,7 +44,7 @@ class LinearProgram(val numVars: Int) {
     */
   def setObjFun(coeffs: Seq[Double], objType: LinearProgram.ObjectiveType) : Unit = {
     val sanitizedCoeffs = sanitizeCoefficients(coeffs)
-    solver.setObjFn(sanitizedCoeffs.toArray)
+    solver.strSetObjFn(sanitizedCoeffs.mkString(" "))
     if (objType == LinearProgram.MIN) {
       solver.setMinim()
     } else {
@@ -51,8 +52,8 @@ class LinearProgram(val numVars: Int) {
     }
 
     /*
-     * Variables are always unbounded for our purposes. This means that this
-     * code does not fully generalize to all linear programs
+     * Variables are always unbounded for our purposes. Users can always
+     * express variable bounds as constraints with one coefficient anyways.
      */
     (1 to numVars).foreach { solver.setUnbounded(_) }
   }
@@ -74,7 +75,7 @@ class LinearProgram(val numVars: Int) {
       case LinearProgram.GE => LpSolve.GE
     }
 
-    solver.addConstraint(sanitizedCoeffs.toArray, op, rhs)
+    solver.strAddConstraint(sanitizedCoeffs.mkString(" "), op, rhs)
   }
 
   /**
