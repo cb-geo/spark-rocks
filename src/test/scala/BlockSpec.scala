@@ -82,7 +82,7 @@ class BlockSpec extends FunSuite {
     assert(!(unitCube intersects joint))
   }
 
-  test("The plane -x + z = 1 should intersect the 2-cube") {
+  test("The plane -x + z = 1 should intersect the two cube") {
     val jointShape = List(
       ((1.0, 0.0, 0.0), 4.0),
       ((-1.0, 0.0, 0.0), 4.0),
@@ -112,11 +112,11 @@ class BlockSpec extends FunSuite {
     assert(redundantUnitCube.nonRedundantFaces == boundingFaces)
   }
 
-  test("The two-cube should not contain any redundant faces") {
+  test("The two cube should not contain any redundant faces") {
     assert(twoCube.nonRedundantFaces == boundingFaces2)
   }
 
-  test("Adding the boundary -x + 2z = 0 to the two-cube should render z = 2 redundant") {
+  test("Adding the boundary -x + 2z = 0 to the two cube should render z = 2 redundant") {
     val newFace = Face((-1.0, 0.0, 2.0), 0.0, phi=0, cohesion=0)
     val redundantBoundingFaces = newFace::boundingFaces2
     val redundant2Cube = Block((1.0, 1.0, 1.0), redundantBoundingFaces)
