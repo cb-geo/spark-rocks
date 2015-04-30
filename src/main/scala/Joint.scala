@@ -17,10 +17,10 @@ import breeze.linalg.{DenseVector, DenseMatrix}
   * 3-tuple. The first two items specify the line, while the last gives the distance
   * of the line from the joint's center in the local coordinate system.
  */
-case class Joint(normalVec: (Double, Double, Double), center: (Double, Double, Double),
-                         val dipAngle: Double, val dipDirection: Double, distance: Double,
-                         val phi: Double, val cohesion: Double,
-                         val shape: List[(Double, Double, Double)]) {
+case class Joint(normalVec: (Double, Double, Double), distance: Double,
+                 center: (Double, Double, Double), val dipAngle: Double,
+                 val dipDirection: Double, val phi: Double, val cohesion: Double,
+                 val shape: List[((Double, Double, Double),Double)]) {
   val (a, b, c) = normalVec
   val (centerX, centerY, centerZ) = center
   val d = distance
@@ -42,7 +42,7 @@ case class Joint(normalVec: (Double, Double, Double), center: (Double, Double, D
     Q(::, 1) := Ndip
     Q(::, 2) := Nplane
 
-    val shapeVectors = shape.map {case (a, b, _) => DenseVector[Double](a, b, 0)}
+    val shapeVectors = shape.map {case ((a, b, _), _) => DenseVector[Double](a, b, 0)}
     val globalShapeVecs = shapeVectors.map {x => Q*x}
 
     val centerVec = DenseVector[Double](centerX, centerY, centerZ)

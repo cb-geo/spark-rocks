@@ -1,7 +1,7 @@
 import org.scalatest._
 import edu.berkeley.ce.rockslicing.LinearProgram
 
-class LPSpec extends FunSuite {
+class LinearProgramSpec extends FunSuite {
 
   val EPSILON = 1.0e-6
 

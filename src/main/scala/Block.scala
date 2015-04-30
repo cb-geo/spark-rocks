@@ -45,7 +45,7 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
     linProg.setObjFun(Array[Double](0.0, 0.0, 0.0, 1.0), LinearProgram.MIN)
 
     // Restrict our attention to plane of joint
-    val coeffs = Array[Double](joint.a, joint.b, joint.c).map(Block.applyTolerance)
+    val coeffs = Array[Double](joint.a, joint.b, joint.c, 0.0).map(Block.applyTolerance)
     val rhs = Block.applyTolerance(joint.d)
     linProg.addConstraint(coeffs, LinearProgram.EQ, rhs)
 
