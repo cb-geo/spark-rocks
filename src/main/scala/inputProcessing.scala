@@ -58,7 +58,6 @@ object inputProcessor {
               shape :::= List((inputLine(3*i+11), inputLine(3*i+12), inputLine(3*i+13)))            
             }
           }
-          // for (i <- 11 until (inputLine.size-3)) shape :::= List((inputLine(i), inputLine(i+1), inputLine(i+2)))
           shape = shape.reverse
           addJoint((a,b,c), (centerX, centerY, centerZ), dipAngle, dipDirection, d,
                     phi, cohesion, shape, joints)
