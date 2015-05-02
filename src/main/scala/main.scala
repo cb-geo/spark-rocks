@@ -7,6 +7,10 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
 
 object RockSlicer {
+
+  // Number of initial blocks to generate before converting to RDD
+  val INITIAL_BLOCK_RDD_LENGTH = 25
+
   def main(args: Array[String]) {
     val conf = new SparkConf().setAppName("CS 267 Final Project")
     val sc = new SparkContext(conf)
@@ -27,15 +31,21 @@ object RockSlicer {
     println("Input has been processed")
 
     // FIXME Is this correct instantiation of our first block?
-    val blocks = List(Block((0.0, 0.0, 0.0), rockVolume))
-    // Generate a list of initial blocks and change it into an RDD
+    var blocks = List(Block((0.0, 0.0, 0.0), rockVolume))
+
+    // Generate a list of initial blocks before RDD-ifying it -- not very clean code
+    var joints = jointList
+    while (blocks.length < INITIAL_BLOCK_RDD_LENGTH && !joints.isEmpty) {
+      blocks = blocks.flatMap(_.cut(joints.head))
+      joints = joints.tail
+    }
     val blockRdd = sc.parallelize(blocks)
+    val broadcastJoints = sc.broadcast(joints)
 
     /*
      * Iterate through the discontinuities, cutting blocks where appropriate and producing
      * a new list of blocks at each step
      */
-    val broadcastJoints = sc.broadcast(jointList)
     var cutBlocks = blockRdd
     for (joint <- broadcastJoints.value) {
       cutBlocks = cutBlocks.flatMap(_.cut(joint))
