@@ -70,6 +70,21 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
   }
 
   /**
+    * Divide this block into two child blocks if a joint intersects this block.
+    * @param joint A joint that may or may not divide this block.
+    * @return A List of Block objects, containing the two child blocks divided by
+    * the joint if it intersects this block. Otherwise, returns a one-item list
+    * containing only this block.
+    */
+  def cut(joint: Joint): List[Block] =
+    if (this intersects joint) {
+      List(Block(center, Face((joint.a, joint.b, joint.c), joint.d, joint.phi, joint.cohesion)::faces),
+           Block(center, Face((-joint.a,-joint.b,-joint.c), joint.d, joint.phi, joint.cohesion)::faces))
+    } else {
+      List(this)
+    }
+
+  /**
     * Compute the faces of the rock block that are not geometrically redundant.
     * @return A list of faces that uniquely determine this rock block and are not
     * geometrically redundant.
