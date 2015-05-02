@@ -16,7 +16,7 @@ import breeze.linalg.{DenseVector, DenseMatrix}
   * @param shape A list of lines specifying the shape of the joint. Each item is a
   * 3-tuple. The first two items specify the line, while the last gives the distance
   * of the line from the joint's center in the local coordinate system.
- */
+  */
 case class Joint(normalVec: (Double, Double, Double), distance: Double,
                  center: (Double, Double, Double), val dipAngle: Double,
                  val dipDirection: Double, val phi: Double, val cohesion: Double,
