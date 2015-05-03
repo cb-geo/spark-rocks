@@ -1,5 +1,5 @@
 import org.scalatest._
-import edu.berkeley.ce.rockslicing.{Face, Block, Joint}
+import edu.berkeley.ce.rockslicing.{Face, Block, Joint, Delaunay}
 
 class BlockSpec extends FunSuite {
   val boundingFaces = List(
@@ -122,5 +122,39 @@ class BlockSpec extends FunSuite {
     val redundant2Cube = Block((1.0, 1.0, 1.0), redundantBoundingFaces)
     val expectedFaces = redundantBoundingFaces.slice(0, redundantBoundingFaces.length - 1)
     assert(redundant2Cube.nonRedundantFaces == expectedFaces)
+  }
+
+  test("The points of intersection between the four planes should (0.0, 0.0, 0.0) & (0.0, 1.0, 0.0)") {
+    val testFace1 = Face((1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
+    val testFace2 = Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0)
+    val testFace3 = Face((0.0, 0.0, 1.0), 0.0, phi=0, cohesion=0)
+    val testFace4 = Face((0.0, 1.0, 0.0), 5.0, phi=0, cohesion=0)
+    val testBlock = Block((1.0, 1.0, 1.0), List[Face](testFace1, testFace2, testFace3, testFace4))
+    val expectedIntersection = List((0.0, 5.0, 0.0),(0.0, 0.0, 0.0))
+    testBlock.findVertices
+    assert(testBlock.vertices == expectedIntersection)
+  }
+
+  test("There should be no intersection between the planes") {
+    val testFace1 = Face((1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
+    val testFace2 = Face((1.0, 0.0, 0.0), 5.0, phi=0, cohesion=0)
+    val testFace3 = Face((0.0, 0.0, 1.0), 0.0, phi=0, cohesion=0)
+    val testBlock = Block((1.0, 1.0, 1.0), List[Face](testFace1, testFace2, testFace3))
+    val expectedIntersection = List.empty[(Double, Double, Double)]
+    testBlock.findVertices
+    assert(testBlock.vertices == expectedIntersection)
+  }
+
+  test("There should three entries in the triangulation list") {
+    val testFace1 = Face((1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
+    val testFace2 = Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0)
+    val testFace3 = Face((0.0, 0.0, 1.0), 0.0, phi=0, cohesion=0)
+    val testFace4 = Face((1/math.sqrt(2.0), 0.0, 1/math.sqrt(2.0)), 1/math.sqrt(2.0), phi=0, cohesion=0)
+    val testBlock = Block((1.0, 1.0, 1.0), List[Face](testFace1, testFace2, testFace3, testFace4))
+    testBlock.findVertices
+    testBlock.meshFaces
+    val testVertices = List(Delaunay.Vector2(1.0, 0.0), Delaunay.Vector2(0.0,1.0), Delaunay.Vector2(0.0,0.0))
+    val expectedTriangulation = (Delaunay.Triangulation(testVertices)).toList
+    assert(testBlock.faces(0).triangles == expectedTriangulation)
   }
 }
