@@ -25,10 +25,9 @@ object inputProcessor {
   }
 
   // Processes input file: Add rock volume faces and joints to respective input list
-  def readInput(fileName: String, rockVolume: ListBuffer[Face],
+  def readInput(inputSource: Source, rockVolume: ListBuffer[Face],
                 joints: ListBuffer[Joint]) : Unit = {
     try {
-      val inputSource = Source.fromFile(fileName) // Open input file
       for (line <- inputSource.getLines) {
         // Check if transitioning to joint input: % in input indicates end of rock volume inputs
         if (line == "%") {
@@ -63,7 +62,6 @@ object inputProcessor {
                     phi, cohesion, shape, joints)
         }
       }
-      inputSource.close
     } catch {
       case e: FileNotFoundException => println("Couldn't find that file.")
       case e: IOException => println("Got an IOException!")

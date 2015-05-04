@@ -1,6 +1,7 @@
 package edu.berkeley.ce.rockslicing
 
 import scala.collection.mutable.ListBuffer
+import scala.io.Source
 import java.io._
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
@@ -20,8 +21,12 @@ object RockSlicer {
      */
     var rockBuffer = new ListBuffer[Face]()
     var jointBuffer = new ListBuffer[Joint]()
-    val inputFile = "tester" // Input file name
-    inputProcessor.readInput(inputFile, rockBuffer, jointBuffer)
+    val inputSource = Source.fromFile("tester") // Input file name
+    try {
+      inputProcessor.readInput(inputSource, rockBuffer, jointBuffer)
+    } finally {
+      inputSource.close
+    }
 
     val rockVolume = rockBuffer.toList
     val jointList = jointBuffer.toList

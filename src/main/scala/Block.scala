@@ -13,10 +13,10 @@ import scala.language.postfixOps
   * Accessed as 'd'.
   * @param phi The friction angle (phi) of the face.
   * @param cohesion The cohesion of the face.
-  * @param vertices: List of vertices that define the extent of the face. This list is 
+  * @param vertices: List of vertices that define the extent of the face. This list is
   * initialized empty and only set once the face is part of a list of faces that define
   * a block. The list gets set by the findVertices method within the Block class
-  * @param triangles: Triangulation of vertices to form triangles that are used to 
+  * @param triangles: Triangulation of vertices to form triangles that are used to
   * calculate the centroid of the block. This list gets set by the meshFaces method
   * within the Block class.
   */
@@ -39,14 +39,14 @@ object Block {
   *
   * @constructor Create a new rock block
   * @param center Cartesian coordinates for the center of the rock block. The individual
-  * components can be accessed as 'centerX', 'centerY', and 'centerZ'. 
+  * components can be accessed as 'centerX', 'centerY', and 'centerZ'.
   * @param faces: The faces that define the boundaries of the rock block.
   * @param vertices: List of vertices based on face intersections. This list is initialized
   * empty and only filled once findVertices is called by the user. This method should only
   * be called after redundant joints have been removed
-  * @param centroid: Updates values of center when called. The centroid, assumed to be the 
+  * @param centroid: Updates values of center when called. The centroid, assumed to be the
   * same as the center of mass for uniform density, will change as new fractures are added
-  * to the block. This function should be called once all joints have been added to the block 
+  * to the block. This function should be called once all joints have been added to the block
   * @param volume: Volume of rock based on bounding faces. Should be called only after all
   * joints have been added to the block. Initialized as zero.
   */
@@ -125,9 +125,9 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
       math.abs(s - face.d) <= Block.EPSILON
     }
 
-  /** 
+  /**
     * Calculate the vertices of the block
-    * @return Modifies the list of vertices based on the current list of Faces. This 
+    * @return Modifies the list of vertices based on the current list of Faces. This
     * function should only be called once all redundant faces have been removed.
     */
   def findVertices: Unit = {
@@ -139,7 +139,7 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
       for (j <- 0 until faces.length) {
         val nj = DenseVector[Double](faces(j).a, faces(j).b, faces(j).c)
         val dj = faces(j).d
-        for (k <- 0 until faces.length) { 
+        for (k <- 0 until faces.length) {
           val nk = DenseVector[Double](faces(k).a, faces(k).b, faces(k).c)
           val dk = faces(k).d
           // check if normals of faces are coplanar, if not find intersection
@@ -198,7 +198,7 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
       return rmat
     }
   }
- 
+
   /**
     * Mesh the faces using Delaunay triangulation. This meshing is done
     * in order to calculate the volume and centroid of the block
@@ -221,7 +221,7 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
         temp_vertices :::= List(Delaunay.Vector2(temp_vector(0), temp_vector(1)))
       }
       transformed_vertices = transformed_vertices.reverse
-      temp_vertices = temp_vertices.reverse 
+      temp_vertices = temp_vertices.reverse
       // Vertices are returned in CLOCKWISE order
       faces(i).triangles = (Delaunay.Triangulation(temp_vertices)).toList
       // If z-component of normal is negative, order needs to be reversed to maintain clock-wise
@@ -277,16 +277,18 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
         val normal_list = List(ei, ej, ek)
         // Loop over each Cartesian axis
         for (k <- 0 until 3) {
-          temp_centroid(k) += 1/24.0 * (ni dot normal_list(k) 
-                                     * (math.pow((a+b) dot normal_list(k), 2) 
-                                      + math.pow((b+c) dot normal_list(k), 2) 
-                                      + math.pow((c+a) dot normal_list(k), 2)))          
+          temp_centroid(k) += 1/24.0 * (ni dot normal_list(k)
+                                     * (math.pow((a+b) dot normal_list(k), 2)
+                                      + math.pow((b+c) dot normal_list(k), 2)
+                                      + math.pow((c+a) dot normal_list(k), 2)))
         }
-      } 
+      }
     }
     temp_centroid :*= 1/(2.0*volume)
     centerX = temp_centroid(0)
     centerY = temp_centroid(1)
     centerZ = temp_centroid(2)
   }
+
+  def centroid: (Double,Double,Double) = (0.0, 0.0, 0.0)
 }
