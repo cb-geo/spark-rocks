@@ -149,9 +149,6 @@ class BlockSpec extends FunSuite {
     val testFace1 = Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
     val testFace2 = Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
     val testFace3 = Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
-    // val testFace4 = Face((-1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0)
-    // val testFace5 = Face((0.0, -1.0, 0.0), 2.0, phi=0, cohesion=0)
-    // val testFace6 = Face((0.0, 0.0, -1.0), 2.0, phi=0, cohesion=0)
     val testFace4 = Face((1/math.sqrt(2.0), 1/math.sqrt(2.0), 0.0), 1/math.sqrt(2.0), phi=0, cohesion=0) 
     val testBlock = Block((1.0, 1.0, 1.0), List[Face](testFace1, testFace2, testFace3, testFace4))
     testBlock.findVertices
@@ -159,5 +156,38 @@ class BlockSpec extends FunSuite {
     val testVertices = List(Delaunay.Vector2(0.0, 1.0), Delaunay.Vector2(1.0,0.0), Delaunay.Vector2(1.0,1.0))
     val expectedTriangulation = (Delaunay.Triangulation(testVertices)).toList
     assert(testBlock.faces(2).triangles == expectedTriangulation)
+  }
+
+  test("Volume should be 8.0") {
+    val testFace1 = Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
+    val testFace2 = Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
+    val testFace3 = Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
+    val testFace4 = Face((-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
+    val testFace5 = Face((0.0, -1.0, 0.0), 1.0, phi=0, cohesion=0)
+    val testFace6 = Face((0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0)
+    val testBlock = Block((1.0, 1.0, 1.0), List[Face](testFace1, testFace2, testFace3, testFace4, testFace5, testFace6))
+    testBlock.findVertices
+    testBlock.meshFaces
+    testBlock.calcCentroidVolume
+    println(testBlock.faces(5).vertices)
+    println(testBlock.faces(5).triangles)
+
+    val expectedVolume = 8.0
+    assert(testBlock.volume == expectedVolume) 
+  }
+
+  test("Centroid should be at (0.0, 0.0, 0.0)") {
+    val testFace1 = Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
+    val testFace2 = Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
+    val testFace3 = Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
+    val testFace4 = Face((-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
+    val testFace5 = Face((0.0, -1.0, 0.0), 1.0, phi=0, cohesion=0)
+    val testFace6 = Face((0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0)
+    val testBlock = Block((1.0, 1.0, 1.0), List[Face](testFace1, testFace2, testFace3, testFace4, testFace5, testFace6))
+    testBlock.findVertices
+    testBlock.meshFaces
+    testBlock.calcCentroidVolume
+    val expectedCentroid = (0.0, 0.0, 0.0)
+    assert((testBlock.centerX, testBlock.centerY, testBlock.centerZ) == expectedCentroid)
   }
 }
