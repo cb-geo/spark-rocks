@@ -169,9 +169,6 @@ class BlockSpec extends FunSuite {
     testBlock.findVertices
     testBlock.meshFaces
     testBlock.calcCentroidVolume
-    println(testBlock.faces(5).vertices)
-    println(testBlock.faces(5).triangles)
-
     val expectedVolume = 8.0
     assert(testBlock.volume == expectedVolume) 
   }
