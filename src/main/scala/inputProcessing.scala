@@ -54,10 +54,8 @@ object inputProcessor {
           val phi = inputLine(9)
           val cohesion = inputLine(10)
           if (inputLength > 11) {
-            // FIXME This needs to be updated to accommodate changes in Joint
-            for (i <- 0 until (inputLength - 11)/3)  {
-              // Last 0.0 is a placeholder that needs to be changed
-              shape :::= List(((inputLine(3*i+11), inputLine(3*i+12), inputLine(3*i+13)), 0.0))
+            for (i <- 0 until (inputLength - 11)/4)  {
+              shape :::= List(((inputLine(4*i+11), inputLine(4*i+12), inputLine(4*i+13)), inputLine(4*i+14)))
             }
           }
           shape = shape.reverse
