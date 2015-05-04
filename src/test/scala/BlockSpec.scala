@@ -145,16 +145,19 @@ class BlockSpec extends FunSuite {
     assert(testBlock.vertices == expectedIntersection)
   }
 
-  test("There should three entries in the triangulation list") {
-    val testFace1 = Face((1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
-    val testFace2 = Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0)
-    val testFace3 = Face((0.0, 0.0, 1.0), 0.0, phi=0, cohesion=0)
-    val testFace4 = Face((1/math.sqrt(2.0), 0.0, 1/math.sqrt(2.0)), 1/math.sqrt(2.0), phi=0, cohesion=0)
+  test("There should three entries in the triangulation list ordered in a clockwise fashion") {
+    val testFace1 = Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
+    val testFace2 = Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
+    val testFace3 = Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
+    // val testFace4 = Face((-1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0)
+    // val testFace5 = Face((0.0, -1.0, 0.0), 2.0, phi=0, cohesion=0)
+    // val testFace6 = Face((0.0, 0.0, -1.0), 2.0, phi=0, cohesion=0)
+    val testFace4 = Face((1/math.sqrt(2.0), 1/math.sqrt(2.0), 0.0), 1/math.sqrt(2.0), phi=0, cohesion=0) 
     val testBlock = Block((1.0, 1.0, 1.0), List[Face](testFace1, testFace2, testFace3, testFace4))
     testBlock.findVertices
     testBlock.meshFaces
-    val testVertices = List(Delaunay.Vector2(1.0, 0.0), Delaunay.Vector2(0.0,1.0), Delaunay.Vector2(0.0,0.0))
+    val testVertices = List(Delaunay.Vector2(0.0, 1.0), Delaunay.Vector2(1.0,0.0), Delaunay.Vector2(1.0,1.0))
     val expectedTriangulation = (Delaunay.Triangulation(testVertices)).toList
-    assert(testBlock.faces(0).triangles == expectedTriangulation)
+    assert(testBlock.faces(2).triangles == expectedTriangulation)
   }
 }

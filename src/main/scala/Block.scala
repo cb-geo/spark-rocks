@@ -147,12 +147,52 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
             vertices :::= List((p_vect(0), p_vect(1), p_vect(2)))
             faces(i).vertices :::= List((p_vect(0), p_vect(1), p_vect(2)))
           }
+          faces(i).vertices = faces(i).vertices.distinct
         }
       }
     }
     vertices = vertices.distinct // Remove any duplicates from list
   }
 
+  /**
+    * Calculates the rotation matrix to rotate the input plane (specified by it's normal)
+    * to the desired orientation (specified by the desired normal)
+    * @param n_current: Current normal of plane
+    * @param n_desired: Desired new normal
+    * @return rmat: 3*3 rotation matrix
+    */
+  def rotationMatrix(n_current: (Double, Double, Double), n_desired: (Double, Double, Double)) :
+                    DenseMatrix[Double] = {
+    val tolerance = 1e-12
+    val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
+    val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
+    if (math.abs(linalg.norm(linalg.cross(n_c,n_d))) > tolerance) {
+      val Txz = DenseMatrix.zeros[Double](3,3)
+      val Tz = DenseMatrix.zeros[Double](3,3)
+      val u = n_c(0)
+      val v = n_c(1)
+      val w = n_c(2)
+      // Rotation matrix to rotate into x-z plane
+      Txz(0,0) = u/math.sqrt(u*u + v*v)
+      Txz(1,0) = -v/math.sqrt(u*u + v*v)
+      Txz(0,1) = v/math.sqrt(u*u + v*v)
+      Txz(1,1) = u/math.sqrt(u*u + v*v)
+      Txz(2,2) = 1.0
+
+      // Rotation matrix to rotate from x-z plane on z-axis
+      Tz(0,0) = w/math.sqrt(u*u + v*v + w*w)
+      Tz(2,0) = math.sqrt(u*u + v*v)/math.sqrt(u*u + v*v + w*w)
+      Tz(0,2) = -math.sqrt(u*u + v*v)/math.sqrt(u*u + v*v + w*w)
+      Tz(2,2) = w/math.sqrt(u*u + v*v + w*w)
+      Tz(1,1) = 1.0
+      val rmat = Tz * Txz
+      return rmat
+    } else {
+      val rmat = DenseMatrix.eye[Double](3)
+      return rmat
+    }
+  }
+ 
   /**
     * Mesh the faces using Delaunay triangulation. This meshing is done
     * in order to calculate the volume and centroid of the block
@@ -162,31 +202,24 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
   def meshFaces: Unit = {
     // Determine rotation matrix to rotate faces perpendicular to z-axis. This way all vertices
     // are only in the x-y plane which makes triangulation easier.
-    val ek = DenseVector[Double](0.0, 0.0, 1.0) // Unit vector in z-direction
+    val ek = (0.0, 0.0, 1.0)
     for (i <- 0 until faces.length) {
-      val nPlane = DenseVector[Double](faces(i).a, faces(i).b, faces(i).c)
-      val v_vector = linalg.cross(nPlane, ek)
-      val c_scalar = nPlane dot ek
-      val v_mag = math.sqrt(v_vector(0)*v_vector(0) + v_vector(1)*v_vector(1) + v_vector(2)*v_vector(2))
-      val v_x = DenseMatrix.zeros[Double](3,3)
-      v_x(1,0) = v_vector(2)
-      v_x(2,0) = -v_vector(1)
-      v_x(0,1) = -v_vector(2)
-      v_x(2,1) = v_vector(0)
-      v_x(0,2) = v_vector(1)
-      v_x(1,2) = -v_vector(0)
-      // Rotation Matrix
-      val R = DenseMatrix.eye[Double](3) + v_x + (v_x :* v_x)*(1-c_scalar)/(v_mag*v_mag)
-      println(R)
+      val nPlane = (faces(i).a, faces(i).b, faces(i).c)
+      val R = rotationMatrix(nPlane, ek)
       var transformed_vertices = List.empty[(Double, Double, Double)]
       var temp_vertices = List.empty[Delaunay.Vector2]
-      for (j <- 0 until vertices.length) { // Iterate through vertices and rotate
+      for (j <- 0 until faces(i).vertices.length) { // Iterate through vertices and rotate
         val temp_vector = R * DenseVector(faces(i).vertices(j)_1, faces(i).vertices(j)_2, faces(i).vertices(j)_3)
         transformed_vertices :::= List((temp_vector(0), temp_vector(1), temp_vector(2)))
         temp_vertices :::= List(Delaunay.Vector2(temp_vector(0), temp_vector(1)))
       }
       transformed_vertices = transformed_vertices.reverse
-      temp_vertices = temp_vertices.reverse
+      temp_vertices = temp_vertices.reverse 
+      println("These are the transformed vertices")
+      println(transformed_vertices)
+      println("These are the original vertices")
+      println(faces(i).vertices)
+      // Vertices are returned in CLOCKWISE order
       faces(i).triangles = (Delaunay.Triangulation(temp_vertices)).toList
     }
   }
