@@ -185,6 +185,21 @@ class BlockSpec extends FunSuite {
     assert(mesh(2) == expectedTriangulation)
   }
 
+  // test("Volume should be 8.0") {
+  //   val testFace1 = Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
+  //   val testFace2 = Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
+  //   val testFace3 = Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
+  //   val testFace4 = Face((-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
+  //   val testFace5 = Face((0.0, -1.0, 0.0), 1.0, phi=0, cohesion=0)
+  //   val testFace6 = Face((0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0)
+  //   val testBlock = Block((1.0, 1.0, 1.0), List[Face](testFace1, testFace2, testFace3, testFace4, testFace5, testFace6))
+  //   testBlock.findVertices
+  //   testBlock.meshFaces
+  //   testBlock.calcCentroidVolume
+  //   val expectedVolume = 8.0
+  //   assert(testBlock.volume == expectedVolume)
+  // }
+
   test("Centroid should be at (0.0, 0.0, 0.0)") {
     val testFace1 = Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
     val testFace2 = Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
