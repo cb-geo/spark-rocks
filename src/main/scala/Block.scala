@@ -275,5 +275,20 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
     (centroid(0), centroid(1), centroid(2))
   }
 
-  // def centroid: (Double,Double,Double) = (0.0, 0.0, 0.0)
+  /**
+    * Calculates the distances of the joints relative to a new origin
+    * @param localOrigin: new local origin 
+    * @return List of joints with updated distances
+    */
+  def updateFaces(localOrigin: (Double, Double,Double)): List[Face] = {
+    var newFaces = List.empty[Face]
+    faces.foreach { f =>
+      val w = DenseVector[Double](centerX, centerY, centerZ - f.d/f.c)
+      val n = DenseVector[Double](f.a, f.b, f.c)
+      val d = math.abs(n dot w)/linalg.norm(n)
+      newFaces :::= List(Face((f.a, f.b, f.c), d, f.phi, f.cohesion))
+    }
+    return newFaces
+  }
+
 }
