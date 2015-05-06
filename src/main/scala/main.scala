@@ -1,6 +1,7 @@
 package edu.berkeley.ce.rockslicing
 
 import scala.collection.mutable.ListBuffer
+import scala.compat.Platform
 import scala.io.Source
 import java.io._
 import org.apache.spark.SparkContext
@@ -28,6 +29,7 @@ object RockSlicer {
     val rockVolume = rockBuffer.toList
     val jointList = jointBuffer.toList
 
+    val startTime = Platform.currentTime
     // FIXME Is this correct instantiation of our first block?
     var blocks = List(Block((0.0, 0.0, 0.0), rockVolume))
 
@@ -52,14 +54,17 @@ object RockSlicer {
                                            }
     // Calculate centroid of each block
     val centroidBlocks = nonRedundantBlocks.map { case block @ Block(_, faces) =>
+                                             Block(center, block.nonRedundantFaces) }
       val vertices = block.findVertices
       val mesh = block.meshFaces(vertices)
       val centroid = block.centroid(vertices, mesh)
       Block(centroid, faces)
     }
 
+    val endTime = Platform.currentTime
     // Convert the list of rock blocks to JSON and save this to a file
-    val jsonBlocks = nonRedundantBlocks.map(json.blockToMinimalJson)
+    val jsonBlocks = centroidBlocks.map(json.blockToMinimalJson)
     jsonBlocks.saveAsTextFile("blocks.json")
+    println(s"Processed ${finalBlocks.length} blocks in ${endTime - startTime} msec.")
   }
 }
