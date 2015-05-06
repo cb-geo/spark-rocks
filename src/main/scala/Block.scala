@@ -51,7 +51,8 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
 
     // Restrict our attention to plane of joint
     val coeffs = Array[Double](joint.a, joint.b, joint.c, 0.0).map(Block.applyTolerance)
-    val rhs = Block.applyTolerance(joint.d)
+    val translatedJoint = joint.updateJoint((centerX, centerY, centerZ))
+    val rhs = Block.applyTolerance(translatedJoint.d)
     linProg.addConstraint(coeffs, LinearProgram.EQ, rhs)
 
     // Require s to be within planes defined by faces of block
@@ -62,7 +63,7 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
     }
 
     // Require s to be within planes defining shape of joint
-    joint.globalCoordinates.foreach { case ((a,b,c),d) =>
+    translatedJoint.globalCoordinates.foreach { case ((a,b,c),d) =>
         val jointCoeffs = Array[Double](a, b, c, -1.0).map(Block.applyTolerance)
         val rhs = Block.applyTolerance(d)
         linProg.addConstraint(jointCoeffs, LinearProgram.LE, rhs)
