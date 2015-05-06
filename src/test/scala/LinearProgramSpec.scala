@@ -9,15 +9,16 @@ class LinearProgramSpec extends FunSuite {
     val solver = new LinearProgram(1)
     solver.setObjFun(List(1.0), LinearProgram.MAX)
     solver.addConstraint(List(1.0), LinearProgram.EQ, 5.0)
-    val solution = solver.solve().get
-    assert(math.abs(solution - 5.0) <= EPSILON)
+    val (varSettings, opt) = solver.solve().get
+    assert(varSettings.length == 1)
+    assert(math.abs(varSettings(0) - 5.0) <= EPSILON && math.abs(opt - 5.0) <= EPSILON)
   }
 
   test("Minimizing x subject to x = 5 should produce result 5") {
     val solver = new LinearProgram(1)
     solver.setObjFun(List(1.0), LinearProgram.MIN)
     solver.addConstraint(List(1.0), LinearProgram.EQ, 5.0)
-    val solution = solver.solve().get
+    val solution = solver.solve().get._2
     assert(math.abs(solution - 5.0) <= EPSILON)
   }
 
@@ -26,7 +27,7 @@ class LinearProgramSpec extends FunSuite {
     solver.setObjFun(List(1.0, 1.0), LinearProgram.MAX)
     solver.addConstraint(List(1.0, 0.0), LinearProgram.LE, 5.0)
     solver.addConstraint(List(0.0, 1.0), LinearProgram.LE, 4.0)
-    val solution = solver.solve().get
+    val solution = solver.solve().get._2
     assert(math.abs(solution - 9.0) <= EPSILON)
   }
 
@@ -35,7 +36,7 @@ class LinearProgramSpec extends FunSuite {
     solver.setObjFun(List(1.0, 1.0), LinearProgram.MIN)
     solver.addConstraint(List(1.0, 0.0), LinearProgram.GE, 5.0)
     solver.addConstraint(List(0.0, 1.0), LinearProgram.GE, 4.0)
-    val solution = solver.solve().get
+    val solution = solver.solve().get._2
     assert(math.abs(solution - 9.0) <= EPSILON)
   }
 
@@ -46,7 +47,7 @@ class LinearProgramSpec extends FunSuite {
     solver.addConstraint(List(0.0, 1.0), LinearProgram.GE, 7.0)
     solver.addConstraint(List(1.0, 0.0), LinearProgram.GE, 5.0)
     solver.addConstraint(List(0.0, 1.0), LinearProgram.LE, 11.0)
-    val solution = solver.solve().get
+    val solution = solver.solve().get._2
     assert(math.abs(solution + 6.0) <= EPSILON)
   }
 
@@ -59,7 +60,7 @@ class LinearProgramSpec extends FunSuite {
     solver.addConstraint(List(1.0, 0.0, 0.0), LinearProgram.LE, 1.0)
     solver.addConstraint(List(0.0, 1.0, 0.0), LinearProgram.LE, 1.0)
     solver.addConstraint(List(0.0, 0.0, 1.0), LinearProgram.LE, 1.0)
-    val solution = solver.solve().get
+    val solution = solver.solve().get._2
     assert(math.abs(solution - 3.0) <= EPSILON)
   }
 
@@ -73,7 +74,7 @@ class LinearProgramSpec extends FunSuite {
     solver.addConstraint(List(0.0, 1.0, 0.0), LinearProgram.LE, 2.0)
     solver.addConstraint(List(0.0, 0.0, 1.0), LinearProgram.LE, 2.0)
     solver.addConstraint(List(-1.0, 0.0, 1.0), LinearProgram.EQ, 1.0)
-    val solution = solver.solve().get
+    val solution = solver.solve().get._2
     assert(math.abs(solution - 1.0) <= EPSILON)
   }
 }

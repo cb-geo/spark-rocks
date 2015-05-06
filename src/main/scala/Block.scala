@@ -40,10 +40,11 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
   /**
     * Determine whether or not a joint intersects this rock block.
     * @param joint The joint to check for intersection.
-    * @return true if there is an intersection between the block and this joint,
-    * false otherwise.
+    * @return An option indicating the point of intersection. If there is no
+    * intersection, None is returned, otherwise Some((x,y,z)) is returned where
+    * (x,y,z) is the point of intersection.
     */
-  def intersects(joint: Joint): Boolean = {
+  def intersects(joint: Joint): Option[(Double,Double,Double)] = {
     val linProg = new LinearProgram(4)
     // Minimize s
     linProg.setObjFun(Array[Double](0.0, 0.0, 0.0, 1.0), LinearProgram.MIN)
@@ -68,8 +69,9 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
     }
 
     linProg.solve() match {
-      case None => false
-      case Some(s: Double) => s < 0
+      case None => None
+      case Some((vars, opt)) if (opt >= -Block.EPSILON) => None
+      case Some((vars, _)) => Some((vars(0), vars(1), vars(2)))
     }
   }
 
@@ -81,11 +83,11 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
     * containing only this block.
     */
   def cut(joint: Joint): List[Block] =
-    if (this intersects joint) {
-      List(Block(center, Face((joint.a, joint.b, joint.c), joint.d, joint.phi, joint.cohesion)::faces),
-           Block(center, Face((-joint.a,-joint.b,-joint.c), joint.d, joint.phi, joint.cohesion)::faces))
-    } else {
-      List(this)
+    this.intersects(joint) match {
+      case None => List(this)
+      case Some((x,y,z)) =>
+        List(Block(center, Face((joint.a, joint.b, joint.c), joint.d, joint.phi, joint.cohesion)::faces),
+             Block(center, Face((-joint.a,-joint.b,-joint.c), joint.d, joint.phi, joint.cohesion)::faces))
     }
 
   /**
@@ -103,7 +105,7 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
         val rhs = Block.applyTolerance(f.d)
         linProg.addConstraint(faceCoeffs, LinearProgram.LE, rhs)
       }
-      val s = linProg.solve().get
+      val s = linProg.solve().get._2
       math.abs(s - face.d) <= Block.EPSILON
     }
 
@@ -187,8 +189,8 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
   /**
     * Mesh the faces using Delaunay triangulation. This meshing is done
     * in order to calculate the volume and centroid of the block
-    * @return A list of lists that give the local to global mapping for the 
-    * triangulation of each of the faces. 
+    * @return A list of lists that give the local to global mapping for the
+    * triangulation of each of the faces.
     */
   def meshFaces(vertices: List[List[(Double, Double, Double)]]): List[List[(Int, Int, Int)]] = {
     // Determine rotation matrix to rotate faces perpendicular to z-axis. This way all vertices
@@ -223,7 +225,7 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
   }
 
   /**
-    * Calculates the centroid of the block. 
+    * Calculates the centroid of the block.
     * @param vertices: A list of lists that contain the vertices of the block faces
     * @param mesh: A list of lists that contain the local to global mapping of the triangulation
     * @return The centroid of the block, (centerX, centerY, centerZ).
@@ -277,7 +279,7 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
 
   /**
     * Calculates the distances of the joints relative to a new origin
-    * @param localOrigin: new local origin 
+    * @param localOrigin: new local origin
     * @return List of joints with updated distances
     */
   def updateFaces(localOrigin: (Double, Double,Double)): List[Face] = {
@@ -296,7 +298,7 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
         w(0) = localOrigin._1 - math.abs(f.d/f.a)
         w(1) = localOrigin._2
         w(2) = localOrigin._3
-      } 
+      }
       val n = DenseVector[Double](f.a, f.b, f.c)
       val d = math.abs(n dot w)/linalg.norm(n)
       Face((f.a, f.b, f.c), d, f.phi, f.cohesion)
