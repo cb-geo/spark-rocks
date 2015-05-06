@@ -19,7 +19,8 @@ object json {
       "b" -> JsNumber(face.b),
       "c" -> JsNumber(face.c),
       "d" -> JsNumber(face.d),
-      "phi" -> JsNumber(face.phi)
+      "phi" -> JsNumber(face.phi),
+      "cohesion" -> JsNumber(face.cohesion)
     ))
   }
 

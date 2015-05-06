@@ -46,10 +46,10 @@ object inputProcessor {
           val inputLine = line.split(" ").map(_.toDouble)
           val inputLength = inputLine.size
           val (a,b,c) = (inputLine(0), inputLine(1), inputLine(2))
-          val (centerX,centerY,centerZ) = (inputLine(3), inputLine(4), inputLine(5))
-          val dipAngle = inputLine(6)
-          val dipDirection = inputLine(7)
-          val d = inputLine(8)
+          val d = inputLine(3)
+          val (centerX,centerY,centerZ) = (inputLine(4), inputLine(5), inputLine(6))
+          val dipAngle = inputLine(7)
+          val dipDirection = inputLine(8)
           val phi = inputLine(9)
           val cohesion = inputLine(10)
           if (inputLength > 11) {
