@@ -124,6 +124,29 @@ class BlockSpec extends FunSuite {
     assert(redundant2Cube.nonRedundantFaces == expectedFaces)
   }
 
+  test("-x = 0 face should be redundant for new block") {
+    val boundingFaces = List(
+        Face((1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0),
+        Face((0.0, 1.0, 0.0), 2.0, phi=0, cohesion=0),
+        Face((0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0),
+        Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+        Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0),
+        Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+        Face((-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0))
+    val origBlock = Block((0.0, 0.0, 0.0), boundingFaces)
+    val newFaces = origBlock.updateFaces((1.0, 0.0, 0.0))
+    val newBlock = Block((1.0, 0.0, 0.0), newFaces)
+    val testFaces = newBlock.nonRedundantFaces
+    val expectedFaces = List(
+        Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+        Face((0.0, 1.0, 0.0), 2.0, phi=0, cohesion=0),
+        Face((0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0),
+        Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0),
+        Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+        Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0))
+    assert(testFaces == expectedFaces)
+  }
+
   test("The points of intersection between the four planes should (0.0, 0.0, 0.0) & (0.0, 5.0, 0.0)") {
     val testFace1 = Face((1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
     val testFace2 = Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0)
@@ -177,21 +200,21 @@ class BlockSpec extends FunSuite {
     assert(centroid == expectedCentroid)
   }
 
-  test("New distances should be shifter based on input local origin") {
-    val testFace1 = Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
-    val testFace2 = Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
-    val testFace3 = Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
+  test("New distances should be shifted based on input local origin") {
+    val testFace1 = Face((1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0)
+    val testFace2 = Face((0.0, 1.0, 0.0), 2.0, phi=0, cohesion=0)
+    val testFace3 = Face((0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0)
     val testFace4 = Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
     val testFace5 = Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0)
     val testFace6 = Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0)
-    val testBlock = Block((1.0, 1.0, 1.0), List(testFace1, testFace2, testFace3, testFace4, testFace5, testFace6))
-    val updatedFaces = testBlock.updateFaces((1.0, 1.0, 1.0))
+    val testBlock = Block((0.0, 0.0, 0.0), List(testFace1, testFace2, testFace3, testFace4, testFace5, testFace6))
+    val updatedFaces = testBlock.updateFaces((2.0, 0.0, 0.0))
     val expectedFace1 = Face((1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
-    val expectedFace2 = Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0)
-    val expectedFace3 = Face((0.0, 0.0, 1.0), 0.0, phi=0, cohesion=0)
-    val expectedFace4 = Face((-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
-    val expectedFace5 = Face((0.0, -1.0, 0.0), 1.0, phi=0, cohesion=0)
-    val expectedFace6 = Face((0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0)
+    val expectedFace2 = Face((0.0, 1.0, 0.0), 2.0, phi=0, cohesion=0)
+    val expectedFace3 = Face((0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0)
+    val expectedFace4 = Face((-1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0)
+    val expectedFace5 = Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0)
+    val expectedFace6 = Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0)
     val expectedFaces = List(expectedFace1, expectedFace2, expectedFace3, expectedFace4, expectedFace5, expectedFace6)
     assert(updatedFaces == expectedFaces)
   }
