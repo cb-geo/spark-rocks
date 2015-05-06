@@ -81,13 +81,16 @@ class LinearProgram(val numVars: Int) {
   /**
     * Solve the linear program to compute the optimal objective value.
     * Note that this instance becomes unuseable after this method completes.
-    * @return Some(Optimal Value) upon success, or None if an error occurred.
+    * @return None if an error occurred, otherwise Some((varSettings, opt)),
+    * where varSettings is the value assigned to each value to optimize the
+    * objective function and opt is the optimal objective value itself.
     */
-  def solve(): Option[Double] = {
+  def solve(): Option[(List[Double], Double)] = {
     try {
       solver.solve()
       val objectiveValue = solver.getObjective()
-      Some(objectiveValue)
+      val variableSettings = solver.getPtrVariables().toList
+      Some((variableSettings, objectiveValue))
     } catch {
       case _: LpSolveException => None
     } finally {

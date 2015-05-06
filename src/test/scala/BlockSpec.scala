@@ -31,7 +31,7 @@ class BlockSpec extends FunSuite {
     )
     val joint = Joint((0.0, 0.0, 1.0), 1/2.0, center=(0.0, 0.0, 1/2.0), dipAngle=0,
                       dipDirection=0, phi=0, cohesion=0, shape=jointShape)
-    assert(unitCube intersects joint)
+    assert(unitCube.intersects(joint).isDefined)
   }
 
   test("The plane z = 2 should not intersect the unit cube") {
@@ -43,7 +43,7 @@ class BlockSpec extends FunSuite {
     )
     val joint = Joint((0.0, 0.0, 1.0), 2.0, center=(0.0, 0.0, 2.0), dipAngle=0,
                       dipDirection=0, phi=0, cohesion=0, shape=jointShape)
-    assert(!(unitCube intersects joint))
+    assert(unitCube.intersects(joint).isEmpty)
   }
 
   test("The plane y = 1 should not intersect the unit cube") {
@@ -55,7 +55,7 @@ class BlockSpec extends FunSuite {
     )
     val joint = Joint((0.0, 1.0, 0.0), 1.0, center=(0.0, 0.0, 2.0), dipAngle=0,
                       dipDirection=0, phi=0, cohesion=0, shape=jointShape)
-    assert(!(unitCube intersects joint))
+    assert(unitCube.intersects(joint).isEmpty)
   }
 
   test("The plane y = 0.99 should intersect the unit cube") {
@@ -67,7 +67,7 @@ class BlockSpec extends FunSuite {
     )
     val joint = Joint((0.0, 1.0, 0.0), 0.99, center=(0.0, 0.0, 2.0), dipAngle=0,
                       dipDirection=0, phi=0, cohesion=0, shape=jointShape)
-    assert(unitCube intersects joint)
+    assert(unitCube.intersects(joint).isDefined)
   }
 
   test("The plane -x + z = 1 should not intersect the unit cube") {
@@ -79,7 +79,7 @@ class BlockSpec extends FunSuite {
     )
     val joint = Joint((-1.0, 0.0, 1.0), 1.0, center=(0.0, 0.0, 1.0), dipAngle=0,
                       dipDirection=0, phi=0, cohesion=0, shape=jointShape)
-    assert(!(unitCube intersects joint))
+    assert(unitCube.intersects(joint).isEmpty)
   }
 
   test("The plane -x + z = 1 should intersect the two cube") {
@@ -91,7 +91,7 @@ class BlockSpec extends FunSuite {
     )
     val joint = Joint((-1.0, 0.0, 1.0), 1.0, center=(0.0, 0.0, 1.0), dipAngle=0,
                       dipDirection=0, phi=0, cohesion=0, shape=jointShape)
-    assert(twoCube intersects joint)
+    assert(twoCube.intersects(joint).isDefined)
   }
 
   test("The unit cube should not contain any redundant faces") {
@@ -176,7 +176,7 @@ class BlockSpec extends FunSuite {
     val testFace1 = Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
     val testFace2 = Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
     val testFace3 = Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
-    val testFace4 = Face((1/math.sqrt(2.0), 1/math.sqrt(2.0), 0.0), 1/math.sqrt(2.0), phi=0, cohesion=0) 
+    val testFace4 = Face((1/math.sqrt(2.0), 1/math.sqrt(2.0), 0.0), 1/math.sqrt(2.0), phi=0, cohesion=0)
     val testBlock = Block((1.0, 1.0, 1.0), List[Face](testFace1, testFace2, testFace3, testFace4))
     val vertices = testBlock.findVertices
     val mesh = testBlock.meshFaces(vertices)
