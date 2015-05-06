@@ -20,7 +20,7 @@ object RockSlicer {
     // Open and read input file specifying rock volume and joints
     var rockBuffer = new ListBuffer[Face]()
     var jointBuffer = new ListBuffer[Joint]()
-    val inputSource = Source.fromFile("tester")
+    val inputSource = Source.fromFile("testBlocks.txt") // Input file name
     try {
       inputProcessor.readInput(inputSource, rockBuffer, jointBuffer)
     } finally {
