@@ -305,8 +305,8 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
         w(2) = localOrigin._3
       }
       val n = DenseVector[Double](f.a, f.b, f.c)
-      val d = math.abs(n dot w)/linalg.norm(n)
-      Face((f.a, f.b, f.c), d, f.phi, f.cohesion)
+      val new_d = math.abs(n dot w)/linalg.norm(n)
+      Face((f.a, f.b, f.c), new_d, f.phi, f.cohesion)
     }
   }
 }

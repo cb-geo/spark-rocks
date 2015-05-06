@@ -54,4 +54,30 @@ case class Joint(normalVec: (Double, Double, Double), distance: Double,
     val globalShapeTuples = globalShapeVecs.map {x => (x(0), x(1), x(2))}
     globalShapeTuples.zip(globalDistances)
   }
+
+  /**
+    * Calculates the distances of the joint relative to a new origin
+    * @param localOrigin: new local origin
+    * @return Joints with updated distance
+    */
+  def updateJoint(localOrigin: (Double, Double,Double)): Joint = {
+    val tolerance = 1e-12
+    var w = DenseVector.zeros[Double](3)
+    if (math.abs(c) >= tolerance) {
+      w(0) = localOrigin._1
+      w(1) = localOrigin._2
+      w(2) = localOrigin._3 - math.abs(d/c)
+    } else if (math.abs(b) >= tolerance) {
+      w(0) = localOrigin._1
+      w(1) = localOrigin._2 - math.abs(d/b)
+      w(2) = localOrigin._3
+    } else if (math.abs(a) >= tolerance) {
+      w(0) = localOrigin._1 - math.abs(d/a)
+      w(1) = localOrigin._2
+      w(2) = localOrigin._3
+    }
+    val n = DenseVector[Double](a, b, c)
+    val new_d = math.abs(n dot w)/linalg.norm(n)
+    Joint((a, b, c), new_d, (centerX, centerY, centerZ), dipAngle, dipDirection, phi, cohesion, shape)
+  }
 }
