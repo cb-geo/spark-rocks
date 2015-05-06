@@ -218,4 +218,15 @@ class BlockSpec extends FunSuite {
     val expectedFaces = List(expectedFace1, expectedFace2, expectedFace3, expectedFace4, expectedFace5, expectedFace6)
     assert(updatedFaces == expectedFaces)
   }
+
+  test("Cutting the two-cube with faces x=1 and z=1 should produce four blocks") {
+    val xPlane = Joint((1.0,0.0,0.0), 1.0, (1.0,1.0,1.0), dipAngle=0, dipDirection=0,
+                       phi=0, cohesion=0, shape=Nil)
+    val zPlane = Joint((0.0,0.0,1.0), 1.0, (1.0,1.0,1.0), dipAngle=0, dipDirection=0,
+                       phi=0, cohesion=0, shape=Nil)
+    val xBlocks = twoCube.cut(xPlane)
+    assert(xBlocks.length == 2)
+    val xzBlocks = xBlocks.flatMap(_.cut(zPlane))
+    assert(xzBlocks.length == 4)
+  }
 }
