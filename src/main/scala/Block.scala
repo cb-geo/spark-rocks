@@ -85,9 +85,14 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
   def cut(joint: Joint): List[Block] =
     this.intersects(joint) match {
       case None => List(this)
-      case Some((x,y,z)) =>
-        List(Block(center, Face((joint.a, joint.b, joint.c), joint.d, joint.phi, joint.cohesion)::faces),
-             Block(center, Face((-joint.a,-joint.b,-joint.c), joint.d, joint.phi, joint.cohesion)::faces))
+      case Some((x,y,z)) => {
+        val updatedFaces = this.updateFaces((x,y,z))
+        // FIXME Is it correct to have d = 0 for the new face?
+        List(
+          Block((x,y,z), Face((joint.a, joint.b, joint.c), 0.0, joint.phi, joint.cohesion)::updatedFaces),
+          Block((x,y,z), Face((-joint.a,-joint.b,-joint.c), 0.0, joint.phi, joint.cohesion)::updatedFaces)
+        )
+      }
     }
 
   /**
@@ -231,7 +236,7 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
     * @return The centroid of the block, (centerX, centerY, centerZ).
     */
   def centroid(vertices: List[List[(Double, Double, Double)]],
-                       mesh:     List[List[(Int, Int, Int)]]): (Double, Double, Double) = {
+               mesh: List[List[(Int, Int, Int)]]): (Double, Double, Double) = {
     // Calculate volume, this is necessary before centroid calcs can be done
     var volume = 0.0
     for (i <- 0 until faces.length) {
