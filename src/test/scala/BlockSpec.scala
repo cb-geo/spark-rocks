@@ -10,7 +10,7 @@ class BlockSpec extends FunSuite {
     Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), // -z = 0
     Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)   // z = 1
   )
-  val unitCube = Block((1/2.0, 1/2.0, 1/2.0), boundingFaces)
+  val unitCube = Block((0.0, 0.0, 0.0), boundingFaces)
 
   val boundingFaces2 = List(
     Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0), // -x = 0
@@ -20,7 +20,7 @@ class BlockSpec extends FunSuite {
     Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), // -z = 0
     Face((0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0)   // z = 2
   )
-  val twoCube = Block((1.0, 1.0, 1.0), boundingFaces2)
+  val twoCube = Block((0.0, 0.0, 0.0), boundingFaces2)
 
   test("The plane z = 0.5 should intersect the unit cube") {
     val jointShape = List(
@@ -70,7 +70,7 @@ class BlockSpec extends FunSuite {
     assert(unitCube.intersects(joint).isDefined)
   }
 
-  test("The plane -x + z = 1 should not intersect the unit cube") {
+  test("The plane -x + z = 1 should intersect the unit cube") {
     val jointShape = List(
       ((1.0, 0.0, 0.0), 4.0),
       ((-1.0, 0.0, 0.0), 4.0),
@@ -79,7 +79,7 @@ class BlockSpec extends FunSuite {
     )
     val joint = Joint((-1.0, 0.0, 1.0), 1.0, center=(0.0, 0.0, 1.0), dipAngle=0,
                       dipDirection=0, phi=0, cohesion=0, shape=jointShape)
-    assert(unitCube.intersects(joint).isEmpty)
+    assert(unitCube.intersects(joint).isDefined)
   }
 
   test("The plane -x + z = 1 should intersect the two cube") {
