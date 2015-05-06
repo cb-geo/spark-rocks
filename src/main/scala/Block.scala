@@ -13,19 +13,11 @@ import scala.language.postfixOps
   * Accessed as 'd'.
   * @param phi The friction angle (phi) of the face.
   * @param cohesion The cohesion of the face.
-  * @param vertices: List of vertices that define the extent of the face. This list is
-  * initialized empty and only set once the face is part of a list of faces that define
-  * a block. The list gets set by the findVertices method within the Block class
-  * @param triangles: Triangulation of vertices to form triangles that are used to
-  * calculate the centroid of the block. This list gets set by the meshFaces method
-  * within the Block class.
   */
 case class Face(normalVec: (Double,Double,Double), distance: Double,
                 val phi: Double, val cohesion: Double) {
   val (a,b,c) = normalVec
   val d = distance
-  var vertices = List.empty[(Double, Double, Double)]
-  var triangles = List.empty[(Int, Int, Int)]
 }
 
 object Block {
@@ -41,19 +33,9 @@ object Block {
   * @param center Cartesian coordinates for the center of the rock block. The individual
   * components can be accessed as 'centerX', 'centerY', and 'centerZ'.
   * @param faces: The faces that define the boundaries of the rock block.
-  * @param vertices: List of vertices based on face intersections. This list is initialized
-  * empty and only filled once findVertices is called by the user. This method should only
-  * be called after redundant joints have been removed
-  * @param centroid: Updates values of center when called. The centroid, assumed to be the
-  * same as the center of mass for uniform density, will change as new fractures are added
-  * to the block. This function should be called once all joints have been added to the block
-  * @param volume: Volume of rock based on bounding faces. Should be called only after all
-  * joints have been added to the block. Initialized as zero.
   */
 case class Block(center: (Double,Double,Double), val faces: List[Face]) {
-  var (centerX, centerY, centerZ) = center
-  var vertices = List.empty[(Double, Double, Double)]
-  var volume = 0.0
+  val (centerX, centerY, centerZ) = center
 
   /**
     * Determine whether or not a joint intersects this rock block.
@@ -127,13 +109,16 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
 
   /**
     * Calculate the vertices of the block
-    * @return Modifies the list of vertices based on the current list of Faces. This
-    * function should only be called once all redundant faces have been removed.
+    * @return List of of lists of vertices based on the current list of Faces. Order of list
+    * follows the same order as input list of faces.
+    * This function should only be called once all redundant faces have been removed.
     */
-  def findVertices: Unit = {
+  def findVertices: List[List[(Double, Double, Double)]] = {
     // Iterate through list to check for intersection
     val tolerance = 1e-12
+    var vertex_list = List.empty[List[(Double, Double, Double)]]
     for (i <- 0 until faces.length) {
+      var temp_vertices = List.empty[(Double, Double, Double)]
       val ni = DenseVector[Double](faces(i).a, faces(i).b, faces(i).c)
       val di = faces(i).d
       for (j <- 0 until faces.length) {
@@ -150,14 +135,14 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
             A_matx(1, ::) := nj.t
             A_matx(2, ::) := nk.t
             val p_vect = A_matx \ b_vect
-            vertices :::= List((p_vect(0), p_vect(1), p_vect(2)))
-            faces(i).vertices :::= List((p_vect(0), p_vect(1), p_vect(2)))
+            temp_vertices :::= List((p_vect(0), p_vect(1), p_vect(2)))
           }
-          faces(i).vertices = faces(i).vertices.distinct
         }
       }
+      temp_vertices = temp_vertices.distinct // Remove any duplicates from list
+      vertex_list :::= List(temp_vertices)
     }
-    vertices = vertices.distinct // Remove any duplicates from list
+    vertex_list.reverse
   }
 
   /**
@@ -202,55 +187,57 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
   /**
     * Mesh the faces using Delaunay triangulation. This meshing is done
     * in order to calculate the volume and centroid of the block
-    * @return Modifies the triangles list in each of the faces in the list of faces
-    * that define the block
+    * @return A list of lists that give the local to global mapping for the 
+    * triangulation of each of the faces. 
     */
-  def meshFaces: Unit = {
+  def meshFaces(vertices: List[List[(Double, Double, Double)]]): List[List[(Int, Int, Int)]] = {
     // Determine rotation matrix to rotate faces perpendicular to z-axis. This way all vertices
     // are only in the x-y plane which makes triangulation easier.
-    assert(vertices.length > 0)
     val ek = (0.0, 0.0, 1.0)
+    var mesh = List.empty[List[(Int, Int, Int)]]
     for (i <- 0 until faces.length) {
       val nPlane = (faces(i).a, faces(i).b, faces(i).c)
       val R = rotationMatrix(nPlane, ek)
-      var transformed_vertices = List.empty[(Double, Double, Double)]
+      var temp_mapping = List.empty[(Int, Int, Int)]
       var temp_vertices = List.empty[Delaunay.Vector2]
-      for (j <- 0 until faces(i).vertices.length) { // Iterate through vertices and rotate
-        val temp_vector = R * DenseVector(faces(i).vertices(j)_1, faces(i).vertices(j)_2, faces(i).vertices(j)_3)
-        transformed_vertices :::= List((temp_vector(0), temp_vector(1), temp_vector(2)))
+      for (j <- 0 until vertices(i).length) { // Iterate through vertices and rotate
+        val temp_vector = R * DenseVector(vertices(i)(j)._1, vertices(i)(j)._2, vertices(i)(j)._3)
         temp_vertices :::= List(Delaunay.Vector2(temp_vector(0), temp_vector(1)))
       }
-      transformed_vertices = transformed_vertices.reverse
       temp_vertices = temp_vertices.reverse
       // Vertices are returned in CLOCKWISE order
-      faces(i).triangles = (Delaunay.Triangulation(temp_vertices)).toList
+      temp_mapping = (Delaunay.Triangulation(temp_vertices)).toList
       // If z-component of normal is negative, order needs to be reversed to maintain clock-wise
       // orientation
-      if (faces(i).c < 0.0) {
+      val tolerance = 1e-12
+      if (math.abs(faces(i).c + 1.0) < tolerance) {
         var temp_triangles = List.empty[(Int, Int, Int)]
-        for (k <- 0 until faces(i).triangles.length) {
-          temp_triangles :::= List((faces(i).triangles(k)._3, faces(i).triangles(k)._2, faces(i).triangles(k)._1))
+        for (k <- 0 until temp_mapping.length) {
+          temp_triangles :::= List((temp_mapping(k)._3, temp_mapping(k)._2, temp_mapping(k)._1))
         }
-        faces(i).triangles = temp_triangles.reverse
+        temp_mapping = temp_triangles.reverse
       }
+      mesh :::= List(temp_mapping)
     }
+    mesh.reverse
   }
 
   /**
-    * Calculates the centroid and volume of the block. This function uses the mesh generated
-    * by meshFaces as well as the vertices generated by findVertices, so there functions should
-    * be invoked before calling this function.
+    * Calculates the centroid of the block. 
+    * @param vertices: A list of lists that contain the vertices of the block faces
+    * @param mesh: A list of lists that contain the local to global mapping of the triangulation
+    * @return The centroid of the block, (centerX, centerY, centerZ).
     */
-  def calcCentroidVolume: Unit = {
-    // Calculate volume, this necessary before centroid calcs can be done
-    volume = 0.0
+  def centroid(vertices: List[List[(Double, Double, Double)]],
+                       mesh:     List[List[(Int, Int, Int)]]): (Double, Double, Double) = {
+    // Calculate volume, this is necessary before centroid calcs can be done
+    var volume = 0.0
     for (i <- 0 until faces.length) {
-      assert(faces(i).triangles.length > 0)
-      for (j <- 0 until faces(i).triangles.length) {
+      for (j <- 0 until mesh(i).length) {
         // Access entries of triangulation in reverse so they are in ANTI-CLOCKWISE order
-        val a_vals = faces(i).vertices(faces(i).triangles(j)._3)
-        val b_vals = faces(i).vertices(faces(i).triangles(j)._2)
-        val c_vals = faces(i).vertices(faces(i).triangles(j)._1)
+        val a_vals = vertices(i)(mesh(i)(j)._3)
+        val b_vals = vertices(i)(mesh(i)(j)._2)
+        val c_vals = vertices(i)(mesh(i)(j)._1)
         val a = DenseVector[Double](a_vals._1, a_vals._2, a_vals._3)
         val b = DenseVector[Double](b_vals._1, b_vals._2, b_vals._3)
         val c = DenseVector[Double](c_vals._1, c_vals._2, c_vals._3)
@@ -260,12 +247,12 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
     }
     volume = volume/6.0
     // Calculate centroid
-    var temp_centroid = DenseVector.zeros[Double](3)
+    var centroid = DenseVector.zeros[Double](3)
     for (i <- 0 until faces.length) {
-      for (j <- 0 until faces(i).triangles.length) {
-        val a_vals = faces(i).vertices(faces(i).triangles(j)._3)
-        val b_vals = faces(i).vertices(faces(i).triangles(j)._2)
-        val c_vals = faces(i).vertices(faces(i).triangles(j)._1)
+      for (j <- 0 until mesh(i).length) {
+        val a_vals = vertices(i)(mesh(i)(j)._3)
+        val b_vals = vertices(i)(mesh(i)(j)._2)
+        val c_vals = vertices(i)(mesh(i)(j)._1)
         val a = DenseVector[Double](a_vals._1, a_vals._2, a_vals._3)
         val b = DenseVector[Double](b_vals._1, b_vals._2, b_vals._3)
         val c = DenseVector[Double](c_vals._1, c_vals._2, c_vals._3)
@@ -277,18 +264,42 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
         val normal_list = List(ei, ej, ek)
         // Loop over each Cartesian axis
         for (k <- 0 until 3) {
-          temp_centroid(k) += 1/24.0 * (ni dot normal_list(k)
+          centroid(k) += 1/24.0 * (ni dot normal_list(k)
                                      * (math.pow((a+b) dot normal_list(k), 2)
                                       + math.pow((b+c) dot normal_list(k), 2)
                                       + math.pow((c+a) dot normal_list(k), 2)))
         }
       }
     }
-    temp_centroid :*= 1/(2.0*volume)
-    centerX = temp_centroid(0)
-    centerY = temp_centroid(1)
-    centerZ = temp_centroid(2)
+    centroid :*= 1/(2.0*volume)
+    (centroid(0), centroid(1), centroid(2))
   }
 
-  def centroid: (Double,Double,Double) = (0.0, 0.0, 0.0)
+  /**
+    * Calculates the distances of the joints relative to a new origin
+    * @param localOrigin: new local origin 
+    * @return List of joints with updated distances
+    */
+  def updateFaces(localOrigin: (Double, Double,Double)): List[Face] = {
+    faces.map { f =>
+      val tolerance = 1e-12
+      var w = DenseVector.zeros[Double](3)
+      if (math.abs(f.c) >= tolerance) {
+        w(0) = centerX
+        w(1) = centerY
+        w(2) = centerZ - f.d/f.c
+      } else if (math.abs(f.b) >= tolerance) {
+        w(0) = centerX
+        w(1) = centerY - f.d/f.b
+        w(2) = centerZ
+      } else if (math.abs(f.a) >= tolerance) {
+        w(0) = centerX - f.d/f.a
+        w(1) = centerY
+        w(2) = centerZ
+      } 
+      val n = DenseVector[Double](f.a, f.b, f.c)
+      val d = math.abs(n dot w)/linalg.norm(n)
+      Face((f.a, f.b, f.c), d, f.phi, f.cohesion)
+    }
+  }
 }

@@ -124,15 +124,19 @@ class BlockSpec extends FunSuite {
     assert(redundant2Cube.nonRedundantFaces == expectedFaces)
   }
 
-  test("The points of intersection between the four planes should (0.0, 0.0, 0.0) & (0.0, 1.0, 0.0)") {
+  test("The points of intersection between the four planes should (0.0, 0.0, 0.0) & (0.0, 5.0, 0.0)") {
     val testFace1 = Face((1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
     val testFace2 = Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0)
     val testFace3 = Face((0.0, 0.0, 1.0), 0.0, phi=0, cohesion=0)
     val testFace4 = Face((0.0, 1.0, 0.0), 5.0, phi=0, cohesion=0)
     val testBlock = Block((1.0, 1.0, 1.0), List[Face](testFace1, testFace2, testFace3, testFace4))
-    val expectedIntersection = List((0.0, 5.0, 0.0),(0.0, 0.0, 0.0))
-    testBlock.findVertices
-    assert(testBlock.vertices == expectedIntersection)
+    val face1 = List((0.0, 5.0, 0.0), (0.0, 0.0, 0.0))
+    val face2 = List((0.0, 0.0, 0.0))
+    val face3 = List((0.0, 5.0, 0.0), (0.0, 0.0, 0.0))
+    val face4 = List((0.0, 5.0, 0.0))
+    val expectedIntersection = List(face1, face2, face3, face4)
+    val vertices = testBlock.findVertices
+    assert(vertices == expectedIntersection)
   }
 
   test("There should be no intersection between the planes") {
@@ -141,8 +145,8 @@ class BlockSpec extends FunSuite {
     val testFace3 = Face((0.0, 0.0, 1.0), 0.0, phi=0, cohesion=0)
     val testBlock = Block((1.0, 1.0, 1.0), List[Face](testFace1, testFace2, testFace3))
     val expectedIntersection = List.empty[(Double, Double, Double)]
-    testBlock.findVertices
-    assert(testBlock.vertices == expectedIntersection)
+    val vertices = testBlock.findVertices
+    assert((vertices(0) == expectedIntersection) && (vertices(1) == expectedIntersection) && (vertices(2) == expectedIntersection))
   }
 
   test("There should three entries in the triangulation list ordered in a clockwise fashion") {
@@ -151,26 +155,11 @@ class BlockSpec extends FunSuite {
     val testFace3 = Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
     val testFace4 = Face((1/math.sqrt(2.0), 1/math.sqrt(2.0), 0.0), 1/math.sqrt(2.0), phi=0, cohesion=0) 
     val testBlock = Block((1.0, 1.0, 1.0), List[Face](testFace1, testFace2, testFace3, testFace4))
-    testBlock.findVertices
-    testBlock.meshFaces
+    val vertices = testBlock.findVertices
+    val mesh = testBlock.meshFaces(vertices)
     val testVertices = List(Delaunay.Vector2(0.0, 1.0), Delaunay.Vector2(1.0,0.0), Delaunay.Vector2(1.0,1.0))
     val expectedTriangulation = (Delaunay.Triangulation(testVertices)).toList
-    assert(testBlock.faces(2).triangles == expectedTriangulation)
-  }
-
-  test("Volume should be 8.0") {
-    val testFace1 = Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
-    val testFace2 = Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
-    val testFace3 = Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
-    val testFace4 = Face((-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
-    val testFace5 = Face((0.0, -1.0, 0.0), 1.0, phi=0, cohesion=0)
-    val testFace6 = Face((0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0)
-    val testBlock = Block((1.0, 1.0, 1.0), List[Face](testFace1, testFace2, testFace3, testFace4, testFace5, testFace6))
-    testBlock.findVertices
-    testBlock.meshFaces
-    testBlock.calcCentroidVolume
-    val expectedVolume = 8.0
-    assert(testBlock.volume == expectedVolume) 
+    assert(mesh(2) == expectedTriangulation)
   }
 
   test("Centroid should be at (0.0, 0.0, 0.0)") {
@@ -181,10 +170,29 @@ class BlockSpec extends FunSuite {
     val testFace5 = Face((0.0, -1.0, 0.0), 1.0, phi=0, cohesion=0)
     val testFace6 = Face((0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0)
     val testBlock = Block((1.0, 1.0, 1.0), List[Face](testFace1, testFace2, testFace3, testFace4, testFace5, testFace6))
-    testBlock.findVertices
-    testBlock.meshFaces
-    testBlock.calcCentroidVolume
+    val vertices = testBlock.findVertices
+    val mesh = testBlock.meshFaces(vertices)
+    val centroid = testBlock.centroid(vertices, mesh)
     val expectedCentroid = (0.0, 0.0, 0.0)
-    assert((testBlock.centerX, testBlock.centerY, testBlock.centerZ) == expectedCentroid)
+    assert(centroid == expectedCentroid)
+  }
+
+  test("New distances should be shifter based on input local origin") {
+    val testFace1 = Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
+    val testFace2 = Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
+    val testFace3 = Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
+    val testFace4 = Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
+    val testFace5 = Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0)
+    val testFace6 = Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0)
+    val testBlock = Block((1.0, 1.0, 1.0), List(testFace1, testFace2, testFace3, testFace4, testFace5, testFace6))
+    val updatedFaces = testBlock.updateFaces((1.0, 1.0, 1.0))
+    val expectedFace1 = Face((1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
+    val expectedFace2 = Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0)
+    val expectedFace3 = Face((0.0, 0.0, 1.0), 0.0, phi=0, cohesion=0)
+    val expectedFace4 = Face((-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
+    val expectedFace5 = Face((0.0, -1.0, 0.0), 1.0, phi=0, cohesion=0)
+    val expectedFace6 = Face((0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0)
+    val expectedFaces = List(expectedFace1, expectedFace2, expectedFace3, expectedFace4, expectedFace5, expectedFace6)
+    assert(updatedFaces == expectedFaces)
   }
 }
