@@ -281,14 +281,25 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
     * @return List of joints with updated distances
     */
   def updateFaces(localOrigin: (Double, Double,Double)): List[Face] = {
-    var newFaces = List.empty[Face]
-    faces.foreach { f =>
-      val w = DenseVector[Double](centerX, centerY, centerZ - f.d/f.c)
+    faces.map { f =>
+      val tolerance = 1e-12
+      var w = DenseVector.zeros[Double](3)
+      if (math.abs(f.c) >= tolerance) {
+        w(0) = centerX
+        w(1) = centerY
+        w(2) = centerZ - f.d/f.c
+      } else if (math.abs(f.b) >= tolerance) {
+        w(0) = centerX
+        w(1) = centerY - f.d/f.b
+        w(2) = centerZ
+      } else if (math.abs(f.a) >= tolerance) {
+        w(0) = centerX - f.d/f.a
+        w(1) = centerY
+        w(2) = centerZ
+      } 
       val n = DenseVector[Double](f.a, f.b, f.c)
       val d = math.abs(n dot w)/linalg.norm(n)
-      newFaces :::= List(Face((f.a, f.b, f.c), d, f.phi, f.cohesion))
+      Face((f.a, f.b, f.c), d, f.phi, f.cohesion)
     }
-    return newFaces
   }
-
 }
