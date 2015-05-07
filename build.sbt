@@ -1,6 +1,6 @@
 name := "CS267-final"
 version := "1.0"
-scalaVersion := "2.11.6"
+scalaVersion := "2.10.5"
 
 scalacOptions ++= Seq("-feature")
 
@@ -11,7 +11,7 @@ resolvers += "Sonatype Releases" at "https://oss.sonatype.org/content/repositori
 libraryDependencies += "com.typesafe.play" %% "play-json" % "2.3.8"
 libraryDependencies += "org.scalanlp" %% "breeze" % "0.11.2"
 libraryDependencies += "org.scalanlp" %% "breeze-natives" % "0.11.2"
-libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
+libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.2.1" % "test"
 
 // Spark pulls in dependencies that screw up sbt-assembly
 libraryDependencies += "org.apache.spark" %% "spark-core" % "1.3.1" % "provided"
