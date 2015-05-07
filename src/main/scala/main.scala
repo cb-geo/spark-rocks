@@ -62,8 +62,9 @@ object RockSlicer {
 
     val endTime = Platform.currentTime
     // Convert the list of rock blocks to JSON and save this to a file
-    val jsonBlocks = centroidBlocks.map(json.blockToMinimalJson)
-    jsonBlocks.saveAsTextFile("blocks.json")
-    println(s"Processed ${jsonBlocks.count()} blocks in ${endTime - startTime} msec.")
+    // val jsonBlocks = centroidBlocks.map(json.blockToMinimalJson)
+    // jsonBlocks.saveAsTextFile("blocks.json")
+    // println(s"Processed ${jsonBlocks.count()} blocks in ${endTime - startTime} msec.")
+    println(s"Process ${centroidBlocks.count()} time: ${endTime - startTime} msec.")
   }
 }

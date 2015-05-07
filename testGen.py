@@ -13,7 +13,10 @@ import math
 # Process command line inputs
 outputFile = str(sys.argv[1])
 sideLength = float(sys.argv[2])
-numberBlocks = int(sys.argv[3])
+nBlocks = float(sys.argv[3])
+
+numberBlocks = int(nBlocks)
+
 
 divisions = int(math.ceil(numberBlocks**(1/3.0)))
 dl = float(sideLength/divisions)
