@@ -285,7 +285,7 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
         val a = DenseVector[Double](a_vals._1, a_vals._2, a_vals._3)
         val b = DenseVector[Double](b_vals._1, b_vals._2, b_vals._3)
         val c = DenseVector[Double](c_vals._1, c_vals._2, c_vals._3)
-        val ni = linalg.cross(b-a,c-a)/linalg.norm(linalg.cross(b-a,c-a))
+        val ni = linalg.cross(b-a,c-a)
         // Unit normals for each axis
         val ei = DenseVector[Double](1.0, 0.0, 0.0)
         val ej = DenseVector[Double](0.0, 1.0, 0.0)
@@ -301,7 +301,7 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
       }
     }
     centroid :*= 1/(2.0*volume)
-    (centroid(0), centroid(1), centroid(2))
+    (centroid(0) + centerX, centroid(1) + centerY, centroid(2) + centerZ)
   }
 
   /**
