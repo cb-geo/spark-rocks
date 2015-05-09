@@ -31,12 +31,14 @@ object json {
       (jsonVal \ "faces").as[List[Face]]
     ))
 
-    def writes(block: Block) = JsObject(Seq(
-      "centerX" -> JsNumber(block.centerX),
-      "centerY" -> JsNumber(block.centerY),
-      "centerZ" -> JsNumber(block.centerZ),
-      "faces" -> Json.toJson(block.faces)
-    ))
+    def writes(block: Block) = {
+      println(block.centerX)
+      JsObject(Seq(
+               "centerX" -> JsNumber(block.centerX),
+               "centerY" -> JsNumber(block.centerY),
+               "centerZ" -> JsNumber(block.centerZ),
+                "faces" -> Json.toJson(block.faces)))
+    }
   }
 
   /**

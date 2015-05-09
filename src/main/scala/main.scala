@@ -53,18 +53,18 @@ object RockSlicer {
                                                Block(center, block.nonRedundantFaces)
                                            }
     // Calculate centroid of each block
-    val centroidBlocks = nonRedundantBlocks.map { case block @ Block(_, faces) =>
-      val vertices = block.findVertices
-      val mesh = block.meshFaces(vertices)
-      val centroid = block.centroid(vertices, mesh)
-      Block(centroid, faces)
-    }
+    // val centroidBlocks = nonRedundantBlocks.map { case block @ Block(_, faces) =>
+    //   val vertices = block.findVertices
+    //   val mesh = block.meshFaces(vertices)
+    //   val centroid = block.centroid(vertices, mesh)
+    //   Block(centroid, faces)
+    // }
 
     val endTime = Platform.currentTime
     // Convert the list of rock blocks to JSON and save this to a file
-    // val jsonBlocks = centroidBlocks.map(json.blockToMinimalJson)
-    // jsonBlocks.saveAsTextFile("blocks.json")
-    // println(s"Processed ${jsonBlocks.count()} blocks in ${endTime - startTime} msec.")
-    println(s"Process ${centroidBlocks.count()} time: ${endTime - startTime} msec.")
+    val jsonBlocks = nonRedundantBlocks.map(json.blockToMinimalJson)
+    jsonBlocks.saveAsTextFile("blocks.json")
+    println(s"Processed ${jsonBlocks.count()} blocks in ${endTime - startTime} msec.")
+    // println(s"Process ${centroidBlocks.count()} time: ${endTime - startTime} msec.")
   }
 }

@@ -50,8 +50,9 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
     linProg.setObjFun(Array[Double](0.0, 0.0, 0.0, 1.0), LinearProgram.MIN)
 
     // Restrict our attention to plane of joint
-    val coeffs = Array[Double](joint.a, joint.b, joint.c, 0.0).map(Block.applyTolerance)
-    val translatedJoint = joint.updateJoint((centerX, centerY, centerZ))
+    val translatedJoint = joint.updateJoint(centerX, centerY, centerZ)
+    println(translatedJoint)
+    val coeffs = Array[Double](translatedJoint.a, translatedJoint.b, translatedJoint.c, 0.0).map(Block.applyTolerance)
     val rhs = Block.applyTolerance(translatedJoint.d)
     linProg.addConstraint(coeffs, LinearProgram.EQ, rhs)
 
@@ -69,7 +70,10 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
         linProg.addConstraint(jointCoeffs, LinearProgram.LE, rhs)
     }
 
-    linProg.solve() match {
+    val s = linProg.solve()
+    println(s)
+
+    s match {
       case None => None
       case Some((vars, opt)) if (opt >= -Block.EPSILON) => None
       case Some((vars, _)) => Some((vars(0), vars(1), vars(2)))
@@ -88,10 +92,12 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
       case None => List(this)
       case Some((x,y,z)) => {
         val updatedFaces = this.updateFaces((x,y,z))
-        // FIXME Is it correct to have d = 0 for the new face?
+        val newX = centerX + x
+        val newY = centerY + y
+        val newZ = centerZ + z
         List(
-          Block((x,y,z), Face((joint.a, joint.b, joint.c), 0.0, joint.phi, joint.cohesion)::updatedFaces),
-          Block((x,y,z), Face((-joint.a,-joint.b,-joint.c), 0.0, joint.phi, joint.cohesion)::updatedFaces)
+          Block((newX,newY,newZ), Face((joint.a, joint.b, joint.c), 0.0, joint.phi, joint.cohesion)::updatedFaces),
+          Block((newX,newY,newZ), Face((-joint.a,-joint.b,-joint.c), 0.0, joint.phi, joint.cohesion)::updatedFaces)
         )
       }
     }
@@ -295,18 +301,18 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
       if (math.abs(f.c) >= tolerance) {
         w(0) = localOrigin._1
         w(1) = localOrigin._2
-        w(2) = localOrigin._3 - math.abs(f.d/f.c)
+        w(2) = localOrigin._3 - (f.d/f.c)
       } else if (math.abs(f.b) >= tolerance) {
         w(0) = localOrigin._1
-        w(1) = localOrigin._2 - math.abs(f.d/f.b)
+        w(1) = localOrigin._2 - (f.d/f.b)
         w(2) = localOrigin._3
       } else if (math.abs(f.a) >= tolerance) {
-        w(0) = localOrigin._1 - math.abs(f.d/f.a)
+        w(0) = localOrigin._1 - (f.d/f.a)
         w(1) = localOrigin._2
         w(2) = localOrigin._3
       }
       val n = DenseVector[Double](f.a, f.b, f.c)
-      val new_d = math.abs(n dot w)/linalg.norm(n)
+      val new_d = -(n dot w)/linalg.norm(n)
       Face((f.a, f.b, f.c), new_d, f.phi, f.cohesion)
     }
   }

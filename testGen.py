@@ -7,19 +7,18 @@ import math
 # necessary to get the requested number of blocks.
 
 # First command line argument:  Output file name
-# Second command line argument: Cube side length
-# Third command line argument:  Number of blocks desired
+# Second command line argument: Number of blocks desired
 
 # Process command line inputs
 outputFile = str(sys.argv[1])
-sideLength = float(sys.argv[2])
-nBlocks = float(sys.argv[3])
+nBlocks = float(sys.argv[2])
 
 numberBlocks = int(nBlocks)
 
-
 divisions = int(math.ceil(numberBlocks**(1/3.0)))
-dl = float(sideLength/divisions)
+dl = 1.0
+# dl = float(sideLength/divisions)
+sideLength = divisions * dl
 
 # Generate faces for cube
 faces = np.empty([6,6], dtype=float)
