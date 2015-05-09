@@ -31,7 +31,6 @@ object RockSlicer {
 
     // val startTime = Platform.currentTime
     var blocks = List(Block((0.0, 0.0, 0.0), rockVolume))
-
     // Generate a list of initial blocks before RDD-ifying it -- not very clean code
     var joints = jointList
     while (blocks.length < INITIAL_BLOCK_RDD_LENGTH && !joints.isEmpty) {
