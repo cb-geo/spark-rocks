@@ -236,11 +236,41 @@ class BlockSpec extends FunSuite {
     val testFace4 = Face((-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
     val testFace5 = Face((0.0, -1.0, 0.0), 1.0, phi=0, cohesion=0)
     val testFace6 = Face((0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0)
-    val testBlock = Block((1.0, 1.0, 1.0), List[Face](testFace1, testFace2, testFace3, testFace4, testFace5, testFace6))
+    val testBlock = Block((0.0, 0.0, 0.0), List[Face](testFace1, testFace2, testFace3, testFace4, testFace5, testFace6))
     val vertices = testBlock.findVertices
     val mesh = testBlock.meshFaces(vertices)
     val centroid = testBlock.centroid(vertices, mesh)
     val expectedCentroid = (0.0, 0.0, 0.0)
+    assert(centroid == expectedCentroid)
+  }
+
+  test("Centroid should be at (0.5, 0.5, 1.0)") {
+    val testFace1 = Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
+    val testFace2 = Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
+    val testFace3 = Face((0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0)
+    val testFace4 = Face((-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
+    val testFace5 = Face((0.0, -1.0, 0.0), 1.0, phi=0, cohesion=0)
+    val testFace6 = Face((0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0)
+    val testBlock = Block((0.5, 0.5, 0.5), List[Face](testFace1, testFace2, testFace3, testFace4, testFace5, testFace6))
+    val vertices = testBlock.findVertices
+    val mesh = testBlock.meshFaces(vertices)
+    val centroid = testBlock.centroid(vertices, mesh)
+    val expectedCentroid = (0.5, 0.5, 1.0)
+    assert(centroid == expectedCentroid)
+  }
+
+  test("Centroid should be at (-1.0, -1.0, -1.0)") {
+    val testFace1 = Face((1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
+    val testFace2 = Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0)
+    val testFace3 = Face((0.0, 0.0, 1.0), 0.0, phi=0, cohesion=0)
+    val testFace4 = Face((-1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0)
+    val testFace5 = Face((0.0, -1.0, 0.0), 2.0, phi=0, cohesion=0)
+    val testFace6 = Face((0.0, 0.0, -1.0), 2.0, phi=0, cohesion=0)
+    val testBlock = Block((0.0, 0.0, 0.0), List[Face](testFace1, testFace2, testFace3, testFace4, testFace5, testFace6))
+    val vertices = testBlock.findVertices
+    val mesh = testBlock.meshFaces(vertices)
+    val centroid = testBlock.centroid(vertices, mesh)
+    val expectedCentroid = (-1.0, -1.0, -1.0)
     assert(centroid == expectedCentroid)
   }
 
@@ -275,15 +305,20 @@ class BlockSpec extends FunSuite {
       val nonRedundantFaces = block.nonRedundantFaces
       Block(center, nonRedundantFaces)
     }
-    /*
+    
     val centroidBlocks = nonRedundantBlocks.map { case block @ Block(center, _) =>
       val vertices = block.findVertices
       val mesh = block.meshFaces(vertices)
+      println("Next Block:")
+      println((block.centerX, block.centerY, block.centerZ))
       val centroid = block.centroid(vertices, mesh)
+      println(centroid)
       val updatedFaces = block.updateFaces(centroid)
+      val tester = Block(centroid, updatedFaces)
+      println(tester)
+      println("\n")
       Block(centroid, updatedFaces)
     }
-    */
 
     // Names describe block positions when locking from fourth octant to first octant
     nonRedundantBlocks map println
