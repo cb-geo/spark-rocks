@@ -20,89 +20,107 @@ class BlockSpec extends FunSuite {
     Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), // -z = 0
     Face((0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0)   // z = 2
   )
-  val twoCube = Block((-1.0, -1.0, -1.0), boundingFaces2)
+  val twoCube = Block((0.0, 0.0, 0.0), boundingFaces2)
 
   test("The plane z = 0.5 should intersect the unit cube") {
-    val jointShape = List(
-      ((1.0, 0.0, 0.0), 2.0),
-      ((-1.0, 0.0, 0.0), 2.0),
-      ((0.0, 1.0, 0.0), 2.0),
-      ((0.0, -1.0, 0.0), 2.0)
-    )
+    val joint = Joint((0.0, 0.0, 1.0), 1/2.0, center=(0.0, 0.0, 0.0), dipAngle=0,
+                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    assert(unitCube.intersects(joint).isDefined)
+  }
+
+  test("The plane z = 0.75 with non-zero origin should intersect the unit cube") {
     val joint = Joint((0.0, 0.0, 1.0), 1/2.0, center=(0.0, 0.0, 1/4.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape= Nil)
+                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isDefined)
   }
 
   test("The plane -z = 0.5 should intersect the unit cube") {
-    val jointShape = List(
-      ((1.0, 0.0, 0.0), 2.0),
-      ((-1.0, 0.0, 0.0), 2.0),
-      ((0.0, 1.0, 0.0), 2.0),
-      ((0.0, -1.0, 0.0), 2.0)
-    )
+    val joint = Joint((0.0, 0.0, -1.0), -1/2.0, center=(0.0, 0.0, 0.0), dipAngle=0,
+                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    assert(unitCube.intersects(joint).isDefined)
+  }
+
+  test("The plane -z = 0.75 with non-zero origin should intersect the unit cube") {
     val joint = Joint((0.0, 0.0, -1.0), -1/2.0, center=(0.0, 0.0, 1/4.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape= Nil)
+                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isDefined)
   }
 
   test("The plane z = 2 should not intersect the unit cube") {
-    val jointShape = List(
-      ((1.0, 0.0, 0.0), 2.0),
-      ((-1.0, 0.0, 0.0), 2.0),
-      ((0.0, 1.0, 0.0), 2.0),
-      ((0.0, -1.0, 0.0), 2.0)
-    )
-    val joint = Joint((0.0, 0.0, 1.0), 2.0, center=(0.0, 0.0, 2.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=jointShape)
+    val joint = Joint((0.0, 0.0, 1.0), 2.0, center=(0.0, 0.0, 0.0), dipAngle=0,
+                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    assert(unitCube.intersects(joint).isEmpty)
+  }
+
+  test("The plane z = 2 with non-zero origin should not intersect the unit cube") {
+    val joint = Joint((0.0, 0.0, 1.0), 1.0, center=(0.0, 0.0, 1.0), dipAngle=0,
+                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isEmpty)
   }
 
   test("The plane y = 1 should not intersect the unit cube") {
-    val jointShape = List(
-      ((1.0, 0.0, 0.0), 2.0),
-      ((-1.0, 0.0, 0.0), 2.0),
-      ((0.0, 0.0, 1.0), 2.0),
-      ((0.0, 0.0, -1.0), 2.0)
-    )
-    val joint = Joint((0.0, 1.0, 0.0), 1.0, center=(0.0, 0.0, 2.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=jointShape)
+    val joint = Joint((0.0, 1.0, 0.0), 1.0, center=(0.0, 0.0, 0.0), dipAngle=0,
+                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    assert(unitCube.intersects(joint).isEmpty)
+  }
+
+  test("The plane y = 1 with non-zero origin should not intersect the unit cube") {
+    val joint = Joint((0.0, 1.0, 0.0), 1/2.0, center=(0.0, 1/2.0, 0.0), dipAngle=0,
+                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    assert(unitCube.intersects(joint).isEmpty)
+  }
+
+  test("The plane -y = 1 should not intersect the unit cube") {
+    val joint = Joint((0.0, -1.0, 0.0), -1.0, center=(0.0, 0.0, 0.0), dipAngle=0,
+                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isEmpty)
   }
 
   test("The plane y = 0.99 should intersect the unit cube") {
-    val jointShape = List(
-      ((1.0, 0.0, 0.0), 2.0),
-      ((-1.0, 0.0, 0.0), 2.0),
-      ((0.0, 0.0, 1.0), 2.0),
-      ((0.0, 0.0, -1.0), 2.0)
-    )
-    val joint = Joint((0.0, 1.0, 0.0), 0.99, center=(0.0, 0.0, 2.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=jointShape)
+    val joint = Joint((0.0, 1.0, 0.0), 0.99, center=(0.0, 0.0, 0.0), dipAngle=0,
+                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isDefined)
   }
 
-  test("The plane -x + z = 1 should intersect the unit cube") {
-    val jointShape = List(
-      ((1.0, 0.0, 0.0), 4.0),
-      ((-1.0, 0.0, 0.0), 4.0),
-      ((0.0, 0.0, 1.0), 4.0),
-      ((0.0, 0.0, -1.0), 4.0)
-    )
-    val joint = Joint((-1.0, 0.0, 1.0), 1.0, center=(0.0, 0.0, 1.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=jointShape)
+  test("The plane y = 0.99 with non-zero origin should intersect the unit cube") {
+    val joint = Joint((0.0, 1.0, 0.0), 0.49, center=(0.0, 0.5, 0.0), dipAngle=0,
+                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isDefined)
   }
 
-  test("The plane -x + z = 1 should intersect the two cube") {
-    val jointShape = List(
-      ((1.0, 0.0, 0.0), 4.0),
-      ((-1.0, 0.0, 0.0), 4.0),
-      ((0.0, 0.0, 1.0), 4.0),
-      ((0.0, 0.0, -1.0), 4.0)
-    )
-    val joint = Joint((-1.0, 0.0, 1.0), 1.0, center=(0.0, 0.0, 1.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=jointShape)
+  test("The plane -y = 0.99 should intersect the unit cube") {
+    val joint = Joint((0.0, -1.0, 0.0), -0.99, center=(0.0, 0.0, 0.0), dipAngle=0,
+                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    assert(unitCube.intersects(joint).isDefined)
+  }
+
+  test("The plane -y = 0.99 with non-zero origin should intersect the unit cube") {
+    val joint = Joint((0.0, -1.0, 0.0), -0.49, center=(0.0, 0.5, 0.0), dipAngle=0,
+                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    assert(unitCube.intersects(joint).isDefined)
+  }
+
+  test("The plane -x + z = 1 at global origin should intersect the unit cube") {
+    val joint = Joint((-1.0, 0.0, 1.0), 1.0, center=(0.0, 0.0, 0.0), dipAngle=0,
+                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    assert(unitCube.intersects(joint).isDefined)
+  }
+
+  test("The plane -x + z = 1 at (1.0,0.0,1.0) should not intersect the unit cube") {
+    val joint = Joint((-1.0, 0.0, 1.0), 1.0, center=(1.0, 0.0, 1.0), dipAngle=0,
+                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    assert(unitCube.intersects(joint).isEmpty)
+  }
+
+  test("The plane -x + z = 1 at global origin should intersect the two cube") {
+    val joint = Joint((-1.0, 0.0, 1.0), 1.0, center=(0.0, 0.0, 0.0), dipAngle=0,
+                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    assert(twoCube.intersects(joint).isDefined)
+  }
+
+  test("The plane -x + z = 1 at (1.0,0.0,1.0) should intersect the two cube") {
+    val joint = Joint((-1.0, 0.0, 1.0), 1.0, center=(1.0, 0.0, 1.0), dipAngle=0,
+                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
     assert(twoCube.intersects(joint).isDefined)
   }
 
@@ -119,7 +137,7 @@ class BlockSpec extends FunSuite {
       Face((0.0, 0.0, -1.0), 2.0, phi=0, cohesion=0), // -z = 2
       Face((0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0)   // z = 2
     )
-    val redundantUnitCube = Block((1/2.0, 1/2.0, 1/2.0), redundantBoundingFaces)
+    val redundantUnitCube = Block((0.0, 0.0, 0.0), redundantBoundingFaces)
 
     assert(redundantUnitCube.nonRedundantFaces == boundingFaces)
   }
@@ -136,27 +154,41 @@ class BlockSpec extends FunSuite {
     assert(redundant2Cube.nonRedundantFaces == expectedFaces)
   }
 
-  test("-x = 0 face should be redundant for new block") {
-    val boundingFaces = List(
-        Face((1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0),
-        Face((0.0, 1.0, 0.0), 2.0, phi=0, cohesion=0),
-        Face((0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0),
-        Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-        Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0),
-        Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-        Face((-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0))
-    val origBlock = Block((0.0, 0.0, 0.0), boundingFaces)
-    val newFaces = origBlock.updateFaces((1.0, 0.0, 0.0))
+  test("Moving origin of two-cube to (1,0,0) should only affect x-distances") {
+    val newFaces = twoCube.updateFaces((1.0, 0.0, 0.0))
     val newBlock = Block((1.0, 0.0, 0.0), newFaces)
     val testFaces = newBlock.nonRedundantFaces
     val expectedFaces = List(
-        Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-        Face((0.0, 1.0, 0.0), 2.0, phi=0, cohesion=0),
-        Face((0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0),
-        Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0),
-        Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-        Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0))
+      Face((-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+      Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+      Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0),
+      Face((0.0, 1.0, 0.0), 2.0, phi=0, cohesion=0),
+      Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+      Face((0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0)
+    )
     assert(testFaces == expectedFaces)
+  }
+
+  test("Moving origin of two-cube to (1,1,1) should affect all distances") {
+    val newFaces = twoCube.updateFaces((1.0, 1.0, 1.0))
+    val newBlock = Block((1.0, 1.0, 1.0), newFaces)
+    val testFaces = newBlock.nonRedundantFaces
+    val expectedFaces = List(
+      Face((-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+      Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+      Face((0.0, -1.0, 0.0), 1.0, phi=0, cohesion=0),
+      Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),
+      Face((0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0),
+      Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
+    )
+    assert(testFaces == expectedFaces)
+  }
+
+  test("Adding the face -x=1 to a two-cube centered at origin should be considered redundant") {
+    val redundantFace = Face((-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
+    val newTwoCube = Block((0.0, 0.0, 0.0), redundantFace::boundingFaces2)
+    val testFaces = newTwoCube.nonRedundantFaces
+    assert(testFaces == boundingFaces2)
   }
 
   test("The points of intersection between the four planes should (0.0, 0.0, 0.0) & (0.0, 5.0, 0.0)") {
@@ -230,18 +262,38 @@ class BlockSpec extends FunSuite {
     val expectedFaces = List(expectedFace1, expectedFace2, expectedFace3, expectedFace4, expectedFace5, expectedFace6)
     assert(updatedFaces == expectedFaces)
   }
-  
 
-  // test("Cutting the two-cube with faces x=1 and z=1 should produce four blocks") {
-  //   val xPlane = Joint((1.0,0.0,0.0), 0.0, (1.0,1.0,1.0), dipAngle=0, dipDirection=0,
-  //                      phi=0, cohesion=0, shape=Nil)
-  //   // val zPlane = Joint((0.0,0.0,1.0), 1.0, (1.0,1.0,1.0), dipAngle=0, dipDirection=0,
-  //   //                    phi=0, cohesion=0, shape=Nil)
-  //   val newDistance = xPlane.updateJoint(-1.)
-  //   val xBlocks = twoCube.cut(xPlane)
-  //   println(xBlocks(0).centerX, xBlocks(0).centerY, xBlocks(0).centerZ)
-  //   assert(xBlocks.length == 2)
-  //   // val xzBlocks = xBlocks.flatMap(_.cut(zPlane))
-  //   // assert(xzBlocks.length == 4)
-  // }
+  test("Cutting the two-cube with faces x=1 and z=1 should produce four blocks") {
+    val xPlane = Joint((1.0,0.0,0.0), 0.0, (1.0,1.0,1.0), dipAngle=0, dipDirection=0,
+                       phi=0, cohesion=0, shape=Nil)
+    val zPlane = Joint((0.0,0.0,1.0), 0.0, (1.0,1.0,1.0), dipAngle=0, dipDirection=0,
+                       phi=0, cohesion=0, shape=Nil)
+    val xBlocks = twoCube.cut(xPlane)
+    val xzBlocks = xBlocks.flatMap(_.cut(zPlane))
+
+    val nonRedundantBlocks = xzBlocks.map { case block @ Block(center, faces) =>
+      val nonRedundantFaces = block.nonRedundantFaces
+      Block(center, nonRedundantFaces)
+    }
+    /*
+    val centroidBlocks = nonRedundantBlocks.map { case block @ Block(center, _) =>
+      val vertices = block.findVertices
+      val mesh = block.meshFaces(vertices)
+      val centroid = block.centroid(vertices, mesh)
+      val updatedFaces = block.updateFaces(centroid)
+      Block(centroid, updatedFaces)
+    }
+    */
+
+    // Names describe block positions when locking from fourth octant to first octant
+    nonRedundantBlocks map println
+  }
 }
+/*
+    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0), // -x = 0
+    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),  // x = 1
+    Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0), // -y = 0
+    Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),  // y = 1
+    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), // -z = 0
+    Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)   // z = 1
+    */

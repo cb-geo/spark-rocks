@@ -67,22 +67,17 @@ case class Joint(normalVec: (Double, Double, Double), distance: Double,
       w(0) = blockOrigin._1
       w(1) = blockOrigin._2
       w(2) = blockOrigin._3 - (d/c + centerZ)
-      println("c non zero")
     } else if (math.abs(b) >= tolerance) {
       w(0) = blockOrigin._1
       w(1) = blockOrigin._2 - (d/b + centerY)
       w(2) = blockOrigin._3
-      println("b non zero")
     } else if (math.abs(a) >= tolerance) {
       w(0) = blockOrigin._1 - (d/a + centerX)
       w(1) = blockOrigin._2
       w(2) = blockOrigin._3
-      println("a non zero")
     }
-    println(w)
     val n = DenseVector[Double](a, b, c)
     val newDistance = -(n dot w)/linalg.norm(n)
-    println(newDistance)
     Joint((a, b, c), newDistance, blockOrigin, dipAngle, dipDirection, phi, cohesion, shape)
   }
 }

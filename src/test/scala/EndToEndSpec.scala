@@ -38,7 +38,6 @@ class EndToEndSpec extends FunSuite {
     }
 
     val blockJson = json.blockSeqToReadableJson(nonRedundantBlocks)
-    println(blockJson)
     //val expectedJson = Source.fromURL(getClass.getResource(s"/${OUTPUT_FILE_NAME}"))
   }
 }
