@@ -33,18 +33,16 @@ class EndToEndSpec extends FunSuite {
     val nonRedundantBlocks = cutBlocks.map { case block @ Block(center, _) =>
                                                Block(center, block.nonRedundantFaces) }
     // Calculate the centroid of each block
-    /*
     val centroidBlocks = nonRedundantBlocks.map { case block @ Block(_, faces) =>
       val vertices = block.findVertices
       val mesh = block.meshFaces(vertices)
       val centroid = block.centroid(vertices, mesh)
       val updatedFaces = block.updateFaces(centroid)
-      Block(centroid, faces)
+      Block(centroid, updatedFaces)
     }
-    */
 
     // Clean up double values arbitrarily close to 0.0
-    val cleanedBlocks = nonRedundantBlocks.map { case Block(center, faces) =>
+    val cleanedBlocks = centroidBlocks.map { case Block(center, faces) =>
       Block(center, faces.map(_.applyTolerance))
     }
 

@@ -34,7 +34,7 @@ case class Face(normalVec: (Double,Double,Double), distance: Double,
     val newD = if (math.abs(d) > Face.EPSILON) d else 0.0
     val newPhi = if (math.abs(phi) > Face.EPSILON) phi else 0.0
     val newCohesion = if (math.abs(cohesion) > Face.EPSILON) cohesion else 0.0
-    Face((a,b,c), d, phi, cohesion)
+    Face((newA,newB,newC), newD, newPhi, newCohesion)
   }
 }
 

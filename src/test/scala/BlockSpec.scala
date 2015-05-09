@@ -305,60 +305,55 @@ class BlockSpec extends FunSuite {
       val nonRedundantFaces = block.nonRedundantFaces
       Block(center, nonRedundantFaces)
     }
- 
+
     val centroidBlocks = nonRedundantBlocks.map { case block @ Block(center, _) =>
       val vertices = block.findVertices
       val mesh = block.meshFaces(vertices)
-      println("Next Block:")
-      println((block.centerX, block.centerY, block.centerZ))
       val centroid = block.centroid(vertices, mesh)
-      println(centroid)
       val updatedFaces = block.updateFaces(centroid)
       val tester = Block(centroid, updatedFaces)
-      println(tester)
-      println("\n")
       Block(centroid, updatedFaces)
     }
 
-    val cleanedBlocks = nonRedundantBlocks.map { case Block(center, faces) =>
+    val cleanedBlocks = centroidBlocks.map { case Block(center, faces) =>
       Block(center, faces.map(_.applyTolerance))
     }
 
     // Names describe block positions when locking from fourth octant to first octant
-    val bottomLeft = Block((0.5,1.0,1.0), List(
-      Face((0.0,0.0,1.0), 0.0, 0.0, 0.0),
+    val bottomLeft = Block((0.5,1.0,0.5), List(
+      Face((0.0,0.0,1.0), 0.5, 0.0, 0.0),
       Face((1.0,0.0,0.0), 0.5, 0.0, 0.0),
       Face((-1.0,0.0,0.0), 0.5, 0.0, 0.0),
       Face((0.0,-1.0,0.0), 1.0, 0.0, 0.0),
       Face((0.0,1.0,0.0), 1.0, 0.0, 0.0),
-      Face((0.0,0.0,-1.0), 1.0, 0.0, 0.0)
+      Face((0.0,0.0,-1.0), 0.5, 0.0, 0.0)
     ))
 
-    val topLeft = Block((0.5,1.0,1.0), List(
-      Face((0.0,0.0,-1.0), 0.0, 0.0, 0.0),
+    val topLeft = Block((0.5,1.0,1.5), List(
+      Face((0.0,0.0,-1.0), 0.5, 0.0, 0.0),
       Face((1.0,0.0,0.0), 0.5, 0.0, 0.0),
       Face((-1.0,0.0,0.0), 0.5, 0.0, 0.0),
       Face((0.0,-1.0,0.0), 1.0, 0.0, 0.0),
       Face((0.0,1.0,0.0), 1.0, 0.0, 0.0),
-      Face((0.0,0.0,1.0), 1.0, 0.0, 0.0)
+      Face((0.0,0.0,1.0), 0.5, 0.0, 0.0)
     ))
 
-    val bottomRight = Block((1.5,1.0,1.0), List(
-      Face((0.0,0.0,1.0), 0.0, 0.0, 0.0),
+    val bottomRight = Block((1.5,1.0,0.5), List(
+      Face((0.0,0.0,1.0), 0.5, 0.0, 0.0),
       Face((-1.0,0.0,0.0), 0.5, 0.0, 0.0),
       Face((1.0,0.0,0.0), 0.5, 0.0, 0.0),
       Face((0.0,-1.0,0.0), 1.0, 0.0, 0.0),
       Face((0.0,1.0,0.0), 1.0, 0.0, 0.0),
-      Face((0.0,0.0,-1.0), 1.0, 0.0, 0.0)
+      Face((0.0,0.0,-1.0), 0.5, 0.0, 0.0)
     ))
 
-    val topRight = Block((1.5,1.0,1.0), List(
-      Face((0.0,0.0,-1.0), 0.0, 0.0, 0.0),
+    val topRight = Block((1.5,1.0,1.5), List(
+      Face((0.0,0.0,-1.0), 0.5, 0.0, 0.0),
       Face((-1.0,0.0,0.0), 0.5, 0.0, 0.0),
       Face((1.0,0.0,0.0), 0.5, 0.0, 0.0),
       Face((0.0,-1.0,0.0), 1.0, 0.0, 0.0),
       Face((0.0,1.0,0.0), 1.0, 0.0, 0.0),
-      Face((0.0,0.0,1.0), 1.0, 0.0, 0.0)
+      Face((0.0,0.0,1.0), 0.5, 0.0, 0.0)
     ))
 
     val expectedBlocks = List(bottomLeft, topLeft, bottomRight, topRight)
