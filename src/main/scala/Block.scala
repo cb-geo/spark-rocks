@@ -4,6 +4,10 @@ import breeze.linalg
 import breeze.linalg.{DenseVector, DenseMatrix}
 import scala.language.postfixOps
 
+object Face {
+  private val EPSILON = 1e-6
+}
+
 /** A simple data structure to represent the face of a rock block.
   *
   * @constructor Create a new rock face.
@@ -18,6 +22,20 @@ case class Face(normalVec: (Double,Double,Double), distance: Double,
                 val phi: Double, val cohesion: Double) {
   val (a,b,c) = normalVec
   val d = distance
+
+  /**
+    * Checks if each of the parameters of a face is approximately 0.0 and,
+    * if so, sets it to 0.0.
+    */
+  def applyTolerance: Face = {
+    val newA = if (math.abs(a) > Face.EPSILON) a else 0.0
+    val newB = if (math.abs(b) > Face.EPSILON) b else 0.0
+    val newC = if (math.abs(c) > Face.EPSILON) c else 0.0
+    val newD = if (math.abs(d) > Face.EPSILON) d else 0.0
+    val newPhi = if (math.abs(phi) > Face.EPSILON) phi else 0.0
+    val newCohesion = if (math.abs(cohesion) > Face.EPSILON) cohesion else 0.0
+    Face((a,b,c), d, phi, cohesion)
+  }
 }
 
 object Block {

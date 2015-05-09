@@ -275,6 +275,7 @@ class BlockSpec extends FunSuite {
       val nonRedundantFaces = block.nonRedundantFaces
       Block(center, nonRedundantFaces)
     }
+
     /*
     val centroidBlocks = nonRedundantBlocks.map { case block @ Block(center, _) =>
       val vertices = block.findVertices
@@ -285,15 +286,48 @@ class BlockSpec extends FunSuite {
     }
     */
 
+    val cleanedBlocks = nonRedundantBlocks.map { case Block(center, faces) =>
+      Block(center, faces.map(_.applyTolerance))
+    }
+
     // Names describe block positions when locking from fourth octant to first octant
-    nonRedundantBlocks map println
+    val bottomLeft = Block((0.5,1.0,1.0), List(
+      Face((0.0,0.0,1.0), 0.0, 0.0, 0.0),
+      Face((1.0,0.0,0.0), 0.5, 0.0, 0.0),
+      Face((-1.0,0.0,0.0), 0.5, 0.0, 0.0),
+      Face((0.0,-1.0,0.0), 1.0, 0.0, 0.0),
+      Face((0.0,1.0,0.0), 1.0, 0.0, 0.0),
+      Face((0.0,0.0,-1.0), 1.0, 0.0, 0.0)
+    ))
+
+    val topLeft = Block((0.5,1.0,1.0), List(
+      Face((0.0,0.0,-1.0), 0.0, 0.0, 0.0),
+      Face((1.0,0.0,0.0), 0.5, 0.0, 0.0),
+      Face((-1.0,0.0,0.0), 0.5, 0.0, 0.0),
+      Face((0.0,-1.0,0.0), 1.0, 0.0, 0.0),
+      Face((0.0,1.0,0.0), 1.0, 0.0, 0.0),
+      Face((0.0,0.0,1.0), 1.0, 0.0, 0.0)
+    ))
+
+    val bottomRight = Block((1.5,1.0,1.0), List(
+      Face((0.0,0.0,1.0), 0.0, 0.0, 0.0),
+      Face((-1.0,0.0,0.0), 0.5, 0.0, 0.0),
+      Face((1.0,0.0,0.0), 0.5, 0.0, 0.0),
+      Face((0.0,-1.0,0.0), 1.0, 0.0, 0.0),
+      Face((0.0,1.0,0.0), 1.0, 0.0, 0.0),
+      Face((0.0,0.0,-1.0), 1.0, 0.0, 0.0)
+    ))
+
+    val topRight = Block((1.5,1.0,1.0), List(
+      Face((0.0,0.0,-1.0), 0.0, 0.0, 0.0),
+      Face((-1.0,0.0,0.0), 0.5, 0.0, 0.0),
+      Face((1.0,0.0,0.0), 0.5, 0.0, 0.0),
+      Face((0.0,-1.0,0.0), 1.0, 0.0, 0.0),
+      Face((0.0,1.0,0.0), 1.0, 0.0, 0.0),
+      Face((0.0,0.0,1.0), 1.0, 0.0, 0.0)
+    ))
+
+    val expectedBlocks = List(bottomLeft, topLeft, bottomRight, topRight)
+    assert(cleanedBlocks == expectedBlocks)
   }
 }
-/*
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0), // -x = 0
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),  // x = 1
-    Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0), // -y = 0
-    Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),  // y = 1
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), // -z = 0
-    Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)   // z = 1
-    */
