@@ -51,31 +51,27 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
 
     // Restrict our attention to plane of joint
     val translatedJoint = joint.updateJoint(centerX, centerY, centerZ)
-    println(translatedJoint)
     val coeffs = Array[Double](translatedJoint.a, translatedJoint.b, translatedJoint.c, 0.0).map(Block.applyTolerance)
     val rhs = Block.applyTolerance(translatedJoint.d)
     linProg.addConstraint(coeffs, LinearProgram.EQ, rhs)
 
     // Require s to be within planes defined by faces of block
     faces.foreach { face =>
-        val faceCoeffs = Array[Double](face.a, face.b, face.c, -1.0).map(Block.applyTolerance)
-        val rhs = Block.applyTolerance(face.d)
-        linProg.addConstraint(faceCoeffs, LinearProgram.LE, rhs)
+      val faceCoeffs = Array[Double](face.a, face.b, face.c, -1.0).map(Block.applyTolerance)
+      val rhs = Block.applyTolerance(face.d)
+      linProg.addConstraint(faceCoeffs, LinearProgram.LE, rhs)
     }
 
     // Require s to be within planes defining shape of joint
     translatedJoint.globalCoordinates.foreach { case ((a,b,c),d) =>
-        val jointCoeffs = Array[Double](a, b, c, -1.0).map(Block.applyTolerance)
-        val rhs = Block.applyTolerance(d)
-        linProg.addConstraint(jointCoeffs, LinearProgram.LE, rhs)
+      val jointCoeffs = Array[Double](a, b, c, -1.0).map(Block.applyTolerance)
+      val rhs = Block.applyTolerance(d)
+      linProg.addConstraint(jointCoeffs, LinearProgram.LE, rhs)
     }
 
-    val s = linProg.solve()
-    println(s)
-
-    s match {
+    linProg.solve() match {
       case None => None
-      case Some((vars, opt)) if (opt >= -Block.EPSILON) => None
+      case Some((_, opt)) if (opt >= -Block.EPSILON) => None
       case Some((vars, _)) => Some((vars(0), vars(1), vars(2)))
     }
   }
@@ -91,11 +87,12 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
     this.intersects(joint) match {
       case None => List(this)
       case Some((x,y,z)) => {
-        val updatedFaces = this.updateFaces((x,y,z))
         val newX = centerX + x
         val newY = centerY + y
         val newZ = centerZ + z
+        val updatedFaces = updateFaces(newX, newY, newZ)
         List(
+          // New origin is guaranteed to lie within joint, so initial d = 0
           Block((newX,newY,newZ), Face((joint.a, joint.b, joint.c), 0.0, joint.phi, joint.cohesion)::updatedFaces),
           Block((newX,newY,newZ), Face((-joint.a,-joint.b,-joint.c), 0.0, joint.phi, joint.cohesion)::updatedFaces)
         )
@@ -108,7 +105,7 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
     * geometrically redundant.
     */
   def nonRedundantFaces: List[Face] =
-    faces.filter { face =>
+    faces.distinct.filter { face =>
       val linProg = new LinearProgram(3)
       val objCoeffs = Array[Double](face.a, face.b, face.c).map(Block.applyTolerance)
       linProg.setObjFun(objCoeffs, LinearProgram.MAX)
@@ -292,28 +289,28 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
   /**
     * Calculates the distances of the joints relative to a new origin
     * @param localOrigin: new local origin
-    * @return List of joints with updated distances
+    * @return List of faces with updated distances
     */
   def updateFaces(localOrigin: (Double, Double,Double)): List[Face] = {
-    faces.map { f =>
+    faces.map { case Face((a,b,c), d, phi, cohesion) =>
       val tolerance = 1e-12
       var w = DenseVector.zeros[Double](3)
-      if (math.abs(f.c) >= tolerance) {
+      if (math.abs(c) >= tolerance) {
         w(0) = localOrigin._1
         w(1) = localOrigin._2
-        w(2) = localOrigin._3 - (f.d/f.c)
-      } else if (math.abs(f.b) >= tolerance) {
+        w(2) = localOrigin._3 - (d/c + centerZ)
+      } else if (math.abs(b) >= tolerance) {
         w(0) = localOrigin._1
-        w(1) = localOrigin._2 - (f.d/f.b)
+        w(1) = localOrigin._2 - (d/b + centerY)
         w(2) = localOrigin._3
-      } else if (math.abs(f.a) >= tolerance) {
-        w(0) = localOrigin._1 - (f.d/f.a)
+      } else if (math.abs(a) >= tolerance) {
+        w(0) = localOrigin._1 - (d/a + centerX)
         w(1) = localOrigin._2
         w(2) = localOrigin._3
       }
-      val n = DenseVector[Double](f.a, f.b, f.c)
+      val n = DenseVector[Double](a, b, c)
       val new_d = -(n dot w)/linalg.norm(n)
-      Face((f.a, f.b, f.c), new_d, f.phi, f.cohesion)
+      Face((a, b, c), new_d, phi, cohesion)
     }
   }
 }

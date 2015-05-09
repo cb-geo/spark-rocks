@@ -32,7 +32,6 @@ object json {
     ))
 
     def writes(block: Block) = {
-      println(block.centerX)
       JsObject(Seq(
                "centerX" -> JsNumber(block.centerX),
                "centerY" -> JsNumber(block.centerY),
