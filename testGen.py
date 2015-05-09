@@ -67,3 +67,5 @@ for i in range(0, joints_z.shape[0]):
     f.write("\n")
 
 f.close
+
+print "The number of blocks generated: ", divisions**3
