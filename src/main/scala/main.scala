@@ -10,16 +10,12 @@ import org.apache.spark.SparkConf
 import org.apache.spark.storage.StorageLevel
 
 object RockSlicer {
-
-  // Number of initial blocks to generate before converting to RDD
-  val INITIAL_BLOCK_RDD_LENGTH = 25
-  val REPARTITION_FREQUENCY = 10
-
   def main(args: Array[String]) {
     val conf = new SparkConf().setAppName("CS 267 Final Project")
     val sc = new SparkContext(conf)
     val inputFile = args(0)
     val numberPartitions = args(1).toInt
+    val repartitionFrequency = args(2).toInt
 
     // Open and read input file specifying rock volume and joints
     var rockBuffer = new ListBuffer[Face]()
@@ -37,7 +33,7 @@ object RockSlicer {
     var blocks = List(Block((0.0, 0.0, 0.0), rockVolume))
     // Generate a list of initial blocks before RDD-ifying it -- not very clean code
     var joints = jointList
-    while (blocks.length < INITIAL_BLOCK_RDD_LENGTH && !joints.isEmpty) {
+    while (blocks.length < numberPartitions && !joints.isEmpty) {
       blocks = blocks.flatMap(_.cut(joints.head))
       joints = joints.tail
     }
@@ -50,7 +46,7 @@ object RockSlicer {
     for (joint <- broadcastJoints.value) {
       cutBlocks = cutBlocks.flatMap(_.cut(joint))
       counter += 1
-      if (counter % REPARTITION_FREQUENCY == 0) {
+      if (counter % repartitionFrequency == 0) {
         cutBlocks = cutBlocks.repartition(numberPartitions)
       }
     }
