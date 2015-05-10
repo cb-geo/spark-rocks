@@ -79,5 +79,6 @@ object RockSlicer {
     jsonBlocks.persist(StorageLevel.MEMORY_ONLY)
     jsonBlocks.saveAsTextFile("blocks.json")
     println(s"Processed ${jsonBlocks.count()} blocks.")
+    sc.stop()
   }
 }
