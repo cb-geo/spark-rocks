@@ -7,20 +7,24 @@ import java.io._
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
+import org.apache.spark.storage.StorageLevel
 
 object RockSlicer {
 
   // Number of initial blocks to generate before converting to RDD
   val INITIAL_BLOCK_RDD_LENGTH = 25
+  val REPARTITION_FREQUENCY = 10
 
   def main(args: Array[String]) {
     val conf = new SparkConf().setAppName("CS 267 Final Project")
     val sc = new SparkContext(conf)
+    val inputFile = args(0)
+    val numberPartitions = args(1).toInt
 
     // Open and read input file specifying rock volume and joints
     var rockBuffer = new ListBuffer[Face]()
     var jointBuffer = new ListBuffer[Joint]()
-    val inputSource = Source.fromFile("testBlocks.txt") // Input file name
+    val inputSource = Source.fromFile(inputFile) // Input file name
     try {
       inputProcessor.readInput(inputSource, rockBuffer, jointBuffer)
     } finally {
@@ -42,8 +46,13 @@ object RockSlicer {
 
     // Iterate through the discontinuities, cutting blocks where appropriate and producing
     var cutBlocks = blockRdd
+    var counter = 0
     for (joint <- broadcastJoints.value) {
       cutBlocks = cutBlocks.flatMap(_.cut(joint))
+      counter += 1
+      if (counter % REPARTITION_FREQUENCY == 0) {
+        cutBlocks = cutBlocks.repartition(numberPartitions)
+      }
     }
 
     // Remove geometrically redundant joints
@@ -67,6 +76,7 @@ object RockSlicer {
     // val endTime = Platform.currentTime
     // Convert the list of rock blocks to JSON and save this to a file
     val jsonBlocks = nonRedundantBlocks.map(json.blockToMinimalJson)
+    jsonBlocks.persist(StorageLevel.MEMORY_ONLY)
     jsonBlocks.saveAsTextFile("blocks.json")
     println(s"Processed ${jsonBlocks.count()} blocks.")
   }
