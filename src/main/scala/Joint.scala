@@ -78,6 +78,6 @@ case class Joint(normalVec: (Double, Double, Double), distance: Double,
     }
     val n = DenseVector[Double](a, b, c)
     val newDistance = -(n dot w)/linalg.norm(n)
-    Joint((a, b, c), newDistance, blockOrigin, dipAngle, dipDirection, phi, cohesion, shape)
+    Joint((a, b, c), newDistance, (centerX, centerY, centerZ), dipAngle, dipDirection, phi, cohesion, shape)
   }
 }

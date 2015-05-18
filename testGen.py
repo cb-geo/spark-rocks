@@ -35,9 +35,9 @@ joints_y = np.empty([divisions-1, 11], dtype=float)
 joints_z = np.empty([divisions-1, 11], dtype=float)
 
 for i in range(0, divisions-1):
-    joints_x[i] = np.array([1, 0, 0, i*dl + dl, 0, 0, 0, 0, 0, 0, 0])
-    joints_y[i] = np.array([0, 1, 0, i*dl + dl, 0, 0, 0, 0, 0, 0, 0]) 
-    joints_z[i] = np.array([0, 0, 1, i*dl + dl, 0, 0, 0, 0, 0, 0, 0]) 
+    joints_x[i] = np.array([1, 0, 0, i*dl + dl, i*dl + dl, sideLength/2.0, sideLength/2.0, 0, 0, 0, 0])
+    joints_y[i] = np.array([0, 1, 0, i*dl + dl, sideLength/2.0, i*dl + dl, sideLength/2.0, 0, 0, 0, 0]) 
+    joints_z[i] = np.array([0, 0, 1, i*dl + dl, sideLength/2.0, sideLength/2.0, i*dl + dl, 0, 0, 0, 0]) 
 
 # Write faces to output file
 f = open(outputFile,'w')

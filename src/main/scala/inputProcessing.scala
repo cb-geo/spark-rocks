@@ -24,6 +24,19 @@ object inputProcessor {
     joints += currentJoint
   }
 
+  // Finds the average x, y and z coordinates if the input joint set
+  def averageCoords(joints: ListBuffer[Joint]) : (Double, Double, Double) = {
+    var x_avg = 0.0
+    var y_avg = 0.0
+    var z_avg = 0.0
+    for (joint <- joints) {
+      x_avg += joint.centerX
+      y_avg += joint.centerY
+      z_avg += joint.centerZ
+    }
+    (x_avg/joints.length, y_avg/joints.length, z_avg/joints.length)
+  }
+
   // Processes input file: Add rock volume faces and joints to respective input list
   def readInput(inputSource: Source, rockVolume: ListBuffer[Face],
                 joints: ListBuffer[Joint]) : Unit = {
