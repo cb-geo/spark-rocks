@@ -23,6 +23,7 @@ object RockSlicer {
     val inputSource = Source.fromFile(inputFile) // Input file name
     try {
       inputProcessor.readInput(inputSource, rockBuffer, jointBuffer)
+      // val (x_avg, y_avg, z_avg) = inputProcessor.averageCoords(jointBuffer)
     } finally {
       inputSource.close
     }
