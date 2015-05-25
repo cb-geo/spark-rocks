@@ -31,12 +31,12 @@ class EndToEndSpec extends FunSuite {
 
     // Remove geometrically redundant joints
     val nonRedundantBlocks = cutBlocks.map { case block @ Block(center, _) =>
-                                               Block(center, block.nonRedundantFaces) }
+      Block(center, block.nonRedundantFaces)
+    }
+
     // Calculate the centroid of each block
-    val centroidBlocks = nonRedundantBlocks.map { case block @ Block(_, faces) =>
-      val vertices = block.findVertices
-      val mesh = block.meshFaces(vertices)
-      val centroid = block.centroid(vertices, mesh)
+    val centroidBlocks = nonRedundantBlocks.map { block =>
+      val centroid = block.centroid
       val updatedFaces = block.updateFaces(centroid)
       Block(centroid, updatedFaces)
     }

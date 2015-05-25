@@ -237,9 +237,7 @@ class BlockSpec extends FunSuite {
     val testFace5 = Face((0.0, -1.0, 0.0), 1.0, phi=0, cohesion=0)
     val testFace6 = Face((0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0)
     val testBlock = Block((0.0, 0.0, 0.0), List[Face](testFace1, testFace2, testFace3, testFace4, testFace5, testFace6))
-    val vertices = testBlock.findVertices
-    val mesh = testBlock.meshFaces(vertices)
-    val centroid = testBlock.centroid(vertices, mesh)
+    val centroid = testBlock.centroid
     val expectedCentroid = (0.0, 0.0, 0.0)
     assert(centroid == expectedCentroid)
   }
@@ -252,9 +250,7 @@ class BlockSpec extends FunSuite {
     val testFace5 = Face((0.0, -1.0, 0.0), 1.0, phi=0, cohesion=0)
     val testFace6 = Face((0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0)
     val testBlock = Block((0.5, 0.5, 0.5), List[Face](testFace1, testFace2, testFace3, testFace4, testFace5, testFace6))
-    val vertices = testBlock.findVertices
-    val mesh = testBlock.meshFaces(vertices)
-    val centroid = testBlock.centroid(vertices, mesh)
+    val centroid = testBlock.centroid
     val expectedCentroid = (0.5, 0.5, 1.0)
     assert(centroid == expectedCentroid)
   }
@@ -267,9 +263,7 @@ class BlockSpec extends FunSuite {
     val testFace5 = Face((0.0, -1.0, 0.0), 2.0, phi=0, cohesion=0)
     val testFace6 = Face((0.0, 0.0, -1.0), 2.0, phi=0, cohesion=0)
     val testBlock = Block((0.0, 0.0, 0.0), List[Face](testFace1, testFace2, testFace3, testFace4, testFace5, testFace6))
-    val vertices = testBlock.findVertices
-    val mesh = testBlock.meshFaces(vertices)
-    val centroid = testBlock.centroid(vertices, mesh)
+    val centroid = testBlock.centroid
     val expectedCentroid = (-1.0, -1.0, -1.0)
     assert(centroid == expectedCentroid)
   }
@@ -307,9 +301,7 @@ class BlockSpec extends FunSuite {
     }
 
     val centroidBlocks = nonRedundantBlocks.map { case block @ Block(center, _) =>
-      val vertices = block.findVertices
-      val mesh = block.meshFaces(vertices)
-      val centroid = block.centroid(vertices, mesh)
+      val centroid = block.centroid
       val updatedFaces = block.updateFaces(centroid)
       val tester = Block(centroid, updatedFaces)
       Block(centroid, updatedFaces)
