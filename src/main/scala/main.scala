@@ -14,16 +14,9 @@ object RockSlicer {
     val numberPartitions = args(1).toInt
 
     // Open and read input file specifying rock volume and joints
-    var rockBuffer = new ListBuffer[Face]()
-    var jointBuffer = new ListBuffer[Joint]()
     val inputSource = Source.fromFile(inputFile) // Input file name
-    try {
-      inputProcessor.readInput(inputSource, rockBuffer, jointBuffer)
-    } finally {
-      inputSource.close
-    }
-    val rockVolume = rockBuffer.toList
-    val jointList = jointBuffer.toList
+    val (rockVolume, jointList) = inputProcessor.readInput(inputSource)
+    inputSource.close
     var blocks = List(Block((0.0, 0.0, 0.0), rockVolume))
 
     // Generate a list of initial blocks before RDD-ifying it -- not very clean code
