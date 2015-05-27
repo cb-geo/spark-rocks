@@ -1,1 +1,3 @@
-# cs267-project
+# SparkRocks
+
+Parallel rock slicing implementation on Apache Spark.

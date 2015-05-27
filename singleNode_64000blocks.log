@@ -1,6 +1,0 @@
-15/05/11 09:13:01 WARN Utils: Your hostname, Mike-T5610 resolves to a loopback address: 127.0.1.1; using 169.229.156.174 instead (on interface eth0)
-15/05/11 09:13:01 WARN Utils: Set SPARK_LOCAL_IP if you need to bind to another address
-15/05/11 09:13:01 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
-15/05/11 09:13:04 WARN BLAS: Failed to load implementation from: com.github.fommil.netlib.NativeSystemBLAS
-15/05/11 09:13:04 WARN BLAS: Failed to load implementation from: com.github.fommil.netlib.NativeRefBLAS
-Processed 64000 blocks.
