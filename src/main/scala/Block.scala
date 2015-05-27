@@ -181,8 +181,7 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
     * @param n_desired: Desired new normal
     * @return rmat: 3*3 rotation matrix
     */
-  def rotationMatrix(n_current: (Double, Double, Double), n_desired: (Double, Double, Double)) :
-                    DenseMatrix[Double] = {
+  private def rotationMatrix(n_current: (Double, Double, Double), n_desired: (Double, Double, Double)): DenseMatrix[Double] = {
     val tolerance = 1e-12
     val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
     val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
@@ -257,8 +256,9 @@ case class Block(center: (Double,Double,Double), val faces: List[Face]) {
     * @param mesh: A list of lists that contain the local to global mapping of the triangulation
     * @return The centroid of the block, (centerX, centerY, centerZ).
     */
-  def centroid(vertices: List[List[(Double, Double, Double)]],
-               mesh: List[List[(Int, Int, Int)]]): (Double, Double, Double) = {
+  def centroid: (Double, Double, Double) = {
+    val vertices = findVertices
+    val mesh = meshFaces(vertices)
     // Calculate volume, this is necessary before centroid calcs can be done
     var volume = 0.0
     for (i <- 0 until faces.length) {
