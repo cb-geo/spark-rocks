@@ -4,8 +4,8 @@ import scala.io.Source
 
 object inputProcessor {
   // Processes input file: Add rock volume faces and joints to respective input list
-  def readInput(inputSource: Source): (List[Face], List[Joint]) = {
-    val lines = inputSource.getLines.toList
+  def readInput(inputSource: Source): (Seq[Face], Seq[Joint]) = {
+    val lines = inputSource.getLines().toVector
     val transitionIndex = lines.indexWhere(_ == "%")
     assert(transitionIndex > -1)
 
@@ -38,7 +38,7 @@ object inputProcessor {
       val phi = mandatoryTokens(9)
       val cohesion = mandatoryTokens(10)
 
-      val shape = optionalTokens.grouped(4).toList.map { group =>
+      val shape = optionalTokens.grouped(4).toVector.map { group =>
         val normalVec = (group(0), group(1), group(2))
         val d = group(3)
         (normalVec, d)
@@ -49,11 +49,4 @@ object inputProcessor {
 
     (rockVolume, joints)
   }
-
-  // Finds the average x, y and z coordinates of the input joint set
-  def averageCoords(joints: Seq[Joint]): (Double, Double, Double) = (
-    joints.map(_.centerX).sum / joints.length,
-    joints.map(_.centerY).sum / joints.length,
-    joints.map(_.centerZ).sum / joints.length
-  )
 }
