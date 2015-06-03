@@ -1,27 +1,25 @@
 package edu.berkeley.ce.rockslicing
 
-import scala.collection.mutable.ListBuffer
+import org.apache.spark.{SparkConf, SparkContext}
+
 import scala.io.Source
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-import org.apache.spark.SparkConf
 
 object RockSlicer {
   def main(args: Array[String]) {
-    val conf = new SparkConf().setAppName("CS 267 Final Project")
+    val conf = new SparkConf().setAppName("SparkRocks")
     val sc = new SparkContext(conf)
     val inputFile = args(0)
     val numberPartitions = args(1).toInt
 
     // Open and read input file specifying rock volume and joints
-    val inputSource = Source.fromFile(inputFile) // Input file name
+    val inputSource = Source.fromFile(inputFile)
     val (rockVolume, jointList) = inputProcessor.readInput(inputSource)
-    inputSource.close
-    var blocks = List(Block((0.0, 0.0, 0.0), rockVolume))
+    inputSource.close()
+    var blocks = Vector(Block((0.0, 0.0, 0.0), rockVolume))
 
     // Generate a list of initial blocks before RDD-ifying it -- not very clean code
     var joints = jointList
-    while (blocks.length < numberPartitions && !joints.isEmpty) {
+    while (blocks.length < numberPartitions && joints.nonEmpty) {
       blocks = blocks.flatMap(_.cut(joints.head))
       joints = joints.tail
     }

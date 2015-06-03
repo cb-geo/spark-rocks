@@ -6,10 +6,11 @@ class JointSpec extends FunSuite {
   private val EPSILON = 1.0e-6
 
   // Sums the difference between all elements in a boundary list
-  private def totalDifference(l1: List[((Double,Double,Double), Double)],
-                              l2: List[((Double,Double,Double), Double)]): Double = {
-    val differences = (l1.zip(l2)) map { case (((a,b,c),d), ((x,y,z),w)) =>
-      math.abs(x-a) + math.abs(y-b) + math.abs(z-c) + math.abs(w-d) }
+  private def totalDifference(l1: Seq[((Double,Double,Double), Double)],
+                              l2: Seq[((Double,Double,Double), Double)]): Double = {
+    val differences = l1.zip(l2) map { case (((a,b,c),d), ((x,y,z),w)) =>
+      math.abs(x-a) + math.abs(y-b) + math.abs(z-c) + math.abs(w-d)
+    }
     differences.sum
   }
 

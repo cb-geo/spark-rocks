@@ -1,7 +1,7 @@
-import scala.collection.mutable.ListBuffer
-import scala.io.Source
-import org.scalatest._
 import edu.berkeley.ce.rockslicing._
+import org.scalatest._
+
+import scala.io.Source
 
 class EndToEndSpec extends FunSuite {
   val INPUT_FILE_NAME = "endToEndData.txt"
@@ -9,12 +9,12 @@ class EndToEndSpec extends FunSuite {
 
   test("Simple end-to-end test using unit cube and simple planes") {
     // Read input file to generate list of joints and initial rock block
-    val inputSource = Source.fromURL(getClass.getResource(s"/${INPUT_FILE_NAME}"))
+    val inputSource = Source.fromURL(getClass.getResource(s"/$INPUT_FILE_NAME"))
     val (rockVolume, jointList) = inputProcessor.readInput(inputSource)
-    inputSource.close
+    inputSource.close()
 
     // Create an initial block
-    val blocks = List(Block((0.0, 0.0, 0.0), rockVolume))
+    val blocks = Vector(Block((0.0, 0.0, 0.0), rockVolume))
 
     // Iterate through joints, cutting blocks where appropriate
     var cutBlocks = blocks
@@ -40,12 +40,12 @@ class EndToEndSpec extends FunSuite {
     }
 
     val blockJson = json.blockSeqToReadableJson(cleanedBlocks)
-    val expectedJsonSource = Source.fromURL(getClass.getResource(s"/${OUTPUT_FILE_NAME}"))
+    val expectedJsonSource = Source.fromURL(getClass.getResource(s"/$OUTPUT_FILE_NAME"))
     try {
       val expectedJson = expectedJsonSource.mkString
       assert(blockJson.trim == expectedJson.trim)
     } finally {
-      expectedJsonSource.close
+      expectedJsonSource.close()
     }
   }
 }

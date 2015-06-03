@@ -1,5 +1,2 @@
 target/
-*~
-testing.scala
-tester
-ToChangeBack/
+.idea/

@@ -42,20 +42,17 @@ class LinearProgram(val numVars: Int) {
     * than the number of variables, coefficients of 0.0 are added by default.
     * @param objType One of either MIN (to minimize) or MAX (to maximize).
     */
-  def setObjFun(coeffs: Seq[Double], objType: LinearProgram.ObjectiveType) : Unit = {
+  def setObjFun(coeffs: Seq[Double], objType: LinearProgram.ObjectiveType): Unit = {
     val sanitizedCoeffs = sanitizeCoefficients(coeffs)
     solver.strSetObjFn(sanitizedCoeffs.mkString(" "))
-    if (objType == LinearProgram.MIN) {
-      solver.setMinim()
-    } else {
-      solver.setMaxim()
+    objType match {
+      case LinearProgram.MIN => solver.setMinim()
+      case LinearProgram.MAX => solver.setMaxim()
     }
 
-    /*
-     * Variables are always unbounded for our purposes. Users can always
-     * express variable bounds as constraints with one coefficient anyways.
-     */
-    (1 to numVars).foreach { solver.setUnbounded(_) }
+     // Variables are always unbounded for our purposes. Users can always
+     // express variable bounds as constraints with one coefficient anyways.
+    (1 to numVars) foreach solver.setUnbounded
   }
 
   /**
@@ -85,11 +82,11 @@ class LinearProgram(val numVars: Int) {
     * where varSettings is the value assigned to each value to optimize the
     * objective function and opt is the optimal objective value itself.
     */
-  def solve(): Option[(List[Double], Double)] = {
+  def solve(): Option[(Seq[Double], Double)] = {
     try {
       solver.solve()
-      val objectiveValue = solver.getObjective()
-      val variableSettings = solver.getPtrVariables().toList
+      val objectiveValue = solver.getObjective
+      val variableSettings = solver.getPtrVariables.toVector
       Some((variableSettings, objectiveValue))
     } catch {
       case _: LpSolveException => None

@@ -33,10 +33,11 @@ object json {
 
     def writes(block: Block) = {
       JsObject(Seq(
-               "centerX" -> JsNumber(block.centerX),
-               "centerY" -> JsNumber(block.centerY),
-               "centerZ" -> JsNumber(block.centerZ),
-                "faces" -> Json.toJson(block.faces)))
+        "centerX" -> JsNumber(block.centerX),
+        "centerY" -> JsNumber(block.centerY),
+        "centerZ" -> JsNumber(block.centerZ),
+         "faces" -> Json.toJson(block.faces)
+      ))
     }
   }
 
@@ -57,17 +58,17 @@ object json {
     Json.stringify(Json.toJson(block))
 
   /**
-    * Converts a list a rock blocks to human-readable JSON.
-    * @param blocks A list of Block objects
-    * @return A human-readable JSON representation of the blocks, as a string
+    * Converts a list of rock blocks to human-readable JSON.
+    * @param blocks A list of Block objects.
+    * @return A human-readable JSON representation of the blocks, as a string.
     */
   def blockSeqToReadableJson(blocks: Seq[Block]): String =
     Json.prettyPrint(Json.toJson(blocks))
 
-  /*
-    * Converts a list a rock blocks to human-readable JSON.
-    * @param blocks A list of Block objects
-    * @return A minimal JSON representation of the blocks, as a string
+  /**
+    * Converts a list of rock blocks to human-readable JSON.
+    * @param blocks A list of Block objects.
+    * @return A minimal JSON representation of the blocks, as a string.
     */
   def blockSeqToMinimalJson(blocks: Seq[Block]): String =
     Json.stringify(Json.toJson(blocks))
