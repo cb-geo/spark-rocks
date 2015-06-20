@@ -65,13 +65,13 @@ case class Joint(normalVec: (Double, Double, Double), distance: Double,
     if (math.abs(c) >= tolerance) {
       w(0) = blockOrigin._1
       w(1) = blockOrigin._2
-      w(2) = blockOrigin._3 - (d/c + centerZ)
+      w(2) = blockOrigin._3 - (d/c)
     } else if (math.abs(b) >= tolerance) {
       w(0) = blockOrigin._1
-      w(1) = blockOrigin._2 - (d/b + centerY)
+      w(1) = blockOrigin._2 - (d/b)
       w(2) = blockOrigin._3
     } else if (math.abs(a) >= tolerance) {
-      w(0) = blockOrigin._1 - (d/a + centerX)
+      w(0) = blockOrigin._1 - (d/a)
       w(1) = blockOrigin._2
       w(2) = blockOrigin._3
     }
