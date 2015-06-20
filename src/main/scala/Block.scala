@@ -2,7 +2,6 @@ package edu.berkeley.ce.rockslicing
 
 import breeze.linalg
 import breeze.linalg.{DenseVector, DenseMatrix}
-import scala.language.postfixOps
 
 object Face {
   private val EPSILON = 1.0e-6
@@ -159,8 +158,8 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
             } else None
           }
         }
-      } map (_.distinct) //map (_.reverse) // FIXME Why is the reverse needed?
-    ).toMap
+      } map (_.distinct) map (_.reverse) // Reverse is needed to keep the same ordering as faces list since elements are added to the front
+    ).toMap                              // of the list as they are created.
 
   /**
     * Calculates the rotation matrix to rotate the input plane (specified by its normal)
@@ -214,7 +213,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
         }.distinct.toList
 
         // If z-component of normal is negative, order needs to be reversed to maintain clockwise orientation
-        if (math.abs(face.c + 1.0) < Block.EPSILON) { // FIXME above comment doesn't match the actual logic
+        if (face.c < -Block.EPSILON) {
           Delaunay.Triangulation(rotatedVertices).map { vert =>
             (vert._3, vert._2, vert._1)
           }

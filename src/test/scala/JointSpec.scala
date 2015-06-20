@@ -63,11 +63,11 @@ class JointSpec extends FunSuite {
     assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
   }
 
-  test("Joint should have updated distance 2.0 from new local origin") {
-    val joint = Joint((1.0, 0.0, 0.0), 1.0, center=(0.0, 0.0, 0.0), dipAngle=0,
+  test("Joint should have updated distance 1.0 from new local origin") {
+    val joint = Joint((1.0, 0.0, 0.0), 0.0, center=(0.0, 0.0, 0.0), dipAngle=0,
                       dipDirection=math.Pi/4.0, phi=0, cohesion=0, shape=boundaries)
     val newJoint = joint.updateJoint(-1.0, 0.0, 0.0)
-    val expectedDistance = 2.0
+    val expectedDistance = 1.0
     assert(newJoint.d == expectedDistance)
   }
 
@@ -75,7 +75,7 @@ class JointSpec extends FunSuite {
     val joint = Joint((1.0, 0.0, 0.0), 1.0, center=(0.0, 0.0, 0.0), dipAngle=0,
                       dipDirection=math.Pi/4.0, phi=0, cohesion=0, shape=boundaries)
     val newJoint = joint.updateJoint(8.0, 0.0, 0.0)
-    val expectedDistance = -7.0
+    val expectedDistance = -8.0
     assert(newJoint.d == expectedDistance)
   }
 }
