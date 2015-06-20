@@ -159,7 +159,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
             } else None
           }
         }
-      } map (_.distinct) map (_.reverse) // FIXME Why is the reverse needed?
+      } map (_.distinct) //map (_.reverse) // FIXME Why is the reverse needed?
     ).toMap
 
   /**
