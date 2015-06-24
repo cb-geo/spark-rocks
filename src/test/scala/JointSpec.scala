@@ -71,7 +71,7 @@ class JointSpec extends FunSuite {
     assert(newJoint.d == expectedDistance)
   }
 
-  test("Joint should have updated distance -7.0 from new local origin") {
+  test("Joint should have updated distance -8.0 from new local origin") {
     val joint = Joint((1.0, 0.0, 0.0), 1.0, center=(0.0, 0.0, 0.0), dipAngle=0,
                       dipDirection=math.Pi/4.0, phi=0, cohesion=0, shape=boundaries)
     val newJoint = joint.updateJoint(8.0, 0.0, 0.0)
