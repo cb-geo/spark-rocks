@@ -25,18 +25,19 @@ object inputProcessor {
 
     val joints = jointData.map { line =>
       val tokens = line.split(" ") map(_.toDouble)
-      assert(tokens.length >= 11)
-      val mandatoryTokens = tokens.take(11)
-      val optionalTokens = tokens.slice(11, tokens.length)
+      assert(tokens.length >= 14)
+      val mandatoryTokens = tokens.take(14)
+      val optionalTokens = tokens.slice(14, tokens.length)
       assert(optionalTokens.length % 4 == 0)
 
       val normalVec = (mandatoryTokens(0), mandatoryTokens(1), mandatoryTokens(2))
       val d = mandatoryTokens(3)
       val center = (mandatoryTokens(4), mandatoryTokens(5), mandatoryTokens(6))
-      val dipAngle = mandatoryTokens(7)
-      val dipDirection = mandatoryTokens(8)
-      val phi = mandatoryTokens(9)
-      val cohesion = mandatoryTokens(10)
+      val localCenter = (mandatoryTokens(7), mandatoryTokens(8), mandatoryTokens(9))
+      val dipAngle = mandatoryTokens(10)
+      val dipDirection = mandatoryTokens(11)
+      val phi = mandatoryTokens(12)
+      val cohesion = mandatoryTokens(13)
 
       val shape = optionalTokens.grouped(4).toVector.map { group =>
         val normalVec = (group(0), group(1), group(2))
@@ -44,7 +45,7 @@ object inputProcessor {
         (normalVec, d)
       }
 
-      Joint(normalVec, d, center, dipAngle, dipDirection, phi, cohesion, shape)
+      Joint(normalVec, d, localCenter, center, dipAngle, dipDirection, phi, cohesion, shape)
     }
 
     (rockVolume, joints)
