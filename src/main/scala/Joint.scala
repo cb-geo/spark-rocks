@@ -11,18 +11,21 @@ import breeze.linalg.{DenseVector, DenseMatrix}
   * @param center Cartesian coordinates for the center of the joint. The individual
            components can be accessed as 'centerX', 'centerY', and 'centerZ'.
   * @param distance The distance of the joint from the local center, accessed as 'd'.
+  * @param localOrigin The local origin from which the distance is referenced. The individual
+  *        components are accessed as 'localX', 'localY', and 'localZ'.
   * @param phi The joint's friction angle (phi).
   * @param cohesion The cohesion along the joint
   * @param shape A list of lines specifying the shape of the joint. Each item is a
   * 3-tuple. The first two items specify the line, while the last gives the distance
   * of the line from the joint's center in the local coordinate system.
   */
-case class Joint(normalVec: (Double, Double, Double), distance: Double,
+case class Joint(normalVec: (Double, Double, Double), distance: Double, localOrigin: (Double, Double, Double),
                  center: (Double, Double, Double), dipAngle: Double, dipDirection: Double, phi: Double,
                  cohesion: Double, shape: Seq[((Double, Double, Double),Double)]) {
   val (a, b, c) = normalVec
   val (centerX, centerY, centerZ) = center
   val d = distance
+  val (localX, localY, localZ) = localOrigin
 
   /** Converts lines defining shape of joint from local to global coordinates
     * @return A seq of pairs, each representing a plane that specifies a boundary of the
@@ -57,7 +60,7 @@ case class Joint(normalVec: (Double, Double, Double), distance: Double,
   /**
     * Calculates the distances of the joint relative to a new origin
     * @param blockOrigin: new local origin
-    * @return Distance relative to block origin
+    * @return Distance relative to block origin (new local origin)
     */
   def updateJoint(blockOrigin: (Double, Double,Double)): Joint = {
     val tolerance = 1e-12
@@ -65,18 +68,18 @@ case class Joint(normalVec: (Double, Double, Double), distance: Double,
     if (math.abs(c) >= tolerance) {
       w(0) = blockOrigin._1
       w(1) = blockOrigin._2
-      w(2) = blockOrigin._3 - (d/c)
+      w(2) = blockOrigin._3 - (d/c + localZ)
     } else if (math.abs(b) >= tolerance) {
       w(0) = blockOrigin._1
-      w(1) = blockOrigin._2 - (d/b)
+      w(1) = blockOrigin._2 - (d/b + localY)
       w(2) = blockOrigin._3
     } else if (math.abs(a) >= tolerance) {
-      w(0) = blockOrigin._1 - (d/a)
+      w(0) = blockOrigin._1 - (d/a + localX)
       w(1) = blockOrigin._2
       w(2) = blockOrigin._3
     }
     val n = DenseVector[Double](a, b, c)
     val newDistance = -(n dot w)/linalg.norm(n)
-    Joint((a, b, c), newDistance, (centerX, centerY, centerZ), dipAngle, dipDirection, phi, cohesion, shape)
+    Joint((a, b, c), newDistance, blockOrigin, (centerX, centerY, centerZ), dipAngle, dipDirection, phi, cohesion, shape)
   }
 }

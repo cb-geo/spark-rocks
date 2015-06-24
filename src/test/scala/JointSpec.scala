@@ -20,7 +20,7 @@ class JointSpec extends FunSuite {
                     ((0.0, -1.0, 0.0), 0.0))     // -y = 0
 
   test("Dip direction of 0 centered at origin") {
-    val joint = Joint((0.0, 0.0, 1.0), 1.0, center=(0.0,0.0,0.0), dipAngle=0,
+    val joint = Joint((0.0, 0.0, 1.0), 1.0, localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0), dipAngle=0,
                       dipDirection=0, phi=0, cohesion=0, shape=boundaries)
     val newBoundaries: List[((Double,Double,Double), Double)] =
         List(((0.0, -1.0, 0.0), 1.0),
@@ -31,7 +31,7 @@ class JointSpec extends FunSuite {
   }
 
   test("Dip direction of 0 centered at (1.0, 2.0, 3.0)") {
-    val joint = Joint((0.0, 0.0, 1.0), 1.0, center=(1.0,2.0,3.0), dipAngle=0,
+    val joint = Joint((0.0, 0.0, 1.0), 1.0, localOrigin=(0.0,0.0,2.0), center=(1.0,2.0,3.0), dipAngle=0,
                       dipDirection=0, phi=0, cohesion=0, shape=boundaries)
     val newBoundaries: List[((Double,Double,Double), Double)] =
         List(((0.0, -1.0, 0.0), -1.0),
@@ -42,7 +42,7 @@ class JointSpec extends FunSuite {
   }
 
   test("Dip direction of pi/4 centered at origin") {
-    val joint = Joint((0.0, 0.0, 1.0), 1.0, center=(0.0, 0.0, 0.0), dipAngle=0,
+    val joint = Joint((0.0, 0.0, 1.0), 1.0, localOrigin=(0.0,0.0,-1.0), center=(0.0, 0.0, 0.0), dipAngle=0,
                       dipDirection=math.Pi/4.0, phi=0, cohesion=0, shape=boundaries)
     val newBoundaries: List[((Double,Double,Double), Double)] =
       List(((math.sqrt(2)/2.0, -math.sqrt(2)/2.0, 0.0), 1.0),
@@ -53,7 +53,7 @@ class JointSpec extends FunSuite {
   }
 
   test("Dip direction of pi/4 centered at (1.0, 2.0, 3.0)") {
-    val joint = Joint((0.0, 0.0, 1.0), 1.0, center=(1.0, 2.0, 3.0), dipAngle=0,
+    val joint = Joint((0.0, 0.0, 1.0), 1.0, localOrigin=(0.0,0.0,2.0), center=(1.0, 2.0, 3.0), dipAngle=0,
                       dipDirection=math.Pi/4.0, phi=0, cohesion=0, shape=boundaries)
     val newBoundaries: List[((Double,Double,Double), Double)] =
       List(((math.sqrt(2)/2.0, -math.sqrt(2)/2.0, 0.0), 1 - math.sqrt(2)/2.0),
@@ -64,18 +64,26 @@ class JointSpec extends FunSuite {
   }
 
   test("Joint should have updated distance 1.0 from new local origin") {
-    val joint = Joint((1.0, 0.0, 0.0), 0.0, center=(0.0, 0.0, 0.0), dipAngle=0,
+    val joint = Joint((1.0, 0.0, 0.0), 0.0, localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 0.0), dipAngle=0,
                       dipDirection=math.Pi/4.0, phi=0, cohesion=0, shape=boundaries)
     val newJoint = joint.updateJoint(-1.0, 0.0, 0.0)
     val expectedDistance = 1.0
     assert(newJoint.d == expectedDistance)
   }
 
-  test("Joint should have updated distance -7.0 from new local origin") {
-    val joint = Joint((1.0, 0.0, 0.0), 1.0, center=(0.0, 0.0, 0.0), dipAngle=0,
+  test("Joint should have updated distance -8.0 from new local origin") {
+    val joint = Joint((1.0, 0.0, 0.0), 1.0, localOrigin=(-1.0,0.0,0.0), center=(0.0, 0.0, 0.0), dipAngle=0,
                       dipDirection=math.Pi/4.0, phi=0, cohesion=0, shape=boundaries)
     val newJoint = joint.updateJoint(8.0, 0.0, 0.0)
     val expectedDistance = -8.0
+    assert(newJoint.d == expectedDistance)
+  }
+
+  test("Joint should have updated distance -5.0 from new local origin") {
+    val joint = Joint((0.0, 0.0, 1.0), 2.0, localOrigin=(0.0,0.0,1.0), center=(1.0, 2.0, 3.0), dipAngle=0,
+      dipDirection=math.Pi/4.0, phi=0, cohesion=0, shape=boundaries)
+    val newJoint = joint.updateJoint(8.0, 0.0, 8.0)
+    val expectedDistance = -5.0
     assert(newJoint.d == expectedDistance)
   }
 }
