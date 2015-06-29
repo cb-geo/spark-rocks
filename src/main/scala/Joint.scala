@@ -3,28 +3,57 @@ package edu.berkeley.ce.rockslicing
 import breeze.linalg
 import breeze.linalg.{DenseVector, DenseMatrix}
 
+object Joint {
+  private val EPSILON = 1e-6
+
+  /**
+   * Find the distance of the joint plane from the input local origin.
+   * @param normalVec Normal vector to the joint plane
+   * @param localOrigin The local origin from which the distance is referenced. This should be in global coordinates.
+   * @param center The center of the joint plane. This should be in global coordinates.
+   * @return
+   */
+  private def findDistance(normalVec: (Double, Double, Double), localOrigin: (Double, Double, Double),
+                            center: (Double, Double, Double)) = {
+    val w = DenseVector.zeros[Double](3)
+    if (math.abs(normalVec._3) >= EPSILON) {
+      w(0) = localOrigin._1
+      w(1) = localOrigin._2
+      w(2) = localOrigin._3 - center._3
+    } else if (math.abs(normalVec._2) >= EPSILON) {
+      w(0) = localOrigin._1
+      w(1) = localOrigin._2 - center._2
+      w(2) = localOrigin._3
+    } else if (math.abs(normalVec._1) >= EPSILON) {
+      w(0) = localOrigin._1 - center._1
+      w(1) = localOrigin._2
+      w(2) = localOrigin._3
+    }
+    val n = DenseVector[Double](normalVec._1, normalVec._2, normalVec._3)
+    -(n dot w)/linalg.norm(n)
+  }
+}
 /**
   * A simple data structure to represent a joint.
   * @constructor Create a new joint.
   * @param normalVec The normal vector to the joint. The individual vector components
   * can be accessed as 'a', 'b', and 'c'.
-  * @param center Cartesian coordinates for the center of the joint. The individual
-           components can be accessed as 'centerX', 'centerY', and 'centerZ'.
-  * @param distance The distance of the joint from the local center, accessed as 'd'.
   * @param localOrigin The local origin from which the distance is referenced. The individual
   *        components are accessed as 'localX', 'localY', and 'localZ'.
+  * @param center Cartesian coordinates for the center of the joint. The individual
+  *        components can be accessed as 'centerX', 'centerY', and 'centerZ'.
   * @param phi The joint's friction angle (phi).
   * @param cohesion The cohesion along the joint
   * @param shape A list of lines specifying the shape of the joint. Each item is a
   * 3-tuple. The first two items specify the line, while the last gives the distance
   * of the line from the joint's center in the local coordinate system.
   */
-case class Joint(normalVec: (Double, Double, Double), distance: Double, localOrigin: (Double, Double, Double),
+case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Double, Double),
                  center: (Double, Double, Double), dipAngle: Double, dipDirection: Double, phi: Double,
                  cohesion: Double, shape: Seq[((Double, Double, Double),Double)]) {
   val (a, b, c) = normalVec
   val (centerX, centerY, centerZ) = center
-  val d = distance
+  val d = Joint.findDistance(normalVec, localOrigin, center)
   val (localX, localY, localZ) = localOrigin
 
   /** Converts lines defining shape of joint from local to global coordinates
@@ -63,23 +92,6 @@ case class Joint(normalVec: (Double, Double, Double), distance: Double, localOri
     * @return Distance relative to block origin (new local origin)
     */
   def updateJoint(blockOrigin: (Double, Double,Double)): Joint = {
-    val tolerance = 1e-12
-    val w = DenseVector.zeros[Double](3)
-    if (math.abs(c) >= tolerance) {
-      w(0) = blockOrigin._1
-      w(1) = blockOrigin._2
-      w(2) = blockOrigin._3 - (d/c + localZ)
-    } else if (math.abs(b) >= tolerance) {
-      w(0) = blockOrigin._1
-      w(1) = blockOrigin._2 - (d/b + localY)
-      w(2) = blockOrigin._3
-    } else if (math.abs(a) >= tolerance) {
-      w(0) = blockOrigin._1 - (d/a + localX)
-      w(1) = blockOrigin._2
-      w(2) = blockOrigin._3
-    }
-    val n = DenseVector[Double](a, b, c)
-    val newDistance = -(n dot w)/linalg.norm(n)
-    Joint((a, b, c), newDistance, blockOrigin, (centerX, centerY, centerZ), dipAngle, dipDirection, phi, cohesion, shape)
+    Joint((a, b, c), blockOrigin, (centerX, centerY, centerZ), dipAngle, dipDirection, phi, cohesion, shape)
   }
 }

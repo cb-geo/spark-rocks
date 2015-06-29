@@ -12,7 +12,7 @@ object Face {
   * @constructor Create a new rock face.
   * @param normalVec The normal vector to the face. The individual vector components can
   * be accessed as 'a', 'b', and 'c'.
-  * @param distance The distance from the normal vector to the center of the rock block.
+  * @param distance The distance from the face to the center of the rock block.
   * Accessed as 'd'.
   * @param phi The friction angle (phi) of the face.
   * @param cohesion The cohesion of the face.
@@ -56,7 +56,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
   /**
     * Determine whether or not a joint intersects this rock block.
     * @param joint The joint to check for intersection.
-    * @return None if the joint does not interset this block, or Some((x,y,z))
+    * @return None if the joint does not intersect this block, or Some((x,y,z))
     * where (x,y,z) is the point of intersection.
     */
   def intersects(joint: Joint): Option[(Double,Double,Double)] = {
