@@ -20,6 +20,12 @@ class JointSpec extends FunSuite {
                     ((0.0, 1.0, 0.0), 1.0),      // y = 1
                     ((0.0, -1.0, 0.0), 0.0))     // -y = 0
 
+  test("Dip direction should be 0") {
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
+                      phi=0, cohesion=0, shape=Nil)
+    assert(joint.dipDirection == 0.0)
+  }
+
   test("Dip direction of 0 centered at origin") {
     val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
                        phi=0, cohesion=0, shape=boundaries)

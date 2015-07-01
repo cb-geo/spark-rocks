@@ -41,8 +41,8 @@ object Joint {
    */
   private def dipDirVector(normalVec: (Double, Double, Double)) = {
     // Dip direction is in opposite direction of gradient indicating greatest increase in z.
-    if ((math.abs(normalVec._3) > Joint.EPSILON) || (math.abs(math.abs(normalVec._3) - 1.0) > Joint.EPSILON)) {
-      DenseVector[Double](normalVec._1 / normalVec._3, normalVec._1 / normalVec._3, 0.0)
+    if ((math.abs(normalVec._3) > Joint.EPSILON) && (math.abs(math.abs(normalVec._3) - 1.0) > Joint.EPSILON)) {
+      DenseVector[Double](normalVec._1 / normalVec._3, normalVec._2 / normalVec._3, 0.0)
     } else if (math.abs(normalVec._3) < Joint.EPSILON) {
       // Joint is vertical, assigns non-zero z component that will be caught is dipDir function
       DenseVector[Double](0.0, 0.0, -1.0)
@@ -59,6 +59,10 @@ object Joint {
    */
   private def dipDir(normalVec: (Double, Double, Double)) = {
     val dipVector = Joint.dipDirVector(normalVec)
+    println("This is the normal vector")
+    println(normalVec)
+    println("This is the dip vector")
+    println(dipVector)
     val xAxis = DenseVector[Double](1.0, 0.0, 0.0)
     if (dipVector(2) != -1.0) {
       math.acos((xAxis dot dipVector)/(linalg.norm(xAxis) * linalg.norm(dipVector)))
