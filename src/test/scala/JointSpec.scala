@@ -44,7 +44,7 @@ class JointSpec extends FunSuite {
 
   test("Dip direction of pi/4 centered at origin") {
     val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,-1.0), center=(0.0, 0.0, 0.0),
-                      dipDirection=math.Pi/4.0, phi=0, cohesion=0, shape=boundaries)
+                      phi=0, cohesion=0, shape=boundaries)
     val newBoundaries: List[((Double,Double,Double), Double)] =
       List(((math.sqrt(2)/2.0, -math.sqrt(2)/2.0, 0.0), 1.0),
            ((-math.sqrt(2)/2.0, math.sqrt(2)/2.0, 0.0), 0.0),
@@ -55,7 +55,7 @@ class JointSpec extends FunSuite {
 
   test("Dip direction of pi/4 centered at (1.0, 2.0, 3.0)") {
     val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,2.0), center=(1.0, 2.0, 3.0),
-                      dipDirection=math.Pi/4.0, phi=0, cohesion=0, shape=boundaries)
+                      phi=0, cohesion=0, shape=boundaries)
     val newBoundaries: List[((Double,Double,Double), Double)] =
       List(((math.sqrt(2)/2.0, -math.sqrt(2)/2.0, 0.0), 1 - math.sqrt(2)/2.0),
            ((-math.sqrt(2)/2.0, math.sqrt(2)/2.0, 0.0), math.sqrt(2)/2.0),

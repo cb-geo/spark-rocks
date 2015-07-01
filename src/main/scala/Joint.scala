@@ -40,19 +40,15 @@ object Joint {
    * @return Dip direction of the plane, indicating direction of greatest increase in z. Return as vector (a, b, 0)
    */
   private def dipDirVector(normalVec: (Double, Double, Double)) = {
-    try {
-      // Dip direction is in opposite direction of gradient indicating greatest increase in z.
-      if ((math.abs(normalVec._3) > Joint.EPSILON) || (math.abs(math.abs(normalVec._3) - 1.0) > Joint.EPSILON)) {
-        DenseVector[Double](normalVec._1 / normalVec._3, normalVec._1 / normalVec._3, 0.0)
-      } else if (math.abs(normalVec._3) < Joint.EPSILON) {
-        // Joint is vertical, assigns non-zero z component that will be caught is dipDir function
-        DenseVector[Double](0.0, 0.0, -1.0)
-      } else if (math.abs(math.abs(normalVec._3) - 1.0) < Joint.EPSILON) {
-        // Joint is horizontal, dip direction arbitrarily assigned to 90 degrees
-        DenseVector[Double](0.0, -1.0, 0.0)
-      }
-    } catch {
-      case e: Exception => println("Check your input vector")
+    // Dip direction is in opposite direction of gradient indicating greatest increase in z.
+    if ((math.abs(normalVec._3) > Joint.EPSILON) || (math.abs(math.abs(normalVec._3) - 1.0) > Joint.EPSILON)) {
+      DenseVector[Double](normalVec._1 / normalVec._3, normalVec._1 / normalVec._3, 0.0)
+    } else if (math.abs(normalVec._3) < Joint.EPSILON) {
+      // Joint is vertical, assigns non-zero z component that will be caught is dipDir function
+      DenseVector[Double](0.0, 0.0, -1.0)
+    } else {
+      // Joint is horizontal, dip direction arbitrarily assigned to 90 degrees
+      DenseVector[Double](0.0, -1.0, 0.0)
     }
   }
 

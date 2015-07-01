@@ -42,7 +42,7 @@ object inputProcessor {
         (normalVec, d)
       }
 
-      Joint(normalVec, localOrigin, center, dipAngle, dipDirection, phi, cohesion, shape)
+      Joint(normalVec, localOrigin, center, phi, cohesion, shape)
     }
 
     (rockVolume, joints)
