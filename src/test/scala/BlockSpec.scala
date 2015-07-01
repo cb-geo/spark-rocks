@@ -47,127 +47,127 @@ class BlockSpec extends FunSuite {
   val EPSILON = 1.0e-6
 
   test("The plane z = 0.5 should intersect the unit cube") {
-    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 1/2.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 1/2.0),
+                       phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isDefined)
   }
 
   test("The plane z = 0.5 with non-zero origin should intersect the unit cube") {
-    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,-1/4), center=(0.0, 0.0, 1/4.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,-1/4), center=(0.0, 0.0, 1/4.0),
+                       phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isDefined)
   }
 
   test("The plane -z = 0.5 should intersect the unit cube") {
-    val joint = Joint((0.0, 0.0, -1.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 1/2.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    val joint = Joint((0.0, 0.0, -1.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 1/2.0),
+                       phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isDefined)
   }
 
   test("The plane -z = 0.5 with non-zero origin should intersect the unit cube") {
-    val joint = Joint((0.0, 0.0, -1.0), localOrigin=(0.0,0.0,-1/4), center=(0.0, 0.0, 1/4.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    val joint = Joint((0.0, 0.0, -1.0), localOrigin=(0.0,0.0,-1/4), center=(0.0, 0.0, 1/4.0),
+                       phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isDefined)
   }
 
   test("The plane z = 2 should not intersect the unit cube") {
-    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 2.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 2.0),
+                       phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isEmpty)
   }
 
   test("The plane z = 1 with non-zero origin should not intersect the unit cube") {
-    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,1.0), center=(0.0, 0.0, 2.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,1.0), center=(0.0, 0.0, 2.0),
+                       phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isEmpty)
   }
 
   test("The plane y = 1 should not intersect the unit cube") {
-    val joint = Joint((0.0, 1.0, 0.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 1.0, 0.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    val joint = Joint((0.0, 1.0, 0.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 1.0, 0.0),
+                       phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isEmpty)
   }
 
   test("The plane y = 1/2.0 with non-zero origin should not intersect the unit cube") {
-    val joint = Joint((0.0, 1.0, 0.0), localOrigin=(0.0,1/2.0,0.0), center=(0.0, 1.0, 0.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    val joint = Joint((0.0, 1.0, 0.0), localOrigin=(0.0,1/2.0,0.0), center=(0.0, 1.0, 0.0),
+                       phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isEmpty)
   }
 
   test("The plane -y = 1 should not intersect the unit cube") {
-    val joint = Joint((0.0, -1.0, 0.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 1.0, 0.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    val joint = Joint((0.0, -1.0, 0.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 1.0, 0.0),
+                       phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isEmpty)
   }
 
   test("The plane y = 0.99 should intersect the unit cube") {
-    val joint = Joint((0.0, 1.0, 0.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.99, 0.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    val joint = Joint((0.0, 1.0, 0.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.99, 0.0),
+                       phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isDefined)
   }
 
   test("The plane y = 0.49 with non-zero origin should intersect the unit cube") {
-    val joint = Joint((0.0, 1.0, 0.0), localOrigin=(0.0,0.5,0.0), center=(0.0, 0.99, 0.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    val joint = Joint((0.0, 1.0, 0.0), localOrigin=(0.0,0.5,0.0), center=(0.0, 0.99, 0.0),
+                       phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isDefined)
   }
 
   test("The plane -y = 0.99 should intersect the unit cube") {
-    val joint = Joint((0.0, -1.0, 0.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.99, 0.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    val joint = Joint((0.0, -1.0, 0.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.99, 0.0),
+                       phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isDefined)
   }
 
   test("The plane -y = 0.49 with non-zero origin should intersect the unit cube") {
-    val joint = Joint((0.0, -1.0, 0.0), localOrigin=(0.0,0.5,0.0), center=(0.0, 0.99, 0.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    val joint = Joint((0.0, -1.0, 0.0), localOrigin=(0.0,0.5,0.0), center=(0.0, 0.99, 0.0),
+                       phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isDefined)
   }
 
   test("The plane x/sqrt(2.0) - z/sqrt(2.0) = 1 at non-zero origin should intersect the unit cube") {
-    val joint = Joint((1.0/sqrt(2.0), 0.0, -1.0/sqrt(2.0)), localOrigin=(-1.0/sqrt(2.0),0.0,1.0/sqrt(2.0)), center=(0.0, 0.0, 0.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    val joint = Joint((1.0/sqrt(2.0), 0.0, -1.0/sqrt(2.0)), localOrigin=(-1.0/sqrt(2.0),0.0,1.0/sqrt(2.0)), center=(0.0, 0.0, 0.0),
+                       phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isDefined)
   }
 
   test("The plane x/sqrt(2.0) - z/sqrt(2.0) = 1 at (0.0,0.0,1.0) should not intersect the unit cube") {
-    val joint = Joint((1.0/sqrt(2.0), 0.0, -1.0/sqrt(2.0)), localOrigin=(-1.0/sqrt(2.0),0.0,1.0 + 1.0/sqrt(2.0)), center=(0.0, 0.0, 1.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    val joint = Joint((1.0/sqrt(2.0), 0.0, -1.0/sqrt(2.0)), localOrigin=(-1.0/sqrt(2.0),0.0,1.0 + 1.0/sqrt(2.0)), center=(0.0, 0.0, 1.0),
+                       phi=0, cohesion=0, shape=Nil)
     assert(unitCube.intersects(joint).isEmpty)
   }
 
   test("The plane x/sqrt(2.0) - z/sqrt(2.0) = 1 at global origin should intersect the two cube") {
-    val joint = Joint((1.0/sqrt(2.0), 0.0, -1.0/sqrt(2.0)), localOrigin=(-1.0/sqrt(2.0),0.0,1.0/sqrt(2.0)), center=(0.0, 0.0, 0.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    val joint = Joint((1.0/sqrt(2.0), 0.0, -1.0/sqrt(2.0)), localOrigin=(-1.0/sqrt(2.0),0.0,1.0/sqrt(2.0)), center=(0.0, 0.0, 0.0),
+                       phi=0, cohesion=0, shape=Nil)
     assert(twoCube.intersects(joint).isDefined)
   }
 
   test("The plane x/sqrt(2.0) - z/sqrt(2.0) = 1 at (0.0,0.0,1.0) should intersect the two cube") {
-    val joint = Joint((1.0/sqrt(2.0), 0.0, -1.0/sqrt(2.0)), localOrigin=(-1.0/sqrt(2.0),0.0,1.0 + 1.0/sqrt(2.0)), center=(0.0, 0.0, 1.0), dipAngle=0,
-                      dipDirection=0, phi=0, cohesion=0, shape=Nil)
+    val joint = Joint((1.0/sqrt(2.0), 0.0, -1.0/sqrt(2.0)), localOrigin=(-1.0/sqrt(2.0),0.0,1.0 + 1.0/sqrt(2.0)), center=(0.0, 0.0, 1.0),
+                       phi=0, cohesion=0, shape=Nil)
     assert(twoCube.intersects(joint).isDefined)
   }
 
   test("The non-persistent joint z < 1.0 should not intersect the two cube") {
-    val joint = Joint((0.0, 0.0, 1.0), localOrigin = (0.0, 0.0, 0.0), center = (2.0, 0.0, 1.0), dipAngle = 0.0, dipDirection = 0.0,
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin = (0.0, 0.0, 0.0), center = (2.0, 0.0, 1.0),
                       phi=0.0, cohesion = 0.0, shape = jointBounds)
     assert(twoCube.intersects(joint).isEmpty)
   }
 
   test("The non-persistent joint z < 1.0 should intersect the two cube") {
-    val joint = Joint((0.0, 0.0, 1.0), localOrigin = (0.0, 0.0, 0.0), center = (1.99, 0.01, 1.0), dipAngle = 0.0, dipDirection = 0.0,
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin = (0.0, 0.0, 0.0), center = (1.99, 0.01, 1.0),
       phi=0.0, cohesion = 0.0, shape = jointBounds)
     assert(twoCube.intersects(joint).isDefined)
   }
 
   test("The non-persistent joint z < 1.0 with non-global origin should not intersect the two cube") {
-    val joint = Joint((0.0, 0.0, 1.0), localOrigin = (3.0, 0.0, 0.0), center = (3.0, 0.0, 1.0), dipAngle = 0.0, dipDirection = 0.0,
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin = (3.0, 0.0, 0.0), center = (3.0, 0.0, 1.0),
       phi=0.0, cohesion = 0.0, shape = jointBounds2)
     assert(twoCube.intersects(joint).isEmpty)
   }
 
   test("The non-persistent joint z < 1.0 with non-global origin should intersect the two cube") {
-    val joint = Joint((0.0, 0.0, 1.0), localOrigin = (3.0, 0.0, 0.0), center = (2.99, 0.01, 1.0), dipAngle = 0.0, dipDirection = 0.0,
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin = (3.0, 0.0, 0.0), center = (2.99, 0.01, 1.0),
       phi=0.0, cohesion = 0.0, shape = jointBounds2)
     assert(twoCube.intersects(joint).isDefined)
   }
@@ -347,9 +347,9 @@ class BlockSpec extends FunSuite {
   }
 
   test("Cutting the two-cube with faces x=0 and z=0 should produce four blocks") {
-    val xPlane = Joint((1.0,0.0,0.0), (1.0,1.0,1.0), (1.0,1.0,1.0), dipAngle=0, dipDirection=0,
+    val xPlane = Joint((1.0,0.0,0.0), (1.0,1.0,1.0), (1.0,1.0,1.0),
                        phi=0, cohesion=0, shape=Nil)
-    val zPlane = Joint((0.0,0.0,1.0), (1.0, 1.0, 1.0), (1.0,1.0,1.0), dipAngle=0, dipDirection=0,
+    val zPlane = Joint((0.0,0.0,1.0), (1.0, 1.0, 1.0), (1.0,1.0,1.0),
                        phi=0, cohesion=0, shape=Nil)
     val xBlocks = twoCube.cut(xPlane)
     val xzBlocks = xBlocks.flatMap(_.cut(zPlane))
