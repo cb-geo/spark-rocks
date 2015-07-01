@@ -32,6 +32,68 @@ object Joint {
     val n = DenseVector[Double](normalVec._1, normalVec._2, normalVec._3)
     -(n dot w)/linalg.norm(n)
   }
+
+  /**
+   * Find the vector indicating dip direction of the joint plane. Global positive x-axis points North and z-axis oriented
+   * with positive upward. Positive y-axis will point west based on this orientation.
+   * @param normalVec Normal vector to the joint plane
+   * @return Dip direction of the plane, indicating direction of greatest increase in z. Return as vector (a, b, 0)
+   */
+  private def dipDirVector(normalVec: (Double, Double, Double)) = {
+    try {
+      // Dip direction is in opposite direction of gradient indicating greatest increase in z.
+      if ((math.abs(normalVec._3) > Joint.EPSILON) || (math.abs(math.abs(normalVec._3) - 1.0) > Joint.EPSILON)) {
+        DenseVector[Double](normalVec._1 / normalVec._3, normalVec._1 / normalVec._3, 0.0)
+      } else if (math.abs(normalVec._3) < Joint.EPSILON) {
+        // Joint is vertical, assigns non-zero z component that will be caught is dipDir function
+        DenseVector[Double](0.0, 0.0, -1.0)
+      } else if (math.abs(math.abs(normalVec._3) - 1.0) < Joint.EPSILON) {
+        // Joint is horizontal, dip direction arbitrarily assigned to 90 degrees
+        DenseVector[Double](0.0, -1.0, 0.0)
+      }
+    } catch {
+      case e: Exception => println("Check your input vector")
+    }
+  }
+
+  /**
+   * Finds the dip direction of the input joint as an azimuth. Global positive x-axis points North.
+   * @param normalVec Normal vector to the joint plane
+   * @return Dip direction as an azimuth in radians
+   */
+  private def dipDir(normalVec: (Double, Double, Double)) = {
+    val dipVector = Joint.dipDirVector(normalVec)
+    val xAxis = DenseVector[Double](1.0, 0.0, 0.0)
+    if (dipVector(2) != -1.0) {
+      math.acos((xAxis dot dipVector)/(linalg.norm(xAxis) * linalg.norm(dipVector)))
+    } else {
+      val normal = DenseVector[Double](normalVec._1, normalVec._2, normalVec._3)
+      math.acos((xAxis dot normal)/(linalg.norm(normal) * linalg.norm(xAxis)))
+    }
+  }
+
+  /**
+   * Finds the dip angle of the input joint.
+   * @param normalVec Normal vector to the joint plane
+   * @return Dip angle in radians
+   */
+  private def dipAngle(normalVec: (Double, Double, Double)) = {
+    val dipVector = Joint.dipDirVector(normalVec)
+    val normal = DenseVector[Double](normalVec._1, normalVec._2, normalVec._3)
+    if ((dipVector(1) != -1.0) && (dipVector(2) != -1.0)) {
+      if (dipVector(2) > 0.0) {
+        math.Pi - math.acos((normal dot dipVector) / (linalg.norm(normal) * linalg.norm(dipVector)))
+      } else {
+        math.acos((normal dot dipVector) / (linalg.norm(normal) * linalg.norm(dipVector))) - math.Pi
+      }
+    } else if (dipVector(1) == -1.0) {
+      // Joint is horizontal
+      0.0
+    } else {
+      // Joint is vertical
+      math.Pi
+    }
+  }
 }
 /**
   * A simple data structure to represent a joint.
@@ -49,12 +111,14 @@ object Joint {
   * of the line from the joint's center in the local coordinate system.
   */
 case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Double, Double),
-                 center: (Double, Double, Double), dipAngle: Double, dipDirection: Double, phi: Double,
-                 cohesion: Double, shape: Seq[((Double, Double, Double),Double)]) {
+                 center: (Double, Double, Double), phi: Double, cohesion: Double,
+                 shape: Seq[((Double, Double, Double),Double)]) {
   val (a, b, c) = normalVec
   val (centerX, centerY, centerZ) = center
   val d = Joint.findDistance(normalVec, localOrigin, center)
   val (localX, localY, localZ) = localOrigin
+  val dipAngle = Joint.dipAngle(normalVec)
+  val dipDirection = Joint.dipDir(normalVec)
 
   /** Converts lines defining shape of joint from local to global coordinates
     * @return A seq of pairs, each representing a plane that specifies a boundary of the
@@ -92,6 +156,6 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
     * @return Distance relative to block origin (new local origin)
     */
   def updateJoint(blockOrigin: (Double, Double,Double)): Joint = {
-    Joint((a, b, c), blockOrigin, (centerX, centerY, centerZ), dipAngle, dipDirection, phi, cohesion, shape)
+    Joint((a, b, c), blockOrigin, (centerX, centerY, centerZ), phi, cohesion, shape)
   }
 }
