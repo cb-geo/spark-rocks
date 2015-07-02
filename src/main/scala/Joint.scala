@@ -47,8 +47,8 @@ object Joint {
       // Joint is vertical, assigns non-zero z component that will be caught is dipDir function
       DenseVector[Double](0.0, 0.0, -1.0)
     } else {
-      // Joint is horizontal, dip direction arbitrarily assigned to 90 degrees
-      DenseVector[Double](0.0, -1.0, 0.0)
+      // Joint is horizontal, dip direction arbitrarily assigned to 0 degrees
+      DenseVector[Double](1.0, 0.0, 0.0)
     }
   }
 
@@ -68,7 +68,7 @@ object Joint {
       math.acos((xAxis dot dipVector)/(linalg.norm(xAxis) * linalg.norm(dipVector)))
     } else {
       val normal = DenseVector[Double](normalVec._1, normalVec._2, normalVec._3)
-      math.acos((xAxis dot normal)/(linalg.norm(normal) * linalg.norm(xAxis)))
+      math.acos((xAxis dot normal)/(linalg.norm(normal) * linalg.norm(xAxis))) - math.Pi/2.0
     }
   }
 
