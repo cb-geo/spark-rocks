@@ -20,10 +20,64 @@ class JointSpec extends FunSuite {
                     ((0.0, 1.0, 0.0), 1.0),      // y = 1
                     ((0.0, -1.0, 0.0), 0.0))     // -y = 0
 
-  test("Dip direction should be 0") {
+  test("Dip direction for horizontal joint should be pi") {
     val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
                       phi=0, cohesion=0, shape=Nil)
-    assert(joint.dipDirection == 0.0)
+    assert(joint.dipDirection == math.Pi/2.0)
+  }
+
+  test("Dip direction for vertical joint should be pi/2.0") {
+    val joint = Joint((0.0, -1.0, 0.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
+      phi=0, cohesion=0, shape=Nil)
+    assert(joint.dipDirection == math.Pi/2.0)
+  }
+
+  test("Dip direction for vertical joint should be pi") {
+    val joint = Joint((-1.0, 0.0, 0.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
+      phi=0, cohesion=0, shape=Nil)
+    assert(joint.dipDirection == math.Pi)
+  }
+
+  test("Dip direction for vertical joint should be 3.0*pi/2.0") {
+    val joint = Joint((0.0, 1.0, 0.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
+      phi=0, cohesion=0, shape=Nil)
+    assert(joint.dipDirection == 3.0*2.0*math.Pi/4.0)
+  }
+
+  test("Dip direction for non-vertical joint should be pi/2.0") {
+    val joint = Joint((0.0,-1.0/sqrt(2.0), 1.0/sqrt(2.0)), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
+      phi=0, cohesion=0, shape=Nil)
+    assert(joint.dipDirection == math.Pi/2.0)
+  }
+
+  test("Dip direction for non-vertical joint should be 3.0*pi/4.0") {
+    val joint = Joint((-1.0/sqrt(3.0),-1.0/sqrt(3.0),1.0/sqrt(3.0)), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
+      phi=0, cohesion=0, shape=Nil)
+    assert(joint.dipDirection == 3.0*math.Pi/4.0)
+  }
+
+  test("Dip direction for non-vertical joint should be 7.0*pi/4.0") {
+    val joint = Joint((1.0/sqrt(3.0), 1.0/sqrt(3.0), 1.0/sqrt(3.0)), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
+      phi=0, cohesion=0, shape=Nil)
+    assert(joint.dipDirection == 7.0*math.Pi/4.0)
+  }
+
+  test("Dip angle for horizontal joint should be 0.0") {
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
+      phi=0, cohesion=0, shape=Nil)
+    assert(joint.dipAngle == 0.0)
+  }
+
+  test("Dip angle for vertical joint should be pi/2.0") {
+    val joint = Joint((1.0, 0.0, 0.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
+      phi=0, cohesion=0, shape=Nil)
+    assert(joint.dipAngle == math.Pi/2.0)
+  }
+
+  test("Dip angle for joint should be pi/4.0") {
+    val joint = Joint((1.0/sqrt(3.0), 1.0/sqrt(3.0), 1.0/sqrt(3.0)), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
+      phi=0, cohesion=0, shape=Nil)
+    assert(joint.dipAngle == math.Pi/4.0)
   }
 
   test("Dip direction of 0 centered at origin") {

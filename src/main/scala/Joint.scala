@@ -47,8 +47,8 @@ object Joint {
       // Joint is vertical, assigns non-zero z component that will be caught is dipDir function
       DenseVector[Double](0.0, 0.0, -1.0)
     } else {
-      // Joint is horizontal, dip direction arbitrarily assigned to 0 degrees
-      DenseVector[Double](1.0, 0.0, 0.0)
+      // Joint is horizontal, dip direction arbitrarily assigned to 90 degrees
+      DenseVector[Double](0.0, -1.0, 0.0)
     }
   }
 
@@ -59,16 +59,24 @@ object Joint {
    */
   private def dipDir(normalVec: (Double, Double, Double)) = {
     val dipVector = Joint.dipDirVector(normalVec)
-    println("This is the normal vector")
-    println(normalVec)
-    println("This is the dip vector")
-    println(dipVector)
+//    println("This is the normal vector")
+//    println(normalVec)
+//    println("This is the dip vector")
+//    println(dipVector)
     val xAxis = DenseVector[Double](1.0, 0.0, 0.0)
     if (dipVector(2) != -1.0) {
-      math.acos((xAxis dot dipVector)/(linalg.norm(xAxis) * linalg.norm(dipVector)))
+      if (normalVec._2 > 0.0) {
+        2.0*math.Pi - math.acos((xAxis dot dipVector) / (linalg.norm(xAxis) * linalg.norm(dipVector)))
+      } else {
+        math.acos((xAxis dot dipVector) / (linalg.norm(xAxis) * linalg.norm(dipVector)))
+      }
     } else {
       val normal = DenseVector[Double](normalVec._1, normalVec._2, normalVec._3)
-      math.acos((xAxis dot normal)/(linalg.norm(normal) * linalg.norm(xAxis))) - math.Pi/2.0
+      if (normalVec._2 > 0.0) {
+        2.0*math.Pi - math.acos((xAxis dot normal) / (linalg.norm(normal) * linalg.norm(xAxis)))
+      } else {
+        math.acos((xAxis dot normal) / (linalg.norm(normal) * linalg.norm(xAxis)))
+      }
     }
   }
 
@@ -91,7 +99,7 @@ object Joint {
       0.0
     } else {
       // Joint is vertical
-      math.Pi
+      math.Pi/2.0
     }
   }
 }
