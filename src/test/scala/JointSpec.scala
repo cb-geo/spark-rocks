@@ -45,19 +45,19 @@ class JointSpec extends FunSuite {
   }
 
   test("Dip direction for non-vertical joint should be pi/2.0") {
-    val joint = Joint((0.0,-1.0/sqrt(2.0), 1.0/sqrt(2.0)), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
+    val joint = Joint((0.0,-1.0/math.sqrt(2.0), 1.0/math.sqrt(2.0)), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
     assert(joint.dipDirection == math.Pi/2.0)
   }
 
   test("Dip direction for non-vertical joint should be 3.0*pi/4.0") {
-    val joint = Joint((-1.0/sqrt(3.0),-1.0/sqrt(3.0),1.0/sqrt(3.0)), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
+    val joint = Joint((-1.0/math.sqrt(3.0),-1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
     assert(joint.dipDirection == 3.0*math.Pi/4.0)
   }
 
   test("Dip direction for non-vertical joint should be 7.0*pi/4.0") {
-    val joint = Joint((1.0/sqrt(3.0), 1.0/sqrt(3.0), 1.0/sqrt(3.0)), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
+    val joint = Joint((1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
     assert(joint.dipDirection == 7.0*math.Pi/4.0)
   }
@@ -74,42 +74,49 @@ class JointSpec extends FunSuite {
     assert(joint.dipAngle == math.Pi/2.0)
   }
 
-  test("Dip angle for joint should be pi/4.0") {
-    val joint = Joint((1.0/sqrt(3.0), 1.0/sqrt(3.0), 1.0/sqrt(3.0)), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
+  test("Dip angle for joint with positive z-component in normal should be pi/6.0") {
+    val joint = Joint((1.0/math.sqrt(1.0 + math.sqrt(3.0)), 0.0, math.sqrt(3.0)/math.sqrt(1.0 + math.sqrt(3.0))), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
-    assert(joint.dipAngle == math.Pi/4.0)
+    assert(math.abs(joint.dipAngle - math.Pi/6.0) < EPSILON)
   }
 
-  test("Dip direction of 0 centered at origin") {
+  test("Dip angle for joint with negative z-component in normal should be pi/6.0") {
+    val joint = Joint((0.0, 1.0/math.sqrt(1.0 + math.sqrt(3.0)), -math.sqrt(3.0)/math.sqrt(1.0 + math.sqrt(3.0))), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
+      phi=0, cohesion=0, shape=Nil)
+    assert(math.abs(joint.dipAngle - math.Pi/6.0) < EPSILON)
+  }
+
+  test("Dip direction of pi/2.0 centered at origin") {
     val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
                        phi=0, cohesion=0, shape=boundaries)
     val newBoundaries: List[((Double,Double,Double), Double)] =
-        List(((0.0, -1.0, 0.0), 1.0),
-             ((0.0, 1.0, 0.0), 0.0),
-             ((1.0, 0.0, 0.0), 1.0),
-             ((-1.0, 0.0, 0.0), 0.0))
+        List(((1.0, 0.0, 0.0), 1.0),
+             ((-1.0, 0.0, 0.0), 0.0),
+             ((0.0, 1.0, 0.0), 1.0),
+             ((0.0, -1.0, 0.0), 0.0))
     assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
   }
 
-  test("Dip direction of 0 centered at (1.0, 2.0, 3.0)") {
-    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,2.0), center=(1.0,2.0,3.0),
+  test("Dip direction of pi/2.0 centered at (1.0, 2.0, 3.0)") {
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,0.0), center=(1.0,2.0,3.0),
                        phi=0, cohesion=0, shape=boundaries)
     val newBoundaries: List[((Double,Double,Double), Double)] =
-        List(((0.0, -1.0, 0.0), -1.0),
-             ((0.0, 1.0, 0.0), 2.0),
-             ((1.0, 0.0, 0.0), 2.0),
-             ((-1.0, 0.0, 0.0), -1.0))
+        List(((1.0, 0.0, 0.0), 2.0),
+          ((-1.0, 0.0, 0.0), -1.0),
+          ((0.0, 1.0, 0.0), 3.0),
+          ((0.0, -1.0, 0.0), -2.0))
     assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
   }
 
-  test("Dip direction of pi/4 centered at origin") {
-    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,-1.0), center=(0.0, 0.0, 0.0),
+  test("Dip direction of 0.0 centered at origin") {
+    val joint = Joint((1.0, 0.0, 0.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 0.0),
                       phi=0, cohesion=0, shape=boundaries)
     val newBoundaries: List[((Double,Double,Double), Double)] =
-      List(((math.sqrt(2)/2.0, -math.sqrt(2)/2.0, 0.0), 1.0),
-           ((-math.sqrt(2)/2.0, math.sqrt(2)/2.0, 0.0), 0.0),
-           ((math.sqrt(2)/2.0, math.sqrt(2)/2.0, 0.0), 1.0),
-           ((-math.sqrt(2)/2.0, -math.sqrt(2)/2.0, 0.0), 0.0))
+        List(((0.0, 1.0, 0.0), 1.0),
+          ((0.0, -1.0, 0.0), 0.0),
+          ((0.0, 0.0, -1.0), 1.0),
+          ((0.0, 0.0, 1.0), 0.0))
+    println(joint.globalCoordinates)
     assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
   }
 
@@ -137,7 +144,7 @@ class JointSpec extends FunSuite {
   }
 
   test("The plane x/sqrt(2.0) - z/sqrt(2.0) = 1 at center (0.0,0.0,1.0) should have distance 1.0 from local origin") {
-    val joint = Joint((1.0/sqrt(2.0), 0.0, -1.0/sqrt(2.0)), localOrigin=(-1.0/sqrt(2.0),0.0,1.0 + 1.0/sqrt(2.0)), center=(0.0, 0.0, 1.0),
+    val joint = Joint((1.0/math.sqrt(2.0), 0.0, -1.0/math.sqrt(2.0)), localOrigin=(-1.0/math.sqrt(2.0),0.0,1.0 + 1.0/math.sqrt(2.0)), center=(0.0, 0.0, 1.0),
        phi=0, cohesion=0, shape=Nil)
     var distance = joint.d
     if (math.abs(joint.d - 1.0) < EPSILON) {
