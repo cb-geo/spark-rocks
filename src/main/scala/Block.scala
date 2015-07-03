@@ -41,6 +41,37 @@ object Block {
 
   private def applyTolerance(d: Double): Double =
     if (math.abs(d) >= EPSILON) d else 0.0
+
+  private def findBoundingSphere(centerX: Double, centerY: Double, centerZ: Double, faces: Seq[Face]):
+      ((Double,Double,Double), Double) = {
+    val basisVectors = Array(
+      Array[Double](1.0, 0.0, 0.0),
+      Array[Double](0.0, 1.0, 0.0),
+      Array[Double](0.0, 0.0, 1.0),
+      Array[Double](-1.0, 0.0, 0.0),
+      Array[Double](0.0, -1.0, 0.0),
+      Array[Double](0.0, 0.0, -1.0)
+    )
+
+    val maxCoordinates = basisVectors.map { v =>
+      val linProg = new LinearProgram(3)
+      linProg.setObjFun(v.toArray, LinearProgram.MAX)
+      faces foreach { face =>
+        val coeffs = Array[Double](face.a, face.b, face.c).map(applyTolerance)
+        val rhs = applyTolerance(face.d)
+        linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
+      }
+      linProg.solve().get._2
+    }
+
+    val pairedCoords = maxCoordinates.take(3).zip(maxCoordinates.takeRight(3))
+    val center = pairedCoords.map { case (x,y) => 0.5 * (x+y) }
+    val diffVector = pairedCoords.map { case (x,y) => x - y }
+    val radius = 0.5 * linalg.norm(DenseVector[Double](diffVector))
+
+    // Shift from Block local coordinates to global coordinates
+    ((center(0) + centerX, center(1) + centerY, center(2) + centerZ), radius)
+  }
 }
 
 /** A rock block.
@@ -52,6 +83,8 @@ object Block {
   */
 case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
   val (centerX, centerY, centerZ) = center
+  val ((sphereCenterX, sphereCenterY, sphereCenterZ), sphereRadius) =
+      Block.findBoundingSphere(centerX, centerY, centerZ, faces)
 
   /**
     * Determine whether or not a joint intersects this rock block.
@@ -60,6 +93,12 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     * where (x,y,z) is the point of intersection.
     */
   def intersects(joint: Joint): Option[(Double,Double,Double)] = {
+    val sphereJoint = joint.updateJoint(sphereCenterX, sphereCenterY, sphereCenterZ)
+    if (sphereJoint.d > sphereRadius) {
+      return None // Intersection is impossible, so we can avoid solving an LP
+    }
+
+
     val linProg = new LinearProgram(4)
     // Minimize s
     linProg.setObjFun(Vector[Double](0.0, 0.0, 0.0, 1.0), LinearProgram.MIN)

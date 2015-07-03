@@ -14,7 +14,7 @@ object Joint {
    * @return
    */
   private def findDistance(normalVec: (Double, Double, Double), localOrigin: (Double, Double, Double),
-                            center: (Double, Double, Double)) = {
+                            center: (Double, Double, Double)): Double = {
     val w = DenseVector.zeros[Double](3)
     if (math.abs(normalVec._3) >= EPSILON) {
       w(0) = localOrigin._1

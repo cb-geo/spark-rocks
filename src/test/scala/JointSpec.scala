@@ -1,4 +1,4 @@
-import breeze.numerics.sqrt
+import math.sqrt
 import org.scalatest._
 import edu.berkeley.ce.rockslicing.Joint
 
@@ -46,10 +46,10 @@ class JointSpec extends FunSuite {
     val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,-1.0), center=(0.0, 0.0, 0.0), dipAngle=0,
                       dipDirection=math.Pi/4.0, phi=0, cohesion=0, shape=boundaries)
     val newBoundaries: List[((Double,Double,Double), Double)] =
-      List(((math.sqrt(2)/2.0, -math.sqrt(2)/2.0, 0.0), 1.0),
-           ((-math.sqrt(2)/2.0, math.sqrt(2)/2.0, 0.0), 0.0),
-           ((math.sqrt(2)/2.0, math.sqrt(2)/2.0, 0.0), 1.0),
-           ((-math.sqrt(2)/2.0, -math.sqrt(2)/2.0, 0.0), 0.0))
+      List(((sqrt(2)/2.0, -sqrt(2)/2.0, 0.0), 1.0),
+           ((-sqrt(2)/2.0, sqrt(2)/2.0, 0.0), 0.0),
+           ((sqrt(2)/2.0, sqrt(2)/2.0, 0.0), 1.0),
+           ((-sqrt(2)/2.0, -sqrt(2)/2.0, 0.0), 0.0))
     assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
   }
 
@@ -57,10 +57,10 @@ class JointSpec extends FunSuite {
     val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,2.0), center=(1.0, 2.0, 3.0), dipAngle=0,
                       dipDirection=math.Pi/4.0, phi=0, cohesion=0, shape=boundaries)
     val newBoundaries: List[((Double,Double,Double), Double)] =
-      List(((math.sqrt(2)/2.0, -math.sqrt(2)/2.0, 0.0), 1 - math.sqrt(2)/2.0),
-           ((-math.sqrt(2)/2.0, math.sqrt(2)/2.0, 0.0), math.sqrt(2)/2.0),
-           ((math.sqrt(2)/2.0, math.sqrt(2)/2.0, 0.0), 1 + 3*math.sqrt(2)/2.0),
-           ((-math.sqrt(2)/2.0, -math.sqrt(2)/2.0, 0.0), -3*math.sqrt(2)/2.0))
+      List(((sqrt(2)/2.0, -sqrt(2)/2.0, 0.0), 1 - sqrt(2)/2.0),
+           ((-sqrt(2)/2.0, sqrt(2)/2.0, 0.0), sqrt(2)/2.0),
+           ((sqrt(2)/2.0, sqrt(2)/2.0, 0.0), 1 + 3*sqrt(2)/2.0),
+           ((-sqrt(2)/2.0, -sqrt(2)/2.0, 0.0), -3*sqrt(2)/2.0))
     assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
   }
 
