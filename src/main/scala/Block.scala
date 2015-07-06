@@ -42,6 +42,16 @@ object Block {
   private def applyTolerance(d: Double): Double =
     if (math.abs(d) >= EPSILON) d else 0.0
 
+  /**
+   * Find a bounding sphere for a rock block.
+   * @param centerX The x coordinate of the block's center
+   * @param centerY The y coordinate of the block's center
+   * @param centerZ The z coordinate of the block's center
+   * @param faces A sequence of faces specifying the block's boundaries
+   * @return A pair where the first element is a triple giving the center of
+   *         the bounding sphere and the second element is the radius of the
+   *         bounding sphere.
+   */
   private def findBoundingSphere(centerX: Double, centerY: Double, centerZ: Double, faces: Seq[Face]):
       ((Double,Double,Double), Double) = {
     val basisVectors = Array(
@@ -74,8 +84,8 @@ object Block {
   }
 }
 
-/** A rock block.
-  *
+/**
+  * A rock block.
   * @constructor Create a new rock block
   * @param center Cartesian coordinates for the center of the rock block. The individual
   * components can be accessed as 'centerX', 'centerY', and 'centerZ'.
@@ -94,11 +104,21 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     */
   def intersects(joint: Joint): Option[(Double,Double,Double)] = {
     val sphereJoint = joint.updateJoint(sphereCenterX, sphereCenterY, sphereCenterZ)
-    if (sphereJoint.d > sphereRadius) {
-      return None // Intersection is impossible, so we can avoid solving an LP
+    sphereJoint.boundingSphere match {
+      case None =>
+        // The joint is persistent
+        if (sphereJoint.d > sphereRadius) None else bruteForceIntersects(joint)
+      case Some(((x,y,z),r)) =>
+        // The joint is not persistent
+        val jointOrigin = DenseVector[Double](x,y,z)
+        val blockOrigin = DenseVector[Double](sphereCenterX, sphereCenterY, sphereCenterZ)
+        val distance = linalg.norm(jointOrigin - blockOrigin)
+        if (distance > (sphereRadius + r)) None else bruteForceIntersects(joint)
     }
+  }
 
-
+  // This computes intersection without any sort of intelligence -- just solves an LP
+  private def bruteForceIntersects(joint: Joint): Option[(Double,Double,Double)] = {
     val linProg = new LinearProgram(4)
     // Minimize s
     linProg.setObjFun(Vector[Double](0.0, 0.0, 0.0, 1.0), LinearProgram.MIN)
@@ -140,7 +160,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
   def cut(joint: Joint): Seq[Block] =
     this.intersects(joint) match {
       case None => Vector(this)
-      case Some((x,y,z)) => {
+      case Some((x,y,z)) =>
         val newX = centerX + x
         val newY = centerY + y
         val newZ = centerZ + z
@@ -150,7 +170,6 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
           Block((newX,newY,newZ), Face((joint.a, joint.b, joint.c), 0.0, joint.phi, joint.cohesion)+:updatedFaces),
           Block((newX,newY,newZ), Face((-joint.a,-joint.b,-joint.c), 0.0, joint.phi, joint.cohesion)+:updatedFaces)
         )
-      }
     }
 
   /**
