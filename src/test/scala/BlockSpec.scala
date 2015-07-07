@@ -1,6 +1,6 @@
-import breeze.numerics.{pow, sqrt}
+import math.sqrt
+import edu.berkeley.ce.rockslicing.{Block, Delaunay, Face, Joint}
 import org.scalatest._
-import edu.berkeley.ce.rockslicing.{Face, Block, Joint, Delaunay}
 
 class BlockSpec extends FunSuite {
   val boundingFaces = List(
