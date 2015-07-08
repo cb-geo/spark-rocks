@@ -98,7 +98,34 @@ object Joint {
       math.Pi/2.0
     }
   }
+
+//  /**
+//   * Calculates the rotation matrix that transforms joint local cooridinates to global coordinates.
+//   * @param strike Strike of the joint as an azimuth in radians
+//   * @param dip Dip angle in radians
+//   * @return rotation matrix
+//   */
+//  private def rotationMatrix(strike: Double, dip: Double) = {
+//    val dipAngle = -(math.Pi + dip)
+//    // Rotation about z-axis
+//    val Rz = DenseMatrix.zeros[Double](3,3)
+//    Rz(0,0) = math.cos(strike)
+//    Rz(0,1) = -math.sin(strike)
+//    Rz(1,0) = math.sin(strike)
+//    Rz(1,1) = math.cos(strike)
+//    Rz(2,2) = 1.0
+//    // Rotation about x-axis
+//    val Rx = DenseMatrix.zeros[Double](3,3)
+//    Rx(0,0) = 1.0
+//    Rx(1,1) = math.cos(dipAngle)
+//    Rx(1,2) = -math.sin(dipAngle)
+//    Rx(2,1) = math.sin(dipAngle)
+//    Rx(2,2) = math.cos(dipAngle)
+//    // Rotation matrix is product of x and z rotation matrices
+//    Rx * Rz
+//  }
 }
+
 /**
   * A simple data structure to represent a joint.
   * @constructor Create a new joint.
@@ -130,9 +157,13 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
     * vector for the plane, and the second item is the distance of the plane from the origin.
     */
   def globalCoordinates: Seq[((Double, Double, Double), Double)] = {
-    val Nplane = DenseVector[Double](a, b, c)
-    val strike = (dipDirection - math.Pi / 2) % (2 * math.Pi) // CHECKED: strike = dipDirection - pi/2 (US convention)
-    val Nstrike = DenseVector[Double](math.cos(strike), math.sin(strike), 0.0)
+    var normalDirection = -1.0 // Negative needed simply because of how vertical planes are dealt with
+    if (math.abs(c) > Joint.EPSILON) { // For non-verical planes
+      normalDirection = -c/math.abs(c) // Ensures that normal will always point in -z global direction (ensures right-handed local coordinates)
+    }
+    val Nplane = normalDirection * DenseVector[Double](a, b, c)
+    val strike = (dipDirection - math.Pi / 2) % (2 * math.Pi) // Strike = dipDirection - pi/2 (US convention)
+    val Nstrike = DenseVector[Double](math.cos(2.0*math.Pi - strike), math.sin(2.0*math.Pi - strike), 0.0)
     val Ndip = linalg.cross(Nplane, Nstrike)
 
     // Q defines the linear transformation to convert to global coordinates

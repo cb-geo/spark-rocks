@@ -86,14 +86,25 @@ class JointSpec extends FunSuite {
     assert(math.abs(joint.dipAngle - math.Pi/6.0) < EPSILON)
   }
 
-  test("Dip direction of pi/2.0 centered at origin") {
-    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
+  test("Dip direction of pi/2.0 centered at origin with positive z component in normal") {
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,0.0), center=(0.0,0.0,0.0),
                        phi=0, cohesion=0, shape=boundaries)
     val newBoundaries: List[((Double,Double,Double), Double)] =
         List(((1.0, 0.0, 0.0), 1.0),
              ((-1.0, 0.0, 0.0), 0.0),
-             ((0.0, 1.0, 0.0), 1.0),
-             ((0.0, -1.0, 0.0), 0.0))
+             ((0.0, -1.0, 0.0), 1.0),
+             ((0.0, 1.0, 0.0), 0.0))
+    assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
+  }
+
+  test("Dip direction of pi/2.0 centered at origin with negative z component in normal") {
+    val joint = Joint((0.0, 0.0, -1.0), localOrigin=(0.0,0.0,0.0), center=(0.0,0.0,0.0),
+      phi=0, cohesion=0, shape=boundaries)
+    val newBoundaries: List[((Double,Double,Double), Double)] =
+      List(((1.0, 0.0, 0.0), 1.0),
+        ((-1.0, 0.0, 0.0), 0.0),
+        ((0.0, -1.0, 0.0), 1.0),
+        ((0.0, 1.0, 0.0), 0.0))
     assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
   }
 
@@ -103,8 +114,8 @@ class JointSpec extends FunSuite {
     val newBoundaries: List[((Double,Double,Double), Double)] =
         List(((1.0, 0.0, 0.0), 2.0),
           ((-1.0, 0.0, 0.0), -1.0),
-          ((0.0, 1.0, 0.0), 3.0),
-          ((0.0, -1.0, 0.0), -2.0))
+          ((0.0, -1.0, 0.0), -1.0),
+          ((0.0, 1.0, 0.0), 2.0))
     assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
   }
 
@@ -116,19 +127,33 @@ class JointSpec extends FunSuite {
           ((0.0, -1.0, 0.0), 0.0),
           ((0.0, 0.0, -1.0), 1.0),
           ((0.0, 0.0, 1.0), 0.0))
-    println(joint.globalCoordinates)
     assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
   }
 
-  test("Dip direction of pi/4 centered at (1.0, 2.0, 3.0)") {
-    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,2.0), center=(1.0, 2.0, 3.0),
-                      phi=0, cohesion=0, shape=boundaries)
+  test("Dip direction of 3*pi/2 centered at origin") {
+    val joint = Joint((0.0, 1.0, 0.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 0.0),
+      phi=0, cohesion=0, shape=boundaries)
     val newBoundaries: List[((Double,Double,Double), Double)] =
-      List(((math.sqrt(2)/2.0, -math.sqrt(2)/2.0, 0.0), 1 - math.sqrt(2)/2.0),
-           ((-math.sqrt(2)/2.0, math.sqrt(2)/2.0, 0.0), math.sqrt(2)/2.0),
-           ((math.sqrt(2)/2.0, math.sqrt(2)/2.0, 0.0), 1 + 3*math.sqrt(2)/2.0),
-           ((-math.sqrt(2)/2.0, -math.sqrt(2)/2.0, 0.0), -3*math.sqrt(2)/2.0))
+      List(((-1.0, 0.0, 0.0), 1.0),
+        ((1.0, 0.0, 0.0), 0.0),
+        ((0.0, 0.0, -1.0), 1.0),
+        ((0.0, 0.0, 1.0), 0.0))
     assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
+  }
+
+  test("Dip direction of pi/4 centered at origin") {
+    val joint = Joint((1.0/math.sqrt(2.0), -1.0/math.sqrt(2.0), 0.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 0.0),
+      phi=0, cohesion=0, shape=boundaries)
+    val newBoundaries: List[((Double,Double,Double), Double)] =
+      List(((1.0/math.sqrt(2.0), 1.0/math.sqrt(2.0), 0.0), 1.0),
+        ((-1.0/math.sqrt(2.0), -1.0/math.sqrt(2.0), 0.0), 0.0),
+        ((0.0, 0.0, -1.0), 1.0),
+        ((0.0, 0.0, 1.0), 0.0))
+    assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
+  }
+
+  test("Dip direction of pi/2 and dip angle of pi/4") {
+    // CONTINUE HERE
   }
 
   test("The joint should have distance 1/2.0") {
