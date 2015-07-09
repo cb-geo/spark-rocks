@@ -152,6 +152,18 @@ class JointSpec extends FunSuite {
     assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
   }
 
+  test("Dip direction of pi/4 centered at (1.0, 2.0, 3.0") {
+    val joint = Joint((1.0/math.sqrt(2.0), -1.0/math.sqrt(2.0), 0.0), localOrigin=(0.0,0.0,0.0), center=(1.0, 2.0, 3.0),
+      phi=0, cohesion=0, shape=boundaries)
+    val newBoundaries: List[((Double,Double,Double), Double)] =
+      List(((1.0/math.sqrt(2.0), 1.0/math.sqrt(2.0), 0.0), 1.0),
+        ((-1.0/math.sqrt(2.0), -1.0/math.sqrt(2.0), 0.0), 0.0),
+        ((0.0, 0.0, -1.0), -2.0),
+        ((0.0, 0.0, 1.0), 3.0))
+    println(joint.globalCoordinates)
+    assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
+  }
+
   test("Dip direction of pi/2 and dip angle of pi/4") {
     // CONTINUE HERE
   }

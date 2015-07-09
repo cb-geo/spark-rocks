@@ -177,6 +177,11 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
 
     val centerVec = DenseVector[Double](centerX, centerY, centerZ)
     val localDistances = shape.map { _._2 }
+//    val globalDistances = globalShapeVecs.map
+//                              {case (shapeVec) =>
+//                                Joint.findDistance((shapeVec(0), shapeVec(1), shapeVec(2)),
+//                                                   (localX, localY, localZ), (centerX, centerY, centerZ))}
+
     val globalDistances = globalShapeVecs.zip(localDistances).map
                               { case (shapeVec, dist) => dist + shapeVec.dot(centerVec) }
 
