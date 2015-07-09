@@ -98,32 +98,6 @@ object Joint {
       math.Pi/2.0
     }
   }
-
-//  /**
-//   * Calculates the rotation matrix that transforms joint local cooridinates to global coordinates.
-//   * @param strike Strike of the joint as an azimuth in radians
-//   * @param dip Dip angle in radians
-//   * @return rotation matrix
-//   */
-//  private def rotationMatrix(strike: Double, dip: Double) = {
-//    val dipAngle = -(math.Pi + dip)
-//    // Rotation about z-axis
-//    val Rz = DenseMatrix.zeros[Double](3,3)
-//    Rz(0,0) = math.cos(strike)
-//    Rz(0,1) = -math.sin(strike)
-//    Rz(1,0) = math.sin(strike)
-//    Rz(1,1) = math.cos(strike)
-//    Rz(2,2) = 1.0
-//    // Rotation about x-axis
-//    val Rx = DenseMatrix.zeros[Double](3,3)
-//    Rx(0,0) = 1.0
-//    Rx(1,1) = math.cos(dipAngle)
-//    Rx(1,2) = -math.sin(dipAngle)
-//    Rx(2,1) = math.sin(dipAngle)
-//    Rx(2,2) = math.cos(dipAngle)
-//    // Rotation matrix is product of x and z rotation matrices
-//    Rx * Rz
-//  }
 }
 
 /**
@@ -177,10 +151,6 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
 
     val centerVec = DenseVector[Double](centerX, centerY, centerZ)
     val localDistances = shape.map { _._2 }
-//    val globalDistances = globalShapeVecs.map
-//                              {case (shapeVec) =>
-//                                Joint.findDistance((shapeVec(0), shapeVec(1), shapeVec(2)),
-//                                                   (localX, localY, localZ), (centerX, centerY, centerZ))}
 
     val globalDistances = globalShapeVecs.zip(localDistances).map
                               { case (shapeVec, dist) => dist + shapeVec.dot(centerVec) }

@@ -170,7 +170,6 @@ class JointSpec extends FunSuite {
         ((-1.0, 0.0, 0.0), 0.0),
         ((0.0, -math.cos(math.Pi/6.0), -math.sin(math.Pi/6.0)), 1.0),
         ((0.0, math.cos(math.Pi/6.0), math.sin(math.Pi/6.0)), 0.0))
-    println(joint.globalCoordinates)
     assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
   }
 
