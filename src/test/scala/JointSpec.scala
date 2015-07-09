@@ -1,4 +1,3 @@
-import breeze.numerics.sqrt
 import org.scalatest._
 import edu.berkeley.ce.rockslicing.Joint
 
@@ -156,16 +155,23 @@ class JointSpec extends FunSuite {
     val joint = Joint((1.0/math.sqrt(2.0), -1.0/math.sqrt(2.0), 0.0), localOrigin=(0.0,0.0,0.0), center=(1.0, 2.0, 3.0),
       phi=0, cohesion=0, shape=boundaries)
     val newBoundaries: List[((Double,Double,Double), Double)] =
-      List(((1.0/math.sqrt(2.0), 1.0/math.sqrt(2.0), 0.0), 1.0),
-        ((-1.0/math.sqrt(2.0), -1.0/math.sqrt(2.0), 0.0), 0.0),
+      List(((1.0/math.sqrt(2.0), 1.0/math.sqrt(2.0), 0.0), 1.0 + math.sqrt(1.5*1.5 + 1.5*1.5)),
+        ((-1.0/math.sqrt(2.0), -1.0/math.sqrt(2.0), 0.0), -math.sqrt(1.5*1.5 + 1.5*1.5)),
         ((0.0, 0.0, -1.0), -2.0),
         ((0.0, 0.0, 1.0), 3.0))
-    println(joint.globalCoordinates)
     assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
   }
 
-  test("Dip direction of pi/2 and dip angle of pi/4") {
-    // CONTINUE HERE
+  test("Dip direction of pi/2 and dip angle of pi/6 centered at origin") {
+    val joint = Joint((0.0, -math.sin(math.Pi/6.0), math.cos(math.Pi/6.0)), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 0.0),
+      phi=0, cohesion=0, shape=boundaries)
+    val newBoundaries: List[((Double,Double,Double), Double)] =
+      List(((1.0, 0.0, 0.0), 1.0),
+        ((-1.0, 0.0, 0.0), 0.0),
+        ((0.0, -math.cos(math.Pi/6.0), -math.sin(math.Pi/6.0)), 1.0),
+        ((0.0, math.cos(math.Pi/6.0), math.sin(math.Pi/6.0)), 0.0))
+    println(joint.globalCoordinates)
+    assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
   }
 
   test("The joint should have distance 1/2.0") {

@@ -37,6 +37,13 @@ class BlockSpec extends FunSuite {
     ((0.0, -1.0, 0.0), 1.0)
   )
 
+  val jointBounds3 = Seq(
+    ((1.0/math.sqrt(2.0), 1.0/math.sqrt(2.0), 0.0), 1.0),
+    ((-1.0/math.sqrt(2.0), 1.0/math.sqrt(2.0), 0.0), 1.0),
+    ((-1.0/math.sqrt(2.0), -1.0/math.sqrt(2.0), 0.0), 1.0),
+    ((1.0/math.sqrt(2.0), -1.0/math.sqrt(2.0), 0.0), 1.0)
+  )
+
   def centroidDifference(c1: (Double, Double, Double), c2: (Double, Double, Double)) : Double =
     c1 match {
       case (a,b,c) => c2 match {
@@ -170,6 +177,26 @@ class BlockSpec extends FunSuite {
     val joint = Joint((0.0, 0.0, 1.0), localOrigin = (3.0, 0.0, 0.0), center = (2.99, 0.01, 1.0),
       phi=0.0, cohesion = 0.0, shape = jointBounds2)
     assert(twoCube.intersects(joint).isDefined)
+  }
+
+  test("The non-persistent joint z < 0 with rotated bounds should not intersect the unit cube") {
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin = (0.0, 0.0, 0.0), center = (2.0, 2.0, 0.5),
+      phi=0.0, cohesion = 0.0, shape = jointBounds3)
+    assert(unitCube.intersects(joint).isEmpty)
+  }
+
+  test("The non-persistent joint z < 0 with rotated bounds should JUST not intersect the unit cube") {
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin = (0.0, 0.0, 0.0),
+      center = (1.0 + 1.0/math.sqrt(2.0), 1.0 + 1.0/math.sqrt(2.0), 0.5),
+      phi=0.0, cohesion = 0.0, shape = jointBounds3)
+    assert(unitCube.intersects(joint).isEmpty)
+  }
+
+  test("The non-persistent joint z < 0 with rotated bounds should intersect the unit cube") {
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin = (0.0, 0.0, 0.0),
+      center = (1.0 + 1.0/math.sqrt(2.0), 0.99 + 1.0/math.sqrt(2.0), 0.5),
+      phi=0.0, cohesion = 0.0, shape = jointBounds3)
+    assert(unitCube.intersects(joint).isDefined)
   }
 
   test("The unit cube should not contain any redundant faces") {
