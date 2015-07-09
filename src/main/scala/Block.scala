@@ -41,10 +41,51 @@ object Block {
 
   private def applyTolerance(d: Double): Double =
     if (math.abs(d) >= EPSILON) d else 0.0
+
+  /**
+   * Find a bounding sphere for a rock block.
+   * @param centerX The x coordinate of the block's center
+   * @param centerY The y coordinate of the block's center
+   * @param centerZ The z coordinate of the block's center
+   * @param faces A sequence of faces specifying the block's boundaries
+   * @return A pair where the first element is a triple giving the center of
+   *         the bounding sphere and the second element is the radius of the
+   *         bounding sphere.
+   */
+  private def findBoundingSphere(centerX: Double, centerY: Double, centerZ: Double, faces: Seq[Face]):
+      ((Double,Double,Double), Double) = {
+    val basisVectors = Array(
+      Array[Double](1.0, 0.0, 0.0),
+      Array[Double](0.0, 1.0, 0.0),
+      Array[Double](0.0, 0.0, 1.0),
+      Array[Double](-1.0, 0.0, 0.0),
+      Array[Double](0.0, -1.0, 0.0),
+      Array[Double](0.0, 0.0, -1.0)
+    )
+
+    val maxCoordinates = basisVectors.map { v =>
+      val linProg = new LinearProgram(3)
+      linProg.setObjFun(v.toArray, LinearProgram.MAX)
+      faces foreach { face =>
+        val coeffs = Array[Double](face.a, face.b, face.c).map(applyTolerance)
+        val rhs = applyTolerance(face.d)
+        linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
+      }
+      linProg.solve().get._2
+    }
+
+    val pairedCoords = maxCoordinates.take(3).zip(maxCoordinates.takeRight(3))
+    val center = pairedCoords.map { case (x,y) => 0.5 * (x+y) }
+    val diffVector = pairedCoords.map { case (x,y) => x - y }
+    val radius = 0.5 * linalg.norm(DenseVector[Double](diffVector))
+
+    // Shift from Block local coordinates to global coordinates
+    ((center(0) + centerX, center(1) + centerY, center(2) + centerZ), radius)
+  }
 }
 
-/** A rock block.
-  *
+/**
+  * A rock block.
   * @constructor Create a new rock block
   * @param center Cartesian coordinates for the center of the rock block. The individual
   * components can be accessed as 'centerX', 'centerY', and 'centerZ'.
@@ -52,6 +93,8 @@ object Block {
   */
 case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
   val (centerX, centerY, centerZ) = center
+  val ((sphereCenterX, sphereCenterY, sphereCenterZ), sphereRadius) =
+      Block.findBoundingSphere(centerX, centerY, centerZ, faces)
 
   /**
     * Determine whether or not a joint intersects this rock block.
@@ -60,6 +103,22 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     * where (x,y,z) is the point of intersection.
     */
   def intersects(joint: Joint): Option[(Double,Double,Double)] = {
+    val sphereJoint = joint.updateJoint(sphereCenterX, sphereCenterY, sphereCenterZ)
+    sphereJoint.boundingSphere match {
+      case None =>
+        // The joint is persistent
+        if (sphereJoint.d > sphereRadius) None else bruteForceIntersects(joint)
+      case Some(((x,y,z),r)) =>
+        // The joint is not persistent
+        val jointOrigin = DenseVector[Double](x,y,z)
+        val blockOrigin = DenseVector[Double](sphereCenterX, sphereCenterY, sphereCenterZ)
+        val distance = linalg.norm(jointOrigin - blockOrigin)
+        if (distance > (sphereRadius + r)) None else bruteForceIntersects(joint)
+    }
+  }
+
+  // This computes intersection without any sort of intelligence -- just solves an LP
+  private def bruteForceIntersects(joint: Joint): Option[(Double,Double,Double)] = {
     val linProg = new LinearProgram(4)
     // Minimize s
     linProg.setObjFun(Vector[Double](0.0, 0.0, 0.0, 1.0), LinearProgram.MIN)
@@ -101,7 +160,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
   def cut(joint: Joint): Seq[Block] =
     this.intersects(joint) match {
       case None => Vector(this)
-      case Some((x,y,z)) => {
+      case Some((x,y,z)) =>
         val newX = centerX + x
         val newY = centerY + y
         val newZ = centerZ + z
@@ -111,7 +170,6 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
           Block((newX,newY,newZ), Face((joint.a, joint.b, joint.c), 0.0, joint.phi, joint.cohesion)+:updatedFaces),
           Block((newX,newY,newZ), Face((-joint.a,-joint.b,-joint.c), 0.0, joint.phi, joint.cohesion)+:updatedFaces)
         )
-      }
     }
 
   /**

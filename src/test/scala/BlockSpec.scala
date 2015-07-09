@@ -1,4 +1,4 @@
-import breeze.numerics.{pow, sqrt}
+import math.sqrt
 import org.scalatest._
 import edu.berkeley.ce.rockslicing.{Face, Block, Joint, Delaunay}
 
@@ -277,7 +277,7 @@ class BlockSpec extends FunSuite {
     val face1 = Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
     val face2 = Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
     val face3 = Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
-    val face4 = Face((1/math.sqrt(2.0), 1/math.sqrt(2.0), 0.0), 1/math.sqrt(2.0), phi=0, cohesion=0)
+    val face4 = Face((1/sqrt(2.0), 1/sqrt(2.0), 0.0), 1/sqrt(2.0), phi=0, cohesion=0)
     val block = Block((1.0, 1.0, 1.0), List(face1, face2, face3, face4))
 
     val vertices = block.findVertices
