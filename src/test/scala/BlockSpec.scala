@@ -211,8 +211,9 @@ class BlockSpec extends FunSuite {
 
   // CONTINUE HERE - SOMETHING ISN'T WORKING OUT IN THIS UNIT TEST. NEED TO UPDATE GLOBAL COORDINATES BASED ON INPUT ORIGIN (BLOCK)
   test("The non-persistent joint z < 0 should not intersect the non-global origin two cube ") {
-    val joint = Joint((0.0, 0.0, 1.0), localOrigin = (0.0, 0.0, 0.0), center = (2.0, 2.0, 2.0),
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin = (1.0, 1.0, 1.0), center = (2.0, 2.0, 2.0),
                       phi = 0.0, cohesion = 0.0, shape = jointBounds)
+
     println(joint.globalCoordinates)
     assert(twoCubeNonOrigin.intersects(joint).isDefined)
   }
