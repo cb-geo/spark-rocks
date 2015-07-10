@@ -23,6 +23,16 @@ class BlockSpec extends FunSuite {
   )
   val twoCube = Block((0.0, 0.0, 0.0), boundingFaces2)
 
+  val boundingFaces3 = List(
+    Face((-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), // -x = 1
+    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),  // x = 1
+    Face((0.0, -1.0, 0.0), 1.0, phi=0, cohesion=0), // -y = 1
+    Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),  // y = 1
+    Face((0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0), // -z = 1
+    Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)   // z = 1
+  )
+  val twoCubeNonOrigin = Block((1.0, 1.0, 1.0), boundingFaces3)
+
   val jointBounds = Seq(
     ((1.0, 0.0, 0.0), 1.0),
     ((-1.0, 0.0, 0.0), 0.0),
@@ -197,6 +207,14 @@ class BlockSpec extends FunSuite {
       center = (1.0 + 1.0/math.sqrt(2.0), 0.99 + 1.0/math.sqrt(2.0), 0.5),
       phi=0.0, cohesion = 0.0, shape = jointBounds3)
     assert(unitCube.intersects(joint).isDefined)
+  }
+
+  // CONTINUE HERE - SOMETHING ISN'T WORKING OUT IN THIS UNIT TEST. NEED TO UPDATE GLOBAL COORDINATES BASED ON INPUT ORIGIN (BLOCK)
+  test("The non-persistent joint z < 0 should not intersect the non-global origin two cube ") {
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin = (0.0, 0.0, 0.0), center = (2.0, 2.0, 2.0),
+                      phi = 0.0, cohesion = 0.0, shape = jointBounds)
+    println(joint.globalCoordinates)
+    assert(twoCubeNonOrigin.intersects(joint).isDefined)
   }
 
   test("The unit cube should not contain any redundant faces") {
