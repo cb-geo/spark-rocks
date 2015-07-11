@@ -137,7 +137,7 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
     }
     val Nplane = normalDirection * DenseVector[Double](a, b, c)
     val strike = (dipDirection - math.Pi / 2) % (2 * math.Pi) // Strike = dipDirection - pi/2 (US convention)
-    val Nstrike = DenseVector[Double](math.cos(2.0*math.Pi - strike), math.sin(2.0*math.Pi - strike), 0.0)
+    val Nstrike = DenseVector[Double](math.cos(- strike), math.sin(- strike), 0.0)
     val Ndip = linalg.cross(Nplane, Nstrike)
 
     // Q defines the linear transformation to convert to global coordinates
@@ -148,12 +148,26 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
 
     val shapeVectors = shape.map { case ((x, y, _), _) => DenseVector[Double](x, y, 0) }
     val globalShapeVecs = shapeVectors.map { Q*_ }
+    val centerVec = DenseVector[Double](centerX, centerY, centerZ)
 
-    val centerVec = DenseVector[Double](centerX - localOrigin._1, centerY - localOrigin._2, centerZ - localOrigin._3)
-    val localDistances = shape.map { _._2 }
+    // Calculate vectors from point in plane to local origin
+    val coordinateVectors = shape.map { case ((a, b, _), d) =>
+      val xl = DenseVector.zeros[Double](3)
+      if (math.abs(a) > Joint.EPSILON) {
+        xl(0) = d/a
+        xl(1) = 0.0
+        xl(2) = 0.0
+      } else {
+        xl(0) = 0.0
+        xl(1) = d/b
+        xl(2) = 0.0
+      }
+      val pointsGlobal = Q * xl + centerVec
+      pointsGlobal - DenseVector[Double](localOrigin._1, localOrigin._2, localOrigin._3)
+    }
 
-    val globalDistances = globalShapeVecs.zip(localDistances).map
-                              { case (shapeVec, dist) => dist + shapeVec.dot(centerVec) }
+    val globalDistances = globalShapeVecs.zip(coordinateVectors).map
+                              { case (shapeVec, coorVec) => (shapeVec dot coorVec) / linalg.norm(shapeVec)}
 
     // Convert back to triples to hide underlying Breeze implementation
     val globalShapeTuples = globalShapeVecs.map {x => (x(0), x(1), x(2))}
