@@ -132,7 +132,7 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
     */
   def globalCoordinates: Seq[((Double, Double, Double), Double)] = {
     var normalDirection = -1.0 // Negative needed simply because of how vertical planes are dealt with
-    if (math.abs(c) > Joint.EPSILON) { // For non-verical planes
+    if (math.abs(c) > Joint.EPSILON) { // For non-vertical planes
       normalDirection = -c/math.abs(c) // Ensures that normal will always point in -z global direction (ensures right-handed local coordinates)
     }
     val Nplane = normalDirection * DenseVector[Double](a, b, c)
