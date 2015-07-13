@@ -215,7 +215,7 @@ class BlockSpec extends FunSuite {
                       phi = 0.0, cohesion = 0.0, shape = jointBounds)
 
     println(joint.globalCoordinates)
-    assert(twoCubeNonOrigin.intersects(joint).isDefined)
+    assert(twoCubeNonOrigin.intersects(joint).isEmpty)
   }
 
   test("The unit cube should not contain any redundant faces") {

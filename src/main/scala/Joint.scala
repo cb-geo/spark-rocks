@@ -137,7 +137,7 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
     }
     val Nplane = normalDirection * DenseVector[Double](a, b, c)
     val strike = (dipDirection - math.Pi / 2) % (2 * math.Pi) // Strike = dipDirection - pi/2 (US convention)
-    val Nstrike = DenseVector[Double](math.cos(2.0*math.Pi - strike), math.sin(2.0*math.Pi - strike), 0.0)
+    val Nstrike = DenseVector[Double](math.cos(- strike), math.sin(- strike), 0.0)
     val Ndip = linalg.cross(Nplane, Nstrike)
 
     // Q defines the linear transformation to convert to global coordinates
