@@ -44,7 +44,7 @@ object Joint {
     if ((math.abs(normalVec._3) > Joint.EPSILON) && (math.abs(math.abs(normalVec._3) - 1.0) > Joint.EPSILON)) {
       DenseVector[Double](normalVec._1 / normalVec._3, normalVec._2 / normalVec._3, 0.0)
     } else if (math.abs(normalVec._3) < Joint.EPSILON) {
-      // Joint is vertical, assigns non-zero z component that will be caught is dipDir function
+      // Joint is vertical, assigns non-zero z component that will be caught in dipDir function
       DenseVector[Double](0.0, 0.0, -1.0)
     } else {
       // Joint is horizontal, dip direction arbitrarily assigned to 90 degrees so that strike is 0 degrees
@@ -131,13 +131,14 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
     * vector for the plane, and the second item is the distance of the plane from the origin.
     */
   def globalCoordinates: Seq[((Double, Double, Double), Double)] = {
-    var normalDirection = -1.0 // Negative needed simply because of how vertical planes are dealt with
-    if (math.abs(c) > Joint.EPSILON) { // For non-vertical planes
-      normalDirection = -c/math.abs(c) // Ensures that normal will always point in -z global direction (ensures right-handed local coordinates)
+    val normalDirection = if (c > -Joint.EPSILON) {
+      -1.0
+    } else {
+      1.0
     }
-    val Nplane = normalDirection * DenseVector[Double](a, b, c)
+    val Nplane = normalDirection * DenseVector[Double](a, b, c) // Ensures that normal will always point in -z global direction (ensures right-handed local coordinates)
     val strike = (dipDirection - math.Pi / 2) % (2 * math.Pi) // Strike = dipDirection - pi/2 (US convention)
-    val Nstrike = DenseVector[Double](math.cos(- strike), math.sin(- strike), 0.0)
+    val Nstrike = DenseVector[Double](math.cos(-strike), math.sin(-strike), 0.0)
     val Ndip = linalg.cross(Nplane, Nstrike)
 
     // Q defines the linear transformation to convert to global coordinates
