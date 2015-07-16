@@ -148,7 +148,7 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
     } else {
       DenseVector[Double](a, b, c)
     }
-    val strike = (dipDirection - math.Pi / 2) % (2 * math.Pi) // Strike = dipDirection - pi/2 (US convention)
+    val strike = (dipDirection.get - math.Pi / 2) % (2 * math.Pi) // Strike = dipDirection - pi/2 (US convention)
     val Nstrike = DenseVector[Double](math.cos(-strike), math.sin(-strike), 0.0)
     val Ndip = linalg.cross(Nplane, Nstrike)
 
