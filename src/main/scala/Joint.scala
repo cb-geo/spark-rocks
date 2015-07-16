@@ -14,7 +14,7 @@ object Joint {
    * @return
    */
   private def findDistance(normalVec: (Double, Double, Double), localOrigin: (Double, Double, Double),
-                            center: (Double, Double, Double)) = {
+                            center: (Double, Double, Double)): Double = {
     val w = DenseVector.zeros[Double](3)
     if (math.abs(normalVec._3) >= EPSILON) {
       w(0) = localOrigin._1
@@ -39,7 +39,7 @@ object Joint {
    * @param normalVec Normal vector to the joint plane
    * @return Dip direction of the plane, indicating direction of greatest increase in z. Return as vector (a, b, 0)
    */
-  private def dipDirVector(normalVec: (Double, Double, Double)) = {
+  private def dipDirVector(normalVec: (Double, Double, Double)): DenseVector[Double] = {
     // Dip direction is in opposite direction of gradient indicating greatest increase in z.
     if ((math.abs(normalVec._3) > Joint.EPSILON) && (math.abs(math.abs(normalVec._3) - 1.0) > Joint.EPSILON)) {
       DenseVector[Double](normalVec._1 / normalVec._3, normalVec._2 / normalVec._3, 0.0)
@@ -57,7 +57,7 @@ object Joint {
    * @param normalVec Normal vector to the joint plane
    * @return Dip direction as an azimuth in radians
    */
-  private def dipDir(normalVec: (Double, Double, Double)) = {
+  private def dipDir(normalVec: (Double, Double, Double)): Double = {
     val dipVector = Joint.dipDirVector(normalVec)
     val xAxis = DenseVector[Double](1.0, 0.0, 0.0)
     if (dipVector(2) != -1.0) { // Checks if joint is vertical - set to -1.0 in dipDirVector for vertical joints
@@ -81,7 +81,7 @@ object Joint {
    * @param normalVec Normal vector to the joint plane
    * @return Dip angle in radians
    */
-  private def dipAngle(normalVec: (Double, Double, Double)) = {
+  private def dipAngle(normalVec: (Double, Double, Double)): Double = {
     val dipVector = Joint.dipDirVector(normalVec)
     val normal = DenseVector[Double](normalVec._1, normalVec._2, normalVec._3)
     // Checks for horizontal and vertical joints. This is set in dipDirVector function so can compare doubles exactly
