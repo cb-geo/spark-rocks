@@ -160,7 +160,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
         }
         // Reverse is needed to keep the same ordering as faces list since elements are added to the front
       } map (_.distinct) map (_.reverse)
-    ).toMap                              // of the list as they are created.
+    ).toMap                              
 
   /**
     * Calculates the rotation matrix to rotate the input plane (specified by its normal)

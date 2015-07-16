@@ -113,16 +113,28 @@ object Joint {
   * @param shape A list of lines specifying the shape of the joint. Each item is a
   * 3-tuple. The first two items specify the line, while the last gives the distance
   * of the line from the joint's center in the local coordinate system.
+  * @param dipAngleParam An optional parameter that can be used to specify the dip angle for the joint.
+  *                 This avoids recalculation of a known dip angle.
+  * @param dipDirectionParam An optional parameter that can be used to specify the dip direction for
+  *                     the joint. This avoids recalculation of a known dip direction.
   */
 case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Double, Double),
                  center: (Double, Double, Double), phi: Double, cohesion: Double,
-                 shape: Seq[((Double, Double, Double),Double)]) {
+                 shape: Seq[((Double, Double, Double),Double)],
+                 dipAngleParam: Option[Double]=null,
+                 dipDirectionParam: Option[Double]=null) {
   val (a, b, c) = normalVec
   val (centerX, centerY, centerZ) = center
   val d = Joint.findDistance(normalVec, localOrigin, center)
   val (localX, localY, localZ) = localOrigin
-  val dipAngle = Joint.dipAngle(normalVec)
-  val dipDirection = Joint.dipDir(normalVec)
+  val dipAngle = dipAngleParam match {
+    case null => Some(Joint.dipAngle(normalVec))
+    case da => da
+  }
+  val dipDirection = dipDirectionParam match {
+    case null => Some(Joint.dipDir(normalVec))
+    case dd => dd
+  }
 
   /** Converts lines defining shape of joint from local to global coordinates
     * @return A seq of pairs, each representing a plane that specifies a boundary of the
@@ -166,6 +178,6 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
     * @return Distance relative to block origin (new local origin)
     */
   def updateJoint(blockOrigin: (Double, Double,Double)): Joint = {
-    Joint((a, b, c), blockOrigin, (centerX, centerY, centerZ), phi, cohesion, shape)
+    Joint((a, b, c), blockOrigin, (centerX, centerY, centerZ), phi, cohesion, shape, dipAngle, dipDirection)
   }
 }

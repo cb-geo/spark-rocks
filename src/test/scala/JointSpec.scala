@@ -28,39 +28,39 @@ class JointSpec extends FunSuite {
   test("Dip direction for vertical joint should be pi/2.0") {
     val joint = Joint((0.0, -1.0, 0.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
-    assert(math.abs(joint.dipDirection - math.Pi/2.0) <= EPSILON)
+    assert(math.abs(joint.dipDirection - math.Pi/2.0) < EPSILON)
   }
 
   test("Dip direction for vertical joint should be pi") {
     val joint = Joint((-1.0, 0.0, 0.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
-    assert(math.abs(joint.dipDirection - math.Pi) <= EPSILON)
+    assert(math.abs(joint.dipDirection - math.Pi) < EPSILON)
   }
 
   test("Dip direction for vertical joint should be 3.0*pi/2.0") {
     val joint = Joint((0.0, 1.0, 0.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
-    assert(math.abs(joint.dipDirection - 3.0*math.Pi/2.0) <= EPSILON)
+    assert(math.abs(joint.dipDirection - 3.0*math.Pi/2.0) < EPSILON)
   }
 
   test("Dip direction for non-vertical joint should be pi/2.0") {
     val joint = Joint((0.0,-1.0/math.sqrt(2.0), 1.0/math.sqrt(2.0)), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
-    assert(math.abs(joint.dipDirection - math.Pi/2.0) <= EPSILON)
+    assert(math.abs(joint.dipDirection - math.Pi/2.0) < EPSILON)
   }
 
   test("Dip direction for non-vertical joint should be 3.0*pi/4.0") {
     val joint = Joint((-1.0/math.sqrt(3.0),-1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)),
                       localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
-    assert(math.abs(joint.dipDirection - 3.0*math.Pi/4.0) <= EPSILON)
+    assert(math.abs(joint.dipDirection - 3.0*math.Pi/4.0) < EPSILON)
   }
 
   test("Dip direction for non-vertical joint should be 7.0*pi/4.0") {
     val joint = Joint((1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)), localOrigin=(0.0,0.0,-1.0),
                       center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
-    assert(math.abs(joint.dipDirection - 7.0*math.Pi/4.0) <= EPSILON)
+    assert(math.abs(joint.dipDirection - 7.0*math.Pi/4.0) < EPSILON)
   }
 
   test("Dip angle for horizontal joint should be 0.0 exactly") {
@@ -98,7 +98,7 @@ class JointSpec extends FunSuite {
              ((-1.0, 0.0, 0.0), 0.0),
              ((0.0, -1.0, 0.0), 1.0),
              ((0.0, 1.0, 0.0), 0.0))
-    assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
+    assert(totalDifference(joint.globalCoordinates, newBoundaries) < EPSILON)
   }
 
   test("Local-to-global coordinates check: Joint with dip direction of pi/2.0 centered " +
@@ -110,7 +110,7 @@ class JointSpec extends FunSuite {
         ((-1.0, 0.0, 0.0), 0.0),
         ((0.0, -1.0, 0.0), 1.0),
         ((0.0, 1.0, 0.0), 0.0))
-    assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
+    assert(totalDifference(joint.globalCoordinates, newBoundaries) < EPSILON)
   }
 
   test("Local-to-global coordinates check: Joint with dip direction of pi/2.0 centered at (1.0, 2.0, 3.0)") {
@@ -121,7 +121,7 @@ class JointSpec extends FunSuite {
           ((-1.0, 0.0, 0.0), -1.0),
           ((0.0, -1.0, 0.0), -1.0),
           ((0.0, 1.0, 0.0), 2.0))
-    assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
+    assert(totalDifference(joint.globalCoordinates, newBoundaries) < EPSILON)
   }
 
   test("Local-to-global coordinates check: Joint with dip direction of 0.0 centered at origin") {
@@ -132,7 +132,7 @@ class JointSpec extends FunSuite {
           ((0.0, -1.0, 0.0), 0.0),
           ((0.0, 0.0, -1.0), 1.0),
           ((0.0, 0.0, 1.0), 0.0))
-    assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
+    assert(totalDifference(joint.globalCoordinates, newBoundaries) < EPSILON)
   }
 
   test("Local-to-global coordinates check: Joint with dip direction of 3*pi/2 centered at origin") {
@@ -143,7 +143,7 @@ class JointSpec extends FunSuite {
         ((1.0, 0.0, 0.0), 0.0),
         ((0.0, 0.0, -1.0), 1.0),
         ((0.0, 0.0, 1.0), 0.0))
-    assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
+    assert(totalDifference(joint.globalCoordinates, newBoundaries) < EPSILON)
   }
 
   test("Local-to-global coordinates check: Joint with dip direction of pi/4 centered at origin") {
@@ -154,7 +154,7 @@ class JointSpec extends FunSuite {
         ((-1.0/math.sqrt(2.0), -1.0/math.sqrt(2.0), 0.0), 0.0),
         ((0.0, 0.0, -1.0), 1.0),
         ((0.0, 0.0, 1.0), 0.0))
-    assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
+    assert(totalDifference(joint.globalCoordinates, newBoundaries) < EPSILON)
   }
 
   test("Local-to-global coordinates check: Joint with dip direction of pi/4 centered at (1.0, 2.0, 3.0") {
@@ -165,7 +165,7 @@ class JointSpec extends FunSuite {
         ((-1.0/math.sqrt(2.0), -1.0/math.sqrt(2.0), 0.0), -math.sqrt(1.5*1.5 + 1.5*1.5)),
         ((0.0, 0.0, -1.0), -2.0),
         ((0.0, 0.0, 1.0), 3.0))
-    assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
+    assert(totalDifference(joint.globalCoordinates, newBoundaries) < EPSILON)
   }
 
   test("Local-to-global coordinates check: Joint with dip direction of pi/2 and " +
@@ -177,7 +177,7 @@ class JointSpec extends FunSuite {
         ((-1.0, 0.0, 0.0), 0.0),
         ((0.0, -math.cos(math.Pi/6.0), -math.sin(math.Pi/6.0)), 1.0),
         ((0.0, math.cos(math.Pi/6.0), math.sin(math.Pi/6.0)), 0.0))
-    assert(totalDifference(joint.globalCoordinates, newBoundaries) <= EPSILON)
+    assert(totalDifference(joint.globalCoordinates, newBoundaries) < EPSILON)
   }
 
   test("The joint should have distance 1/2.0") {
