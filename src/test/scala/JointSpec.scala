@@ -22,71 +22,71 @@ class JointSpec extends FunSuite {
   test("Dip direction for horizontal joint should be pi/2.0 exactly") {
     val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
                       phi=0, cohesion=0, shape=Nil)
-    assert(joint.dipDirection.get == math.Pi/2.0)
+    assert(joint.dipDirection == math.Pi/2.0)
   }
 
   test("Dip direction for vertical joint should be pi/2.0") {
     val joint = Joint((0.0, -1.0, 0.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
-    assert(math.abs(joint.dipDirection.get - math.Pi/2.0) < EPSILON)
+    assert(math.abs(joint.dipDirection - math.Pi/2.0) < EPSILON)
   }
 
   test("Dip direction for vertical joint should be pi") {
     val joint = Joint((-1.0, 0.0, 0.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
-    assert(math.abs(joint.dipDirection.get - math.Pi) < EPSILON)
+    assert(math.abs(joint.dipDirection - math.Pi) < EPSILON)
   }
 
   test("Dip direction for vertical joint should be 3.0*pi/2.0") {
     val joint = Joint((0.0, 1.0, 0.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
-    assert(math.abs(joint.dipDirection.get - 3.0*math.Pi/2.0) < EPSILON)
+    assert(math.abs(joint.dipDirection - 3.0*math.Pi/2.0) < EPSILON)
   }
 
   test("Dip direction for non-vertical joint should be pi/2.0") {
     val joint = Joint((0.0,-1.0/math.sqrt(2.0), 1.0/math.sqrt(2.0)), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
-    assert(math.abs(joint.dipDirection.get - math.Pi/2.0) < EPSILON)
+    assert(math.abs(joint.dipDirection - math.Pi/2.0) < EPSILON)
   }
 
   test("Dip direction for non-vertical joint should be 3.0*pi/4.0") {
     val joint = Joint((-1.0/math.sqrt(3.0),-1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)),
                       localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
-    assert(math.abs(joint.dipDirection.get - 3.0*math.Pi/4.0) < EPSILON)
+    assert(math.abs(joint.dipDirection - 3.0*math.Pi/4.0) < EPSILON)
   }
 
   test("Dip direction for non-vertical joint should be 7.0*pi/4.0") {
     val joint = Joint((1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)), localOrigin=(0.0,0.0,-1.0),
                       center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
-    assert(math.abs(joint.dipDirection.get - 7.0*math.Pi/4.0) < EPSILON)
+    assert(math.abs(joint.dipDirection - 7.0*math.Pi/4.0) < EPSILON)
   }
 
   test("Dip angle for horizontal joint should be 0.0 exactly") {
     val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
-    assert(joint.dipAngle.get == 0.0)
+    assert(joint.dipAngle == 0.0)
   }
 
   test("Dip angle for vertical joint should be pi/2.0 exactly") {
     val joint = Joint((1.0, 0.0, 0.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
-    assert(joint.dipAngle.get == math.Pi/2.0)
+    assert(joint.dipAngle == math.Pi/2.0)
   }
 
   test("Dip angle for joint with positive z-component in normal should be pi/6.0") {
     val joint = Joint((1.0/math.sqrt(1.0 + math.sqrt(3.0)), 0.0, math.sqrt(3.0)/math.sqrt(1.0 + math.sqrt(3.0))),
                       localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
-    assert(math.abs(joint.dipAngle.get - math.Pi/6.0) < EPSILON)
+    assert(math.abs(joint.dipAngle - math.Pi/6.0) < EPSILON)
   }
 
   test("Dip angle for joint with negative z-component in normal should be pi/6.0") {
     val joint = Joint((0.0, 1.0/math.sqrt(1.0 + math.sqrt(3.0)), -math.sqrt(3.0)/math.sqrt(1.0 + math.sqrt(3.0))),
                        localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
       phi=0, cohesion=0, shape=Nil)
-    assert(math.abs(joint.dipAngle.get - math.Pi/6.0) < EPSILON)
+    assert(math.abs(joint.dipAngle - math.Pi/6.0) < EPSILON)
   }
 
   test("Local-to-global coordinates check: Joint with dip direction of pi/2.0 centered " +

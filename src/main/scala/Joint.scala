@@ -121,19 +121,19 @@ object Joint {
 case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Double, Double),
                  center: (Double, Double, Double), phi: Double, cohesion: Double,
                  shape: Seq[((Double, Double, Double),Double)],
-                 dipAngleParam: Option[Double]=null,
-                 dipDirectionParam: Option[Double]=null) {
+                 dipAngleParam: Option[Double]=None,
+                 dipDirectionParam: Option[Double]=None) {
   val (a, b, c) = normalVec
   val (centerX, centerY, centerZ) = center
   val d = Joint.findDistance(normalVec, localOrigin, center)
   val (localX, localY, localZ) = localOrigin
   val dipAngle = dipAngleParam match {
-    case null => Some(Joint.dipAngle(normalVec))
-    case da => da
+    case None => Joint.dipAngle(normalVec)
+    case Some(da) => da
   }
   val dipDirection = dipDirectionParam match {
-    case null => Some(Joint.dipDir(normalVec))
-    case dd => dd
+    case None => Joint.dipDir(normalVec)
+    case Some(dd) => dd
   }
 
   /** Converts lines defining shape of joint from local to global coordinates
@@ -148,7 +148,7 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
     } else {
       DenseVector[Double](a, b, c)
     }
-    val strike = (dipDirection.get - math.Pi / 2) % (2 * math.Pi) // Strike = dipDirection - pi/2 (US convention)
+    val strike = (dipDirection - math.Pi / 2) % (2 * math.Pi) // Strike = dipDirection - pi/2 (US convention)
     val Nstrike = DenseVector[Double](math.cos(-strike), math.sin(-strike), 0.0)
     val Ndip = linalg.cross(Nplane, Nstrike)
 
@@ -178,6 +178,6 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
     * @return Distance relative to block origin (new local origin)
     */
   def updateJoint(blockOrigin: (Double, Double,Double)): Joint = {
-    Joint((a, b, c), blockOrigin, (centerX, centerY, centerZ), phi, cohesion, shape, dipAngle, dipDirection)
+    Joint((a, b, c), blockOrigin, (centerX, centerY, centerZ), phi, cohesion, shape, Some(dipAngle), Some(dipDirection))
   }
 }
