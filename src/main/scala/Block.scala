@@ -216,8 +216,9 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
             } else None
           }
         }
-      } map (_.distinct) map (_.reverse) // Reverse is needed to keep the same ordering as faces list since elements are added to the front
-    ).toMap                              // of the list as they are created.
+        // Reverse is needed to keep the same ordering as faces list since elements are added to the front
+      } map (_.distinct) map (_.reverse)
+    ).toMap                              
 
   /**
     * Calculates the rotation matrix to rotate the input plane (specified by its normal)
@@ -226,7 +227,8 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     * @param n_desired: Desired new normal
     * @return 3*3 rotation matrix
     */
-  private def rotationMatrix(n_current: (Double, Double, Double), n_desired: (Double, Double, Double)): DenseMatrix[Double] = {
+  private def rotationMatrix(n_current: (Double, Double, Double), n_desired: (Double, Double, Double)):
+                             DenseMatrix[Double] = {
     val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
     val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
     if (math.abs(linalg.norm(linalg.cross(n_c,n_d))) > Block.EPSILON) {
