@@ -5,6 +5,9 @@ import org.apache.spark.{SparkConf, SparkContext}
 import scala.io.Source
 
 object RockSlicer {
+
+  val NUM_SEED_JOINTS = 25
+
   def main(args: Array[String]) {
     val conf = new SparkConf().setAppName("SparkRocks")
     val sc = new SparkContext(conf)
@@ -13,18 +16,15 @@ object RockSlicer {
 
     // Open and read input file specifying rock volume and joints
     val inputSource = Source.fromFile(inputFile)
-    val (rockVolume, jointList) = inputProcessor.readInput(inputSource)
+    val (rockVolume, joints) = inputProcessor.readInput(inputSource)
     inputSource.close()
     var blocks = Vector(Block((0.0, 0.0, 0.0), rockVolume))
 
-    // Generate a list of initial blocks before RDD-ifying it -- not very clean code
-    var joints = jointList
-    while (blocks.length < numberPartitions && joints.nonEmpty) {
-      blocks = blocks.flatMap(_.cut(joints.head))
-      joints = joints.tail
-    }
+    // Generate a list of initial blocks before RDD-ifying it
+    val (seedJoints, remainingJoints) = generateSeedJoints(joints, NUM_SEED_JOINTS)
+    seedJoints foreach { joint => blocks = blocks.flatMap(_.cut(joint)) }
     val blockRdd = sc.parallelize(blocks)
-    val broadcastJoints = sc.broadcast(joints)
+    val broadcastJoints = sc.broadcast(remainingJoints)
 
     // Iterate through the discontinuities, cutting blocks where appropriate
     var cutBlocks = blockRdd
@@ -53,5 +53,24 @@ object RockSlicer {
     val jsonBlocks = squeakyClean.map(json.blockToMinimalJson)
     jsonBlocks.saveAsTextFile("blocks.json")
     sc.stop()
+  }
+
+  // Produce joints that achieve some lead balancing when generating the initial Block RDD
+  private def generateSeedJoints(joints: Seq[Joint], numSeedJoints: Integer): (Seq[Joint], Seq[Joint]) = {
+    val (persistentJoints, nonPersistentJoints) = joints.partition(joint => joint.shape.isEmpty)
+    persistentJoints.length match {
+      // All of the seed joints will be persistent
+      case l if l >= numSeedJoints => (persistentJoints.take(numSeedJoints),
+          persistentJoints.takeRight(l - numSeedJoints) ++ nonPersistentJoints)
+      // All persistent joints are used as seed joints, along with some non-persistent joints
+      case l =>
+          // Sort non-persistent joints by relative position along x axis
+          val sortedNonPersistent = nonPersistentJoints.sortWith(_.localOrigin._1 < _.localOrigin._1)
+          val numNonPersistent = numSeedJoints - l
+          val step = (sortedNonPersistent.length / numNonPersistent.toFloat).toInt + 1
+          val seedNonpersistent = (0 to sortedNonPersistent.length by step) collect sortedNonPersistent
+          val remainingNonpersistent = sortedNonPersistent.diff(seedNonpersistent)
+          (persistentJoints ++ seedNonpersistent, remainingNonpersistent)
+    }
   }
 }
