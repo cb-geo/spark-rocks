@@ -6,13 +6,11 @@ import scala.io.Source
 
 object RockSlicer {
 
-  val NUM_SEED_JOINTS = 25
-
   def main(args: Array[String]) {
     val conf = new SparkConf().setAppName("SparkRocks")
     val sc = new SparkContext(conf)
     val inputFile = args(0)
-    val numberPartitions = args(1).toInt
+    val numberSeedJoints = args(1).toInt
 
     // Open and read input file specifying rock volume and joints
     val inputSource = Source.fromFile(inputFile)
@@ -21,7 +19,7 @@ object RockSlicer {
     var blocks = Vector(Block((0.0, 0.0, 0.0), rockVolume))
 
     // Generate a list of initial blocks before RDD-ifying it
-    val (seedJoints, remainingJoints) = generateSeedJoints(joints, NUM_SEED_JOINTS)
+    val (seedJoints, remainingJoints) = generateSeedJoints(joints, numberSeedJoints)
     seedJoints foreach { joint => blocks = blocks.flatMap(_.cut(joint)) }
     val blockRdd = sc.parallelize(blocks)
     val broadcastJoints = sc.broadcast(remainingJoints)
@@ -57,7 +55,7 @@ object RockSlicer {
 
   // Produce joints that achieve some lead balancing when generating the initial Block RDD
   private def generateSeedJoints(joints: Seq[Joint], numSeedJoints: Integer): (Seq[Joint], Seq[Joint]) = {
-    val (persistentJoints, nonPersistentJoints) = joints.partition(joint => joint.shape.isEmpty)
+    val (persistentJoints, nonPersistentJoints) = joints.partition(_.shape.isEmpty)
     persistentJoints.length match {
       // All of the seed joints will be persistent
       case l if l >= numSeedJoints => (persistentJoints.take(numSeedJoints),
@@ -67,10 +65,14 @@ object RockSlicer {
           // Sort non-persistent joints by relative position along x axis
           val sortedNonPersistent = nonPersistentJoints.sortWith(_.localOrigin._1 < _.localOrigin._1)
           val numNonPersistent = numSeedJoints - l
-          val step = (sortedNonPersistent.length / numNonPersistent.toFloat).toInt + 1
-          val seedNonpersistent = (0 to sortedNonPersistent.length by step) collect sortedNonPersistent
-          val remainingNonpersistent = sortedNonPersistent.diff(seedNonpersistent)
-          (persistentJoints ++ seedNonpersistent, remainingNonpersistent)
+          val step = sortedNonPersistent.length / numNonPersistent
+          val seedNonPersistentCandidates = (sortedNonPersistent.indices by step) collect sortedNonPersistent
+          // Still could have too many candidate joints, take middle joints
+          val numExtraJoints = seedNonPersistentCandidates.length - numNonPersistent
+          val seedNonPersistent = seedNonPersistentCandidates.drop(math.ceil(numExtraJoints/2).toInt).
+                dropRight(math.floor(numExtraJoints/2).toInt)
+          val remainingNonPersistent = sortedNonPersistent.diff(seedNonPersistent)
+          (persistentJoints ++ seedNonPersistent, remainingNonPersistent)
     }
   }
 }
