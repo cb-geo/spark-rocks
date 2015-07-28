@@ -58,19 +58,19 @@ object RockSlicer {
     val (persistentJoints, nonPersistentJoints) = joints.partition(_.shape.isEmpty)
     persistentJoints.length match {
       // All of the seed joints will be persistent
-      case l if l >= numSeedJoints => (persistentJoints.take(numSeedJoints),
-          persistentJoints.takeRight(l - numSeedJoints) ++ nonPersistentJoints)
+      case len if len >= numSeedJoints => (persistentJoints.take(numSeedJoints),
+          persistentJoints.drop(numSeedJoints) ++ nonPersistentJoints)
       // All persistent joints are used as seed joints, along with some non-persistent joints
-      case l =>
+      case len =>
           // Sort non-persistent joints by relative position along x axis
-          val sortedNonPersistent = nonPersistentJoints.sortWith(_.localOrigin._1 < _.localOrigin._1)
-          val numNonPersistent = numSeedJoints - l
+          val sortedNonPersistent = nonPersistentJoints.sortWith(_.centerX < _.centerX)
+          val numNonPersistent = numSeedJoints - len
           val step = sortedNonPersistent.length / numNonPersistent
           val seedNonPersistentCandidates = (sortedNonPersistent.indices by step) collect sortedNonPersistent
           // Still could have too many candidate joints, take middle joints
           val numExtraJoints = seedNonPersistentCandidates.length - numNonPersistent
-          val seedNonPersistent = seedNonPersistentCandidates.drop(math.ceil(numExtraJoints/2).toInt).
-                dropRight(math.floor(numExtraJoints/2).toInt)
+          val seedNonPersistent = seedNonPersistentCandidates.slice(math.ceil(numExtraJoints/2.0).toInt,
+                                                                    len - math.floor(numExtraJoints/2.0).toInt)
           val remainingNonPersistent = sortedNonPersistent.diff(seedNonPersistent)
           (persistentJoints ++ seedNonPersistent, remainingNonPersistent)
     }
