@@ -62,17 +62,17 @@ object RockSlicer {
           persistentJoints.drop(numSeedJoints) ++ nonPersistentJoints)
       // All persistent joints are used as seed joints, along with some non-persistent joints
       case len =>
-          // Sort non-persistent joints by relative position along x axis
-          val sortedNonPersistent = nonPersistentJoints.sortWith(_.centerX < _.centerX)
-          val numNonPersistent = numSeedJoints - len
-          val step = sortedNonPersistent.length / numNonPersistent
-          val seedNonPersistentCandidates = (sortedNonPersistent.indices by step) collect sortedNonPersistent
-          // Still could have too many candidate joints, take middle joints
-          val numExtraJoints = seedNonPersistentCandidates.length - numNonPersistent
-          val seedNonPersistent = seedNonPersistentCandidates.slice(math.ceil(numExtraJoints/2.0).toInt,
-                                                                    len - math.floor(numExtraJoints/2.0).toInt)
-          val remainingNonPersistent = sortedNonPersistent.diff(seedNonPersistent)
-          (persistentJoints ++ seedNonPersistent, remainingNonPersistent)
+        // Sort non-persistent joints by relative position along x axis
+        val sortedNonPersistent = nonPersistentJoints.sortWith(_.centerX < _.centerX)
+        val numNonPersistent = numSeedJoints - len
+        val step = sortedNonPersistent.length / numNonPersistent
+        val indices = sortedNonPersistent.indices by step
+        // Arrange the indices so we prefer middle elements
+        val arrangedIndices = (indices.take(indices.length / 2).reverse zip
+          indices.drop(indices.length / 2)).flatMap { case (x, y) => Seq(x, y) }
+        val seedNonPersistent = arrangedIndices.take(numNonPersistent) collect sortedNonPersistent
+        val remainingNonPersistent = sortedNonPersistent.diff(seedNonPersistent)
+        (persistentJoints ++ seedNonPersistent, remainingNonPersistent)
     }
   }
 }
