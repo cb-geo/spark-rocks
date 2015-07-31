@@ -1,0 +1,3 @@
+[submodule "rockProcessor"]
+	path = rockProcessor
+	url = https://github.com/shellshocked2003/rockProcessor
