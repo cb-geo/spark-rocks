@@ -1,4 +1,5 @@
-import edu.berkeley.ce.rockslicing.{Block, Delaunay, Face, Joint}
+package edu.berkeley.ce.rockslicing
+
 import org.scalatest._
 
 import scala.math.sqrt
