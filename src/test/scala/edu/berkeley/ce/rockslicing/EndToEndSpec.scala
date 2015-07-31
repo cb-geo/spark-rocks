@@ -1,4 +1,5 @@
-import edu.berkeley.ce.rockslicing._
+package edu.berkeley.ce.rockslicing
+
 import org.scalatest._
 
 import scala.io.Source

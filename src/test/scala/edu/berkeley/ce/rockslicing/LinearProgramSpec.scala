@@ -1,5 +1,6 @@
+package edu.berkeley.ce.rockslicing
+
 import org.scalatest._
-import edu.berkeley.ce.rockslicing.LinearProgram
 
 class LinearProgramSpec extends FunSuite {
 
