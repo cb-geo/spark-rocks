@@ -2,6 +2,7 @@ package edu.berkeley.ce.rockslicing
 
 import org.apache.spark.{SparkConf, SparkContext}
 
+import scala.collection.mutable
 import scala.io.Source
 
 object RockSlicer {
@@ -62,17 +63,40 @@ object RockSlicer {
           persistentJoints.drop(numSeedJoints) ++ nonPersistentJoints)
       // All persistent joints are used as seed joints, along with some non-persistent joints
       case len =>
-        // Sort non-persistent joints by relative position along x axis
-        val sortedNonPersistent = nonPersistentJoints.sortWith(_.centerX < _.centerX)
         val numNonPersistent = numSeedJoints - len
-        val step = sortedNonPersistent.length / numNonPersistent
-        val indices = sortedNonPersistent.indices by step
-        // Arrange the indices so we prefer middle elements
-        val arrangedIndices = (indices.take(indices.length / 2).reverse zip
-          indices.drop(indices.length / 2)).flatMap { case (x, y) => Seq(x, y) }
-        val seedNonPersistent = arrangedIndices.take(numNonPersistent) collect sortedNonPersistent
+        // Arrange joints so we prefer elements near middle of rock mass
+        val sortedNonPersistent = nonPersistentJoints.sortWith(_.centerX < _.centerX)
+        val indices = loadBalanceIndices(sortedNonPersistent.indices).take(numNonPersistent)
+        val seedNonPersistent = indices.collect(sortedNonPersistent)
         val remainingNonPersistent = sortedNonPersistent.diff(seedNonPersistent)
         (persistentJoints ++ seedNonPersistent, remainingNonPersistent)
     }
+  }
+
+  private def loadBalanceIndices(indices: Seq[Int]): Seq[Int] = {
+    def loadBalanceIndicesImpl(queue: mutable.PriorityQueue[Seq[Int]]): Seq[Int] = {
+      if (queue.isEmpty) {
+        Nil
+      } else {
+        val s = queue.dequeue()
+        val (median, left, right) = removeMedian(s)
+        if (left.nonEmpty) {
+          queue.enqueue(left)
+        }
+        if (right.nonEmpty) {
+          queue.enqueue(right)
+        }
+        median +: loadBalanceIndicesImpl(queue)
+      }
+    }
+
+    def removeMedian[A](s: Seq[A]): (A, Seq[A], Seq[A]) = {
+      val medianIndex = s.length / 2
+      (s(medianIndex), s.take(medianIndex), s.drop(medianIndex + 1))
+    }
+
+    val queue = new mutable.PriorityQueue[Seq[Int]]()(Ordering.by(_.length))
+    queue.enqueue(indices)
+    loadBalanceIndicesImpl(queue)
   }
 }
