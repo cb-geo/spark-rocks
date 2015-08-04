@@ -10,17 +10,16 @@ object RockSlicer {
   def main(args: Array[String]) {
     val conf = new SparkConf().setAppName("SparkRocks")
     val sc = new SparkContext(conf)
-    val inputFile = args(0)
-    val numberSeedJoints = args(1).toInt
+    val inputs = commandReader(args)
 
     // Open and read input file specifying rock volume and joints
-    val inputSource = Source.fromFile(inputFile)
+    val inputSource = Source.fromFile(inputs.inputFile)
     val (rockVolume, joints) = inputProcessor.readInput(inputSource)
     inputSource.close()
     var blocks = Vector(Block((0.0, 0.0, 0.0), rockVolume))
 
     // Generate a list of initial blocks before RDD-ifying it
-    val (seedJoints, remainingJoints) = generateSeedJoints(joints, numberSeedJoints)
+    val (seedJoints, remainingJoints) = generateSeedJoints(joints, inputs.numberSeedJoints)
     seedJoints foreach { joint => blocks = blocks.flatMap(_.cut(joint)) }
     val blockRdd = sc.parallelize(blocks)
     val broadcastJoints = sc.broadcast(remainingJoints)
@@ -48,9 +47,20 @@ object RockSlicer {
       Block(center, faces.map(_.applyTolerance))
     }
 
-    // Convert the list of rock blocks to JSON and save this to a file
-    val jsonBlocks = squeakyClean.map(json.blockToMinimalJson)
-    jsonBlocks.saveAsTextFile("blocks.json")
+    // Convert list of rock blocks to requested output
+    if (inputs.toInequalities) {
+      // Convert the list of rock blocks to JSON and save this to a file
+      val jsonBlocks = squeakyClean.map(json.blockToMinimalJson)
+      jsonBlocks.saveAsTextFile("blocks.json")
+    }
+    if (inputs.toVertices) {
+      // Convert the list of rock blocks to JSON with vertices and normals to a file
+      // TODO: Write this functionality
+    }
+    if (inputs.toVTK) {
+      // Convert the list of rock blocks to JSON with vertices, normals and connectivity in format easily converted
+      // to vtk my rockProcessor module
+    }
     sc.stop()
   }
 
