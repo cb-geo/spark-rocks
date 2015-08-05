@@ -81,12 +81,17 @@ class BlocksVTKSpec extends FunSuite {
 
     val vtkblocks = BlocksVTK(cleanedBlocks)
 //    println(vtkblocks.faceVertices)
-//    println(vtkblocks.vertices)
+//    println(vtkblocks.blockID)
+//    println(vtkblocks.vertices(vtkblocks.faceVertices))
+//    println(vtkblocks.connectivity(vtkblocks.faceVertices))
+    println(vtkblocks.normals)
   }
 
   test("vtkblocks of unit cube") {
     val vtkblocks = BlocksVTK(Seq(twoCubeNonOrigin))
-    println(vtkblocks.faceVertices)
-    println(vtkblocks.vertices)
+//    println(vtkblocks.faceVertices)
+//    println(vtkblocks.vertices)
+//    println(vtkblocks.connectivity)
+//    println(vtkblocks.normals)
   }
 }

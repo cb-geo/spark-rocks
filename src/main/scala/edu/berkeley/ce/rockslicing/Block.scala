@@ -212,7 +212,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
               A_matx(1, ::) := n2.t
               A_matx(2, ::) := n3.t
               val p_vect = A_matx \ b_vect
-              Some((p_vect(0), p_vect(1), p_vect(2)))
+              Some((p_vect(0) + centerX, p_vect(1) + centerY, p_vect(2) + centerZ))
             } else None
           }
         }
@@ -326,9 +326,9 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     }
     (
       // Factor of 3 comes from: centroid / (2.0 * (volume/6.0))
-      3.0 * centroidX / totalVolume + centerX,
-      3.0 * centroidY / totalVolume + centerY,
-      3.0 * centroidZ / totalVolume + centerZ
+      3.0 * centroidX / totalVolume,
+      3.0 * centroidY / totalVolume,
+      3.0 * centroidZ / totalVolume
     )
   }
 
