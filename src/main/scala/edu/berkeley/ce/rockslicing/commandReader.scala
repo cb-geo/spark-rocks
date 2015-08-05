@@ -4,10 +4,10 @@ package edu.berkeley.ce.rockslicing
   * @constructor Create a new command reader
   */
 case class commandReader(inputs: Array[String]) {
-  assert(inputs.length >= 3)
+  assert(inputs.length >= 2)
   val inputFile = inputs(0)
   val numberSeedJoints = inputs(1).toInt
-  val toInequalities = inputs contains "inequalities"
+  val toInequalities = (inputs.length == 2) || (inputs contains "inequalities")
   val toVertices = inputs contains "vertices"
   val toVTK = inputs contains "toVTK"
 }

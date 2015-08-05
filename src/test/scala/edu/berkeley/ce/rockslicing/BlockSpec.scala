@@ -292,7 +292,7 @@ class BlockSpec extends FunSuite {
     val face2 = Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0)
     val face3 = Face((0.0, 0.0, 1.0), 0.0, phi=0, cohesion=0)
     val face4 = Face((0.0, 1.0, 0.0), 5.0, phi=0, cohesion=0)
-    val block = Block((1.0, 1.0, 1.0), List(face1, face2, face3, face4))
+    val block = Block((0.0, 0.0, 0.0), List(face1, face2, face3, face4))
     val face1Verts = List((0.0, 5.0, 0.0), (0.0, 0.0, 0.0))
     val face2Verts = List((0.0, 0.0, 0.0))
     val face3Verts = List((0.0, 5.0, 0.0), (0.0, 0.0, 0.0))
