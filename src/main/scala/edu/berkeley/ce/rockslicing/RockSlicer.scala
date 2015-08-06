@@ -60,6 +60,7 @@ object RockSlicer {
     if (inputs.toVTK) {
       // Convert the list of rock blocks to JSON with vertices, normals and connectivity in format easily converted
       // to vtk my rockProcessor module
+      // TODO: Write this functionality
     }
     sc.stop()
   }
