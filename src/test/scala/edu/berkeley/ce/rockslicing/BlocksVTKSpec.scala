@@ -80,22 +80,21 @@ class BlocksVTKSpec extends FunSuite {
     }
 
     val vtkblocks = BlocksVTK(cleanedBlocks)
-//    val orderedVertices = vtkblocks.orderedVerts
-//    val connections = vtkblocks.connectivity
+    val vertices = vtkblocks.vertices(vtkblocks.faceVertices)
+    val orderedverts = vtkblocks.orientedVerts(vtkblocks.faceVertices)
+    val connectivity = vtkblocks.connectivity(orderedverts, vertices)
+//    println(orderedverts)
+//    println(vertices)
+//    println(connectivity)
   }
 
   test("vtkblocks of unit cube") {
     val vtkblocks = BlocksVTK(Seq(twoCubeNonOrigin))
     val vertices = vtkblocks.vertices(vtkblocks.faceVertices)
-    val rotatedVertexList = vtkblocks.rotatedVerts(vtkblocks.faceVertices)
-    val rotatedVertices = vtkblocks.vertices(rotatedVertexList)
-    val connectivity = vtkblocks.connectivity(rotatedVertexList, rotatedVertices)
-    println(vtkblocks.faceVertices.head.values)
-    println(rotatedVertexList.head.values)
-    println(rotatedVertices.length)
-    println(rotatedVertices)
+    val orderedverts = vtkblocks.orientedVerts(vtkblocks.faceVertices)
+    val connectivity = vtkblocks.connectivity(orderedverts, vertices)
+    println(orderedverts)
     println(vertices)
-    println("This is the intersection of vertices and rotated vertices")
-    println(vertices.intersect(rotatedVertices))
+    println(connectivity)
   }
 }
