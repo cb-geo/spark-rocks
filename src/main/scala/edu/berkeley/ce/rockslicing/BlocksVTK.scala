@@ -110,43 +110,37 @@ case class BlocksVTK(blocks: Seq[Block]) {
   }
 
   /**
-   * Rotates all the vertices of all the faces in the input such that they lie in the x-y plane
+   * Arranges vertices for each face in a counter-clockwise orientation relative to its unit normal
    * @param faceSeq Sequence of maps of faces and their vertices
-   * @return Sequence of maps of faces and their vertices rotated such they lie in the x-y plane
+   * @return Sequence of maps of faces and their vertices in counter-clockwise orientation
    */
-  def rotatedVerts(faceSeq: Seq[Map[Face, Seq[(Double, Double, Double)]]]):
+  def orientedVerts(faceSeq: Seq[Map[Face, Seq[(Double, Double, Double)]]]):
   Seq[Map[Face, Seq[(Double, Double, Double)]]] = {
     faceSeq map {
       case face =>
         face.keys.zip(
           face.map { kv =>
+            // Rotate vertices to all be in x-y plane
             val R = BlocksVTK.rotationMatrix(kv._1.normalVec, (0.0, 0.0, 1.0))
-            kv._2 map { vertex =>
-              val rotatedVert = R * DenseVector[Double](vertex._1, vertex._2, vertex._3)
-              (rotatedVert(0), rotatedVert(1), rotatedVert(2))
+            val rotatedVerts = kv._2 map { vertex =>
+              val rotatedVertex = R * DenseVector[Double](vertex._1, vertex._2, vertex._3)
+              (rotatedVertex(0), rotatedVertex(1), rotatedVertex(2))
             }
-          }
-        ).toMap
-    }
-  }
-
-  /**
-   * Orders vertices in a counter-clockwise orientation relative to unit normal of face
-   * @param faceSeq Sequence of maps of faces and their vertices
-   * @return Sequence of maps of faces and their vertices sorted in a counter-clockwise orientation
-   */
-  def orderedVerts(faceSeq: Seq[Map[Face, Seq[(Double, Double, Double)]]]):
-                            Seq[Map[Face, Seq[(Double, Double, Double)]]] = {
-    faceSeq map {
-      case face =>
-        face.keys.zip(
-          face.map { kv =>
-            val center = BlocksVTK.findCenter(kv._2)
-            if (kv._1.normalVec._3 < -BlocksVTK.EPSILON) {
-              kv._2.sortWith(BlocksVTK.ccwCompare(_, _, center)).reverse
+            // Order vertices in counter-clockwise orientation
+            val center = BlocksVTK.findCenter(rotatedVerts)
+            val orderedVerts = {
+              if (kv._1.normalVec._3 < -BlocksVTK.EPSILON) {
+                rotatedVerts.sortWith(BlocksVTK.ccwCompare(_, _, center)).reverse
+              }
+              else {
+                rotatedVerts.sortWith(BlocksVTK.ccwCompare(_, _, center))
+              }
             }
-            else {
-              kv._2.sortWith(BlocksVTK.ccwCompare(_, _, center))
+            // Rotate vertices back to original orientation
+            val invR = R.t // Inverse of rotation matrix is equal to its transpose
+            orderedVerts map { vertex =>
+              val orderedVertex = invR * DenseVector[Double](vertex._1, vertex._2, vertex._3)
+              (orderedVertex(0), orderedVertex(1), orderedVertex(2))
             }
           }
         ).toMap
