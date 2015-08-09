@@ -1,11 +1,9 @@
 package edu.berkeley.ce.rockslicing
 
 import org.scalatest._
+import NumericUtils.EPSILON
 
 class LinearProgramSpec extends FunSuite {
-
-  val EPSILON = 1.0e-6
-
   test("Maximizing x subject to x = 5 should produce result 5") {
     val solver = new LinearProgram(1)
     solver.setObjFun(List(1.0), LinearProgram.MAX)

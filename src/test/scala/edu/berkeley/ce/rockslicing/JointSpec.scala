@@ -1,13 +1,10 @@
 package edu.berkeley.ce.rockslicing
 
 import org.scalatest._
-
 import scala.math.sqrt
+import NumericUtils.{EPSILON}
 
 class JointSpec extends FunSuite {
-
-  private val EPSILON = 1.0e-6
-
   // Sums the difference between all elements in a boundary list
   private def totalDifference(l1: Seq[((Double,Double,Double), Double)],
                               l2: Seq[((Double,Double,Double), Double)]): Double = {

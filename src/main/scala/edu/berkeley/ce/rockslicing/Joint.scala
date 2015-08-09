@@ -1,11 +1,10 @@
 package edu.berkeley.ce.rockslicing
 
 import breeze.linalg
-import breeze.linalg.{DenseVector, DenseMatrix}
+import breeze.linalg.{DenseMatrix, DenseVector}
+import edu.berkeley.ce.rockslicing.NumericUtils.{EPSILON, applyTolerance}
 
 object Joint {
-  private val EPSILON = 1e-6
-
   /**
    * Find the distance of the joint plane from the input local origin.
    * @param normalVec Normal vector to the joint plane
@@ -32,9 +31,6 @@ object Joint {
     val n = DenseVector[Double](normalVec._1, normalVec._2, normalVec._3)
     -(n dot w)/linalg.norm(n)
   }
-
-  private def applyTolerance(d: Double): Double =
-    if (math.abs(d) >= EPSILON) d else 0.0
 
   /**
    * Find a bounding sphere for a non-persistent joint. This function is not
@@ -95,9 +91,9 @@ object Joint {
    */
   private def dipDirVector(normalVec: (Double, Double, Double)): DenseVector[Double] = {
     // Dip direction is in opposite direction of gradient indicating greatest increase in z.
-    if ((math.abs(normalVec._3) > Joint.EPSILON) && (math.abs(math.abs(normalVec._3) - 1.0) > Joint.EPSILON)) {
+    if ((math.abs(normalVec._3) > EPSILON) && (math.abs(math.abs(normalVec._3) - 1.0) > EPSILON)) {
       DenseVector[Double](normalVec._1 / normalVec._3, normalVec._2 / normalVec._3, 0.0)
-    } else if (math.abs(normalVec._3) < Joint.EPSILON) {
+    } else if (math.abs(normalVec._3) < EPSILON) {
       // Joint is vertical, assigns non-zero z component that will be caught in dipDir function
       DenseVector[Double](0.0, 0.0, -1.0)
     } else {
@@ -208,7 +204,7 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
     * vector for the plane, and the second item is the distance of the plane from the origin.
     */
   def globalCoordinates: Seq[((Double, Double, Double), Double)] = {
-    val Nplane = if (c > -Joint.EPSILON) {
+    val Nplane = if (c > -EPSILON) {
       // Ensures that normal will always point in -z global direction (ensures right-handed local coordinates)
       -1.0 * DenseVector[Double](a, b, c)
     } else {

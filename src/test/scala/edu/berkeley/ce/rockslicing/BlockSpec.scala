@@ -1,8 +1,8 @@
 package edu.berkeley.ce.rockslicing
 
 import org.scalatest._
-
 import scala.math.sqrt
+import NumericUtils.EPSILON
 
 class BlockSpec extends FunSuite {
   val boundingFaces = List(
@@ -62,8 +62,6 @@ class BlockSpec extends FunSuite {
         case (x,y,z) => math.abs(x-a) + math.abs(y-b) + math.abs(z-c)
       }
     }
-
-  val EPSILON = 1.0e-6
 
   test("The plane z = 0.5 should intersect the unit cube") {
     val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 1/2.0),
