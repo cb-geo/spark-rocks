@@ -15,7 +15,7 @@ object RockSlicer {
 
     // Open and read input file specifying rock volume and joints
     val inputSource = Source.fromFile(inputFile)
-    val (rockVolume, joints) = inputProcessor.readInput(inputSource)
+    val (rockVolume, joints) = InputProcessor.readInput(inputSource)
     inputSource.close()
     var blocks = Vector(Block((0.0, 0.0, 0.0), rockVolume))
 
@@ -49,7 +49,7 @@ object RockSlicer {
     }
 
     // Convert the list of rock blocks to JSON and save this to a file
-    val jsonBlocks = squeakyClean.map(json.blockToMinimalJson)
+    val jsonBlocks = squeakyClean.map(Json.blockToMinimalJson)
     jsonBlocks.saveAsTextFile("blocks.json")
     sc.stop()
   }
