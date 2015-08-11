@@ -2,7 +2,6 @@ package edu.berkeley.ce.rockslicing
 
 import breeze.linalg
 import breeze.linalg.{DenseMatrix, DenseVector}
-import edu.berkeley.ce.rockslicing.NumericUtils.{EPSILON, applyTolerance}
 
 object Joint {
   /**
@@ -15,15 +14,15 @@ object Joint {
   private def findDistance(normalVec: (Double, Double, Double), localOrigin: (Double, Double, Double),
                             center: (Double, Double, Double)): Double = {
     val w = DenseVector.zeros[Double](3)
-    if (math.abs(normalVec._3) >= EPSILON) {
+    if (math.abs(normalVec._3) >= NumericUtils.EPSILON) {
       w(0) = localOrigin._1
       w(1) = localOrigin._2
       w(2) = localOrigin._3 - center._3
-    } else if (math.abs(normalVec._2) >= EPSILON) {
+    } else if (math.abs(normalVec._2) >= NumericUtils.EPSILON) {
       w(0) = localOrigin._1
       w(1) = localOrigin._2 - center._2
       w(2) = localOrigin._3
-    } else if (math.abs(normalVec._1) >= EPSILON) {
+    } else if (math.abs(normalVec._1) >= NumericUtils.EPSILON) {
       w(0) = localOrigin._1 - center._1
       w(1) = localOrigin._2
       w(2) = localOrigin._3
@@ -60,15 +59,15 @@ object Joint {
     val maxCoordinates = basisVectors.map { v =>
       val linProg = new LinearProgram(3)
       linProg.setObjFun(v.toArray, LinearProgram.MAX)
-      val jointCoeffs = Array[Double](normalVec._1, normalVec._2, normalVec._3).map(applyTolerance)
-      val jointRhs = applyTolerance(distance)
+      val jointCoeffs = Array[Double](normalVec._1, normalVec._2, normalVec._3).map(NumericUtils.applyTolerance)
+      val jointRhs = NumericUtils.applyTolerance(distance)
       linProg.addConstraint(jointCoeffs, LinearProgram.LE, jointRhs)
 
       faces foreach { face =>
         val (a, b, c) = face._1
         val d = face._2
-        val coeffs = Array[Double](a, b, c).map(applyTolerance)
-        val rhs = applyTolerance(d)
+        val coeffs = Array[Double](a, b, c).map(NumericUtils.applyTolerance)
+        val rhs = NumericUtils.applyTolerance(d)
         linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
       }
       linProg.solve().get._2
@@ -91,9 +90,10 @@ object Joint {
    */
   private def dipDirVector(normalVec: (Double, Double, Double)): DenseVector[Double] = {
     // Dip direction is in opposite direction of gradient indicating greatest increase in z.
-    if ((math.abs(normalVec._3) > EPSILON) && (math.abs(math.abs(normalVec._3) - 1.0) > EPSILON)) {
+    if ((math.abs(normalVec._3) > NumericUtils.EPSILON) &&
+        (math.abs(math.abs(normalVec._3) - 1.0) > NumericUtils.EPSILON)) {
       DenseVector[Double](normalVec._1 / normalVec._3, normalVec._2 / normalVec._3, 0.0)
-    } else if (math.abs(normalVec._3) < EPSILON) {
+    } else if (math.abs(normalVec._3) < NumericUtils.EPSILON) {
       // Joint is vertical, assigns non-zero z component that will be caught in dipDir function
       DenseVector[Double](0.0, 0.0, -1.0)
     } else {
@@ -204,7 +204,7 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
     * vector for the plane, and the second item is the distance of the plane from the origin.
     */
   def globalCoordinates: Seq[((Double, Double, Double), Double)] = {
-    val Nplane = if (c > -EPSILON) {
+    val Nplane = if (c > -NumericUtils.EPSILON) {
       // Ensures that normal will always point in -z global direction (ensures right-handed local coordinates)
       -1.0 * DenseVector[Double](a, b, c)
     } else {
