@@ -3,8 +3,6 @@ package edu.berkeley.ce.rockslicing
 import breeze.linalg
 import breeze.linalg.{DenseVector, DenseMatrix}
 
-import NumericUtils.{applyTolerance, EPSILON}
-
 /** A simple data structure to represent the face of a rock block.
   *
   * @constructor Create a new rock face.
@@ -24,12 +22,12 @@ case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double
     * if so, sets it to 0.0.
     */
   def applyTolerance: Face = {
-    val newA = if (math.abs(a) > EPSILON) a else 0.0
-    val newB = if (math.abs(b) > EPSILON) b else 0.0
-    val newC = if (math.abs(c) > EPSILON) c else 0.0
-    val newD = if (math.abs(d) > EPSILON) d else 0.0
-    val newPhi = if (math.abs(phi) > EPSILON) phi else 0.0
-    val newCohesion = if (math.abs(cohesion) > EPSILON) cohesion else 0.0
+    val newA = if (math.abs(a) > NumericUtils.EPSILON) a else 0.0
+    val newB = if (math.abs(b) > NumericUtils.EPSILON) b else 0.0
+    val newC = if (math.abs(c) > NumericUtils.EPSILON) c else 0.0
+    val newD = if (math.abs(d) > NumericUtils.EPSILON) d else 0.0
+    val newPhi = if (math.abs(phi) > NumericUtils.EPSILON) phi else 0.0
+    val newCohesion = if (math.abs(cohesion) > NumericUtils.EPSILON) cohesion else 0.0
     Face((newA,newB,newC), newD, newPhi, newCohesion)
   }
 }
@@ -118,27 +116,28 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
 
     // Restrict our attention to plane of joint
     val translatedJoint = joint.updateJoint(centerX, centerY, centerZ)
-    val coeffs = Vector[Double](translatedJoint.a, translatedJoint.b, translatedJoint.c, 0.0).map(applyTolerance)
-    val rhs = applyTolerance(translatedJoint.d)
+    val coeffs = Vector[Double](translatedJoint.a, translatedJoint.b, translatedJoint.c, 0.0).
+                    map(NumericUtils.applyTolerance)
+    val rhs = NumericUtils.applyTolerance(translatedJoint.d)
     linProg.addConstraint(coeffs, LinearProgram.EQ, rhs)
 
     // Require s to be within planes defined by faces of block
     faces.foreach { face =>
-      val faceCoeffs = Vector[Double](face.a, face.b, face.c, -1.0).map(applyTolerance)
-      val rhs = applyTolerance(face.d)
+      val faceCoeffs = Vector[Double](face.a, face.b, face.c, -1.0).map(NumericUtils.applyTolerance)
+      val rhs = NumericUtils.applyTolerance(face.d)
       linProg.addConstraint(faceCoeffs, LinearProgram.LE, rhs)
     }
 
     // Require s to be within planes defining shape of joint
     translatedJoint.globalCoordinates.foreach { case ((a,b,c),d) =>
-      val jointCoeffs = Vector[Double](a, b, c, -1.0).map(applyTolerance)
-      val rhs = applyTolerance(d)
+      val jointCoeffs = Vector[Double](a, b, c, -1.0).map(NumericUtils.applyTolerance)
+      val rhs = NumericUtils.applyTolerance(d)
       linProg.addConstraint(jointCoeffs, LinearProgram.LE, rhs)
     }
 
     linProg.solve() match {
       case None => None
-      case Some((_, opt)) if opt >= -EPSILON => None
+      case Some((_, opt)) if opt >= -NumericUtils.EPSILON => None
       case Some((vars, _)) => Some((vars(0), vars(1), vars(2)))
     }
   }
@@ -173,15 +172,15 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
   def nonRedundantFaces: Seq[Face] =
     faces.distinct.filter { face =>
       val linProg = new LinearProgram(3)
-      val objCoeffs = Vector(face.a, face.b, face.c).map(applyTolerance)
+      val objCoeffs = Vector(face.a, face.b, face.c).map(NumericUtils.applyTolerance)
       linProg.setObjFun(objCoeffs, LinearProgram.MAX)
       faces.foreach { f =>
-        val faceCoeffs = Vector(f.a, f.b, f.c).map(applyTolerance)
-        val rhs = applyTolerance(f.d)
+        val faceCoeffs = Vector(f.a, f.b, f.c).map(NumericUtils.applyTolerance)
+        val rhs = NumericUtils.applyTolerance(f.d)
         linProg.addConstraint(faceCoeffs, LinearProgram.LE, rhs)
       }
       val s = linProg.solve().get._2
-      math.abs(s - face.d) <= EPSILON
+      math.abs(s - face.d) <= NumericUtils.EPSILON
     }
 
   /**
@@ -198,7 +197,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
           faces flatMap { f3 =>
             val n3 = DenseVector[Double](f3.a, f3.b, f3.c)
             // Check if normals of faces are coplanar, if not find intersection
-            if (math.abs(n1 dot linalg.cross(n2, n3)) > EPSILON) {
+            if (math.abs(n1 dot linalg.cross(n2, n3)) > NumericUtils.EPSILON) {
               val A_matx = DenseMatrix.zeros[Double](3, 3)
               val b_vect = DenseVector[Double](f1.d, f2.d, f3.d)
               A_matx(0, ::) := n1.t
@@ -224,7 +223,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
                              DenseMatrix[Double] = {
     val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
     val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
-    if (math.abs(linalg.norm(linalg.cross(n_c,n_d))) > EPSILON) {
+    if (math.abs(linalg.norm(linalg.cross(n_c,n_d))) > NumericUtils.EPSILON) {
       val (u, v, w) = n_current
 
       // Rotation matrix to rotate into x-z plane
@@ -266,7 +265,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
         }.distinct.toList
 
         // If z-component of normal is negative, order needs to be reversed to maintain clockwise orientation
-        if (face.c < -EPSILON) {
+        if (face.c < -NumericUtils.EPSILON) {
           Delaunay.Triangulation(rotatedVertices).map { vert =>
             (vert._3, vert._2, vert._1)
           }
@@ -333,15 +332,15 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
   def updateFaces(localOrigin: (Double, Double,Double)): Seq[Face] = {
     faces.map { case Face((a,b,c), d, phi, cohesion) =>
       val w = DenseVector.zeros[Double](3)
-      if (math.abs(c) >= EPSILON) {
+      if (math.abs(c) >= NumericUtils.EPSILON) {
         w(0) = localOrigin._1
         w(1) = localOrigin._2
         w(2) = localOrigin._3 - (d/c + centerZ)
-      } else if (math.abs(b) >= EPSILON) {
+      } else if (math.abs(b) >= NumericUtils.EPSILON) {
         w(0) = localOrigin._1
         w(1) = localOrigin._2 - (d/b + centerY)
         w(2) = localOrigin._3
-      } else if (math.abs(a) >= EPSILON) {
+      } else if (math.abs(a) >= NumericUtils.EPSILON) {
         w(0) = localOrigin._1 - (d/a + centerX)
         w(1) = localOrigin._2
         w(2) = localOrigin._3
