@@ -157,6 +157,22 @@ object BlockVTK {
       (face.a, face.b, face.c)
     }
   }
+
+  /**
+   * Determines the cumulative offsets that define each face in the connectivity list
+   * @param connectivities Mapping from each face of a block to a Seq of integers that represent
+   *                       tne indices of the vertices in the global vertex list
+   * @return A Seq of integers that represent the cumulative offset of each face in the
+   *         connectivity list
+   */
+  private def faceOffsets(connectivities: Map[Face, Seq[Int]]): Seq[Int] = {
+    val localOffsets = (connectivities map { kv => kv._2.length}).toList
+    var offsets = List[Int](localOffsets.head)
+    for (i <- 1 until localOffsets.length) {
+      offsets = offsets :+ (offsets(i-1) + localOffsets(i))
+    }
+    return offsets
+  }
 }
 
 /**
@@ -164,12 +180,17 @@ object BlockVTK {
  * @constructor Create a new rock block in format that can be turned into vtk by rockProcessor
  */
 case class BlockVTK(block: Block) {
-  // Distinct vertices of block
   private val orientedVertices = BlockVTK.orientVertices(block)
-  val vertices = orientedVertices.values.flatten.toList.distinct.flatten
-  private val connectivityMap = BlockVTK.connectivity(orientedVertices, vertices)
-  val vertexIDs = vertices.indices
+  private val tupleVertices = orientedVertices.values.flatten.toList.distinct
+  private val connectivityMap = BlockVTK.connectivity(orientedVertices, tupleVertices)
+  val vertices = tupleVertices flatMap { t =>
+    List(t._1, t._2, t._3)
+  }
+  val vertexIDs = tupleVertices.indices.toList
   val connectivity = connectivityMap.values.flatten
   val faceCount = orientedVertices.size
-  val offsets = connectivityMap map { kv => kv._2.length} //THIS NEEDS TO FIXED
+  val offsets = BlockVTK.faceOffsets(connectivityMap)
+  val normals = BlockVTK.normals(block) flatMap { t =>
+    List(t._1, t._2, t._3)
+  }
 }

@@ -78,23 +78,15 @@ class BlocksVTKSpec extends FunSuite {
     val cleanedBlocks = centroidBlocks.map { case Block(center, faces) =>
       Block(center, faces.map(_.applyTolerance))
     }
-
-    val vtkblocks = BlocksVTK(cleanedBlocks)
-    val vertices = vtkblocks.vertices(vtkblocks.faceVertices)
-    val orderedverts = vtkblocks.orientedVerts(vtkblocks.faceVertices)
-    val connectivity = vtkblocks.connectivity(orderedverts, vertices)
-//    println(orderedverts)
-//    println(vertices)
-//    println(connectivity)
   }
 
   test("vtkblocks of unit cube") {
-    val vtkblocks = BlocksVTK(Seq(twoCubeNonOrigin))
-    val vertices = vtkblocks.vertices(vtkblocks.faceVertices)
-    val orderedverts = vtkblocks.orientedVerts(vtkblocks.faceVertices)
-    val connectivity = vtkblocks.connectivity(orderedverts, vertices)
-    println(orderedverts)
-    println(vertices)
-    println(connectivity)
+    val vtkblock = BlockVTK(twoCubeNonOrigin)
+    println(vtkblock.vertices)
+    println(vtkblock.connectivity)
+    println(vtkblock.offsets)
+    println(vtkblock.faceCount)
+    println(vtkblock.vertexIDs)
+    println(vtkblock.normals)
   }
 }
