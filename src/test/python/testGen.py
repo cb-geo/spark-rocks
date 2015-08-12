@@ -55,12 +55,6 @@ if (nProc > divisions**2):
     jointsZ_temp = np.delete(joints_z, indices, 0)
     jointsZ_first = joints_z[indices.astype(int)]
     joints_z = np.concatenate((jointsZ_first, jointsZ_temp))                            
-    # print "This is jp_z: ", jp_z
-    # print "This is the fraction: ", fraction
-    # print "These are the indices: ", indices 
-    # print "This is the shape of joints in z: ", joints_z.shape[0]
-    # print "These are the joints in the z-direction: "
-    # print joints_z
 
 elif (nProc-1 > joints_x.shape[0]):
     jp_y = (nProc - 1 - joints_x.shape[0])/(joints_x.shape[0] + 1)
@@ -73,12 +67,6 @@ elif (nProc-1 > joints_x.shape[0]):
     jointsY_temp = np.delete(joints_y, indices, 0)
     jointsY_first = joints_y[indices.astype(int)]
     joints_y = np.concatenate((jointsY_first, jointsY_temp))
-    # print "This is jp_y: ", jp_y
-    # print "This is the fraction: ", fraction
-    # print "These are the indices: ", indices 
-    # print "This is the shape of joints in y: ", joints_y.shape[0]
-    # print "These are the joints in the y-direction: "
-    # print joints_y
 
 else:  
     jp_x = nProc - 1 
@@ -88,15 +76,9 @@ else:
     for i in range(0, jp_x):
         indices[i] = math.floor(fraction*(i+1)*joints_x.shape[0]) 
 
-    # print "This is jp_x: ", jp_x
-    # print "This is the fraction: ", fraction
-    # print "These are the indices: ", indices 
-    # print "This is the shape of joints in x: ", joints_x.shape[0]
     jointsX_temp = np.delete(joints_x, indices, 0)
     jointsX_first = joints_x[indices.astype(int)]
     joints_x = np.concatenate((jointsX_first, jointsX_temp))
-    # print "These are the joints in the x-direction: "
-    # print joints_x
 
 print "Number of joints to process is:", jointCount
 
