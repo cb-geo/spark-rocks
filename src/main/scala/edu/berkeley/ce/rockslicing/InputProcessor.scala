@@ -2,7 +2,7 @@ package edu.berkeley.ce.rockslicing
 
 import scala.io.Source
 
-object inputProcessor {
+object InputProcessor {
   // Processes input file: Add rock volume faces and joints to respective input list
   def readInput(inputSource: Source): (Seq[Face], Seq[Joint]) = {
     val lines = inputSource.getLines().toVector

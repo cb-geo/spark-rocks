@@ -14,7 +14,7 @@ object RockSlicer {
 
     // Open and read input file specifying rock volume and joints
     val inputSource = Source.fromFile(inputs.inputFile)
-    val (rockVolume, joints) = inputProcessor.readInput(inputSource)
+    val (rockVolume, joints) = InputProcessor.readInput(inputSource)
     inputSource.close()
     var blocks = Vector(Block((0.0, 0.0, 0.0), rockVolume))
 
