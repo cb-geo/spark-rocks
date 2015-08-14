@@ -61,7 +61,7 @@ object BlockVTK {
    * @param center Reference point for comparison
    * @return Returns TRUE if pointA is first relative to pointB, FALSE otherwise
    */
-  def ccwCompare(pointA: (Double, Double, Double), pointB: (Double, Double, Double),
+  private def ccwCompare(pointA: (Double, Double, Double), pointB: (Double, Double, Double),
                            center: (Double, Double, Double)): Boolean = {
     assert(math.abs(pointA._3 - pointB._3) < BlockVTK.EPSILON)
     if ((pointA._1 - center._1 < -BlockVTK.EPSILON) && (pointB._1 - center._1 >= BlockVTK.EPSILON)) {
@@ -70,7 +70,6 @@ object BlockVTK {
     if ((pointA._1 - center._1 >= BlockVTK.EPSILON) && (pointB._1 - center._1 < -BlockVTK.EPSILON)) {
       return false
     }
-    // CONTINUE CHECKING HERE
     if ((math.abs(pointA._1 - center._1) < BlockVTK.EPSILON) &&
         (math.abs(pointB._1 - center._1) < BlockVTK.EPSILON)) {
       if ((pointA._2 - center._2 >= BlockVTK.EPSILON) || (pointB._2 - center._2 >= BlockVTK.EPSILON)) {
@@ -79,12 +78,12 @@ object BlockVTK {
       return pointB._2 > pointA._2
     }
     // the cross product of vectors (pointA - center) and (pointB - center)
-    val det = ((pointA._1 - center._1) * (pointB._2 - center._2) -
-               (pointB._1 - center._1) * (pointA._2 - center._2)).toInt
-    if (det > 0) {
+    val det = (pointA._1 - center._1) * (pointB._2 - center._2) -
+      (pointB._1 - center._1) * (pointA._2 - center._2)
+    if (det > BlockVTK.EPSILON) {
       return true
     }
-    if (det < 0) {
+    if (det < -BlockVTK.EPSILON) {
       return false
     }
     // pointA and pointB are on the same line from the center, so check which one is closer to the center
@@ -100,7 +99,7 @@ object BlockVTK {
    * @return A mapping from each face of the block to a Seq of vertices for that face arranged in counter-
    *         clockwise order relative to its unit normal
    */
-  def orientVertices(block: Block): Map[Face, Seq[(Double, Double, Double)]] = {
+  private def orientVertices(block: Block): Map[Face, Seq[(Double, Double, Double)]] = {
     val faces = block.findVertices
     faces.keys.zip(
       faces.map { kv =>
@@ -150,14 +149,15 @@ object BlockVTK {
 
   /**
    * Creates a sequence of all the normals of all the faces for the list of input blocks
-   * @param block A rock block
+   * @param faces A mapping from each face of the block to a Seq of vertices for that face arranged in counter-
+   *         clockwise order relative to its unit normal
    * @return Sequence of tuples representing normals of all the block faces
    */
-  private def normals(block: Block): Seq[(Double, Double, Double)] = {
-    block.faces map { case face =>
-      (face.a, face.b, face.c)
+  private def normals(faces: Map[Face, Seq[(Double, Double, Double)]]): Seq[(Double, Double, Double)] = {
+    faces map { kv =>
+      (kv._1.a, kv._1.b, kv._1.c)
     }
-  }
+  }.toSeq
 
   /**
    * Determines the cumulative offsets that define each face in the connectivity list
@@ -182,7 +182,7 @@ object BlockVTK {
  */
 case class BlockVTK(block: Block) {
   private val orientedVertices = BlockVTK.orientVertices(block)
-  val tupleVertices = orientedVertices.values.flatten.toList.distinct
+  private val tupleVertices = orientedVertices.values.flatten.toList.distinct
   private val connectivityMap = BlockVTK.connectivity(orientedVertices, tupleVertices)
   val vertices = tupleVertices flatMap { t =>
     List(t._1, t._2, t._3)
@@ -191,7 +191,7 @@ case class BlockVTK(block: Block) {
   val connectivity = connectivityMap.values.flatten
   val faceCount = orientedVertices.size
   val offsets = BlockVTK.faceOffsets(connectivityMap)
-  val normals = BlockVTK.normals(block) flatMap { t =>
+  val normals = BlockVTK.normals(orientedVertices) flatMap { t =>
     List(t._1, t._2, t._3)
   }
 }
