@@ -8,7 +8,6 @@ case class CommandReader(inputs: Array[String]) {
   val inputFile = inputs(0)
   val numberSeedJoints = inputs(1).toInt
   val toInequalities = (inputs.length == 2) || (inputs contains "inequalities")
-  val toVertices = inputs contains "vertices"
   val toVTK = inputs contains "toVTK"
 }
 
