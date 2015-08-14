@@ -10,7 +10,7 @@ object RockSlicer {
   def main(args: Array[String]) {
     val conf = new SparkConf().setAppName("SparkRocks")
     val sc = new SparkContext(conf)
-    val inputs = commandReader(args)
+    val inputs = CommandReader(args)
 
     // Open and read input file specifying rock volume and joints
     val inputSource = Source.fromFile(inputFile)

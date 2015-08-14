@@ -61,15 +61,16 @@ object BlockVTK {
    * @param center Reference point for comparison
    * @return Returns TRUE if pointA is first relative to pointB, FALSE otherwise
    */
-  private def ccwCompare(pointA: (Double, Double, Double), pointB: (Double, Double, Double),
+  def ccwCompare(pointA: (Double, Double, Double), pointB: (Double, Double, Double),
                            center: (Double, Double, Double)): Boolean = {
     assert(math.abs(pointA._3 - pointB._3) < BlockVTK.EPSILON)
-    if ((pointA._1 - center._1 < BlockVTK.EPSILON) && (pointB._1 - center._1 >= -BlockVTK.EPSILON)) {
+    if ((pointA._1 - center._1 < -BlockVTK.EPSILON) && (pointB._1 - center._1 >= BlockVTK.EPSILON)) {
       return true
     }
-    if ((pointA._1 - center._1 >= -BlockVTK.EPSILON) && (pointB._1 - center._1 < BlockVTK.EPSILON)) {
+    if ((pointA._1 - center._1 >= BlockVTK.EPSILON) && (pointB._1 - center._1 < -BlockVTK.EPSILON)) {
       return false
     }
+    // CONTINUE CHECKING HERE
     if ((math.abs(pointA._1 - center._1) < BlockVTK.EPSILON) &&
         (math.abs(pointB._1 - center._1) < BlockVTK.EPSILON)) {
       if ((pointA._2 - center._2 >= BlockVTK.EPSILON) || (pointB._2 - center._2 >= BlockVTK.EPSILON)) {
@@ -99,7 +100,7 @@ object BlockVTK {
    * @return A mapping from each face of the block to a Seq of vertices for that face arranged in counter-
    *         clockwise order relative to its unit normal
    */
-  private def orientVertices(block: Block): Map[Face, Seq[(Double, Double, Double)]] = {
+  def orientVertices(block: Block): Map[Face, Seq[(Double, Double, Double)]] = {
     val faces = block.findVertices
     faces.keys.zip(
       faces.map { kv =>
@@ -181,7 +182,7 @@ object BlockVTK {
  */
 case class BlockVTK(block: Block) {
   private val orientedVertices = BlockVTK.orientVertices(block)
-  private val tupleVertices = orientedVertices.values.flatten.toList.distinct
+  val tupleVertices = orientedVertices.values.flatten.toList.distinct
   private val connectivityMap = BlockVTK.connectivity(orientedVertices, tupleVertices)
   val vertices = tupleVertices flatMap { t =>
     List(t._1, t._2, t._3)
