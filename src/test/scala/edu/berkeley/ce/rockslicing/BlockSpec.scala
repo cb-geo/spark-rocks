@@ -1,7 +1,6 @@
 package edu.berkeley.ce.rockslicing
 
 import org.scalatest._
-
 import scala.math.sqrt
 
 class BlockSpec extends FunSuite {
@@ -62,8 +61,6 @@ class BlockSpec extends FunSuite {
         case (x,y,z) => math.abs(x-a) + math.abs(y-b) + math.abs(z-c)
       }
     }
-
-  val EPSILON = 1.0e-6
 
   test("The plane z = 0.5 should intersect the unit cube") {
     val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 1/2.0),
@@ -349,7 +346,7 @@ class BlockSpec extends FunSuite {
     val block = Block((0.0, 0.0, 0.0), List(face1, face2, face3, face4, face5, face6))
     val centroid = block.centroid
     val expectedCentroid = (0.0, 0.0, 0.0)
-    assert(centroidDifference(centroid, expectedCentroid) <= EPSILON)
+    assert(centroidDifference(centroid, expectedCentroid) <= NumericUtils.EPSILON)
   }
 
   test("Centroid should be at (0.5, 0.5, 1.0)") {
@@ -362,7 +359,7 @@ class BlockSpec extends FunSuite {
     val block = Block((0.5, 0.5, 0.5), List(face1, face2, face3, face4, face5, face6))
     val centroid = block.centroid
     val expectedCentroid = (0.5, 0.5, 1.0)
-    assert(centroidDifference(centroid, expectedCentroid) < EPSILON)
+    assert(centroidDifference(centroid, expectedCentroid) < NumericUtils.EPSILON)
   }
 
   test("Centroid should be at (-1.0, -1.0, -1.0)") {
@@ -375,7 +372,7 @@ class BlockSpec extends FunSuite {
     val block = Block((0.0, 0.0, 0.0), List(face1, face2, face3, face4, face5, face6))
     val centroid = block.centroid
     val expectedCentroid = (-1.0, -1.0, -1.0)
-    assert(centroidDifference(centroid, expectedCentroid) < EPSILON)
+    assert(centroidDifference(centroid, expectedCentroid) < NumericUtils.EPSILON)
   }
 
   test("New distances should be shifted based on input local origin") {

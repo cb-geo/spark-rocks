@@ -1,12 +1,17 @@
 package edu.berkeley.ce.rockslicing
 
-import play.api.libs.{json => playJson}
-import playJson._
+import play.api.libs.json.JsNumber
+import play.api.libs.json.Format
+import play.api.libs.json.JsSuccess
+import play.api.libs.json.JsValue
+import play.api.libs.json.JsObject
+import play.api.libs.json.{Json => PlayJson}
+
 
 /**
   * Defines functions to convert rock block data structures to JSON format
   */
-object json {
+object Json {
   private implicit object FaceFormat extends Format[Face] {
     def reads(jsonVal: JsValue) = JsSuccess(Face(
       ((jsonVal \ "a").as[Double], (jsonVal \ "b").as[Double], (jsonVal \ "c").as[Double]),
@@ -36,7 +41,7 @@ object json {
         "centerX" -> JsNumber(block.centerX),
         "centerY" -> JsNumber(block.centerY),
         "centerZ" -> JsNumber(block.centerZ),
-         "faces" -> Json.toJson(block.faces)
+         "faces" -> PlayJson.toJson(block.faces)
       ))
     }
   }
@@ -47,7 +52,7 @@ object json {
     * @return A human-readable JSON representation of the block as a string.
     */
   def blockToReadableJson(block: Block): String =
-    Json.prettyPrint(Json.toJson(block))
+    PlayJson.prettyPrint(PlayJson.toJson(block))
 
   /**
     * Converts a rock block to minimal JSON.
@@ -55,7 +60,7 @@ object json {
     * @return A minimal JSON representation of the block, as a string.
     */
   def blockToMinimalJson(block: Block): String =
-    Json.stringify(Json.toJson(block))
+    PlayJson.stringify(PlayJson.toJson(block))
 
   /**
     * Converts a list of rock blocks to human-readable JSON.
@@ -63,7 +68,7 @@ object json {
     * @return A human-readable JSON representation of the blocks, as a string.
     */
   def blockSeqToReadableJson(blocks: Seq[Block]): String =
-    Json.prettyPrint(Json.toJson(blocks))
+    PlayJson.prettyPrint(PlayJson.toJson(blocks))
 
   /**
     * Converts a list of rock blocks to human-readable JSON.
@@ -71,5 +76,5 @@ object json {
     * @return A minimal JSON representation of the blocks, as a string.
     */
   def blockSeqToMinimalJson(blocks: Seq[Block]): String =
-    Json.stringify(Json.toJson(blocks))
+    PlayJson.stringify(PlayJson.toJson(blocks))
 }

@@ -11,7 +11,7 @@ class EndToEndSpec extends FunSuite {
   test("Simple end-to-end test using unit cube and simple planes") {
     // Read input file to generate list of joints and initial rock block
     val inputSource = Source.fromURL(getClass.getResource(s"/$INPUT_FILE_NAME"))
-    val (rockVolume, jointList) = inputProcessor.readInput(inputSource)
+    val (rockVolume, jointList) = InputProcessor.readInput(inputSource)
     inputSource.close()
 
     // Create an initial block
@@ -40,7 +40,7 @@ class EndToEndSpec extends FunSuite {
       Block(center, faces.map(_.applyTolerance))
     }
 
-    val blockJson = json.blockSeqToReadableJson(cleanedBlocks)
+    val blockJson = Json.blockSeqToReadableJson(cleanedBlocks)
     val expectedJsonSource = Source.fromURL(getClass.getResource(s"/$OUTPUT_FILE_NAME"))
     try {
       val expectedJson = expectedJsonSource.mkString
