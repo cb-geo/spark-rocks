@@ -5,8 +5,6 @@ import breeze.linalg.{DenseVector, DenseMatrix}
 
 object BlockVTK {
 
-  private val EPSILON = 1.0e-6
-
   /**
     * Calculates the rotation matrix to rotate the input plane (specified by its normal)
     * to the desired orientation (specified by the desired normal)
@@ -18,7 +16,7 @@ object BlockVTK {
                              DenseMatrix[Double] = {
       val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
       val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
-      if (math.abs(linalg.norm(linalg.cross(n_c,n_d))) > BlockVTK.EPSILON) {
+      if (math.abs(linalg.norm(linalg.cross(n_c,n_d))) > NumericUtils.EPSILON) {
         val (u, v, w) = n_current
 
         // Rotation matrix to rotate into x-z plane
@@ -64,24 +62,24 @@ object BlockVTK {
   private def ccwCompare(pointA: (Double, Double, Double), pointB: (Double, Double, Double),
                          center: (Double, Double, Double)): Boolean = {
     // Check that points are in the same x-y plane
-    assert(math.abs(pointA._3 - pointB._3) < BlockVTK.EPSILON)
+    assert(math.abs(pointA._3 - pointB._3) < NumericUtils.EPSILON)
 
     // Starts counter-clockwise comparison from 12 o'clock. Center serves as origin and 12 o'clock is along
     // vertical line running through this center.
     // Check if points are on opposite sides of the center. Points left of center will be before points
     // right of the center
-    if ((pointA._1 - center._1 < -BlockVTK.EPSILON) && (pointB._1 - center._1 >= BlockVTK.EPSILON)) {
+    if ((pointA._1 - center._1 < -NumericUtils.EPSILON) && (pointB._1 - center._1 >= NumericUtils.EPSILON)) {
       return true
     }
-    else if ((pointA._1 - center._1 >= BlockVTK.EPSILON) && (pointB._1 - center._1 < -BlockVTK.EPSILON)) {
+    else if ((pointA._1 - center._1 >= NumericUtils.EPSILON) && (pointB._1 - center._1 < -NumericUtils.EPSILON)) {
       return false
     }
 
     // Compares points that fall on the x = center._1 line.
-    if ((math.abs(pointA._1 - center._1) < BlockVTK.EPSILON) &&
-        (math.abs(pointB._1 - center._1) < BlockVTK.EPSILON)) {
+    if ((math.abs(pointA._1 - center._1) < NumericUtils.EPSILON) &&
+        (math.abs(pointB._1 - center._1) < NumericUtils.EPSILON)) {
       // Points furthest away from the center will be before points that are closer to the center
-      if ((pointA._2 - center._2 >= BlockVTK.EPSILON) || (pointB._2 - center._2 >= BlockVTK.EPSILON)) {
+      if ((pointA._2 - center._2 >= NumericUtils.EPSILON) || (pointB._2 - center._2 >= NumericUtils.EPSILON)) {
         return pointA._2 > pointB._2
       }
       return pointB._2 > pointA._2
@@ -92,9 +90,9 @@ object BlockVTK {
     val det = (pointA._1 - center._1) * (pointB._2 - center._2) -
       (pointB._1 - center._1) * (pointA._2 - center._2)
     // If resulting vector points in positive z-direction, pointA is before pointB
-    if (det > BlockVTK.EPSILON) {
+    if (det > NumericUtils.EPSILON) {
       return true
-    } else if (det < -BlockVTK.EPSILON) {
+    } else if (det < -NumericUtils.EPSILON) {
       return false
     }
 
@@ -124,7 +122,7 @@ object BlockVTK {
         // Order vertices in counter-clockwise orientation
         val center = BlockVTK.findCenter(rotatedVerts)
         val orderedVerts = {
-          if (face.normalVec._3 < -BlockVTK.EPSILON) {
+          if (face.normalVec._3 < -NumericUtils.EPSILON) {
             // If z-component of normal vector points in negative z-direction, orientation
             // needs to be reversed otherwise points will be ordered clockwise
             rotatedVerts.sortWith(BlockVTK.ccwCompare(_, _, center)).reverse

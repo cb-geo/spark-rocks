@@ -50,7 +50,7 @@ object RockSlicer {
     // Convert list of rock blocks to requested output
     if (inputs.toInequalities) {
       // Convert the list of rock blocks to JSON and save this to a file
-      val jsonBlocks = squeakyClean.map(json.blockToMinimalJson)
+      val jsonBlocks = squeakyClean.map(Json.blockToMinimalJson)
       jsonBlocks.saveAsTextFile("blocks.json")
     }
     if (inputs.toVTK) {
