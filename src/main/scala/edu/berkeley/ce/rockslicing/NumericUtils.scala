@@ -1,5 +1,6 @@
 package edu.berkeley.ce.rockslicing
 
+import scala.math.BigDecimal
 /**
  * Numerical utilities for implementation and test cases.
  */
@@ -25,4 +26,20 @@ object NumericUtils {
    */
   def applyTolerance(values: Seq[Double]): Seq[Double] =
     values map applyTolerance
+
+  /**
+    * Rounds 7th decimal place so that number has 6 decimal places.
+    * @param d A Double value
+    * @return Value with 6 decimal places
+    */
+  def roundToTolerance(d: Double): Double =
+    BigDecimal(d).setScale(6, BigDecimal.RoundingMode.HALF_UP).toDouble
+
+  /**
+    * Rounds all the values in a sequence to 6 decimal places
+    * @param values A sequence of Double values
+    * @return The sequence with all values rounded to 6 decimal places
+    */
+  def roundToTolerance(values: Seq[Double]): Seq[Double] =
+    values map roundToTolerance
 }

@@ -134,7 +134,8 @@ object BlockVTK {
         // Rotate vertices back to original orientation
         val invR = R.t // Inverse of rotation matrix is equal to its transpose
         orderedVerts map { vertex =>
-          val orderedVertex = invR * DenseVector[Double](vertex._1, vertex._2, vertex._3)
+          val orderedVertex = (invR * DenseVector[Double](vertex._1, vertex._2, vertex._3)).map {
+            NumericUtils.roundToTolerance }
           (orderedVertex(0), orderedVertex(1), orderedVertex(2))
         }
       }
@@ -142,12 +143,12 @@ object BlockVTK {
   }
 
   /**
-   * Finds the indices of the face vertices in the global list of vertices
-   * @param faceOrientedVerts Mapping from each face to a Seq of vertices for that face
-   * @param vertices Seq of distinct vertices for the rock block
-   * @return A mapping from each face of the block to a Seq of integers that represent
-   *         the indices of the vertices in the global vertex list
-   */
+    * Finds the indices of the face vertices in the global list of vertices
+    * @param faceOrientedVerts Mapping from each face to a Seq of vertices for that face
+    * @param vertices Seq of distinct vertices for the rock block
+    * @return A mapping from each face of the block to a Seq of integers that represent
+    *         the indices of the vertices in the global vertex list
+    */
   private def connectivity(faceOrientedVerts: Map[Face, Seq[(Double, Double, Double)]],
                            vertices: Seq[(Double, Double, Double)]): Map[Face, Seq[Int]] = {
     faceOrientedVerts.keys.zip(
@@ -193,9 +194,9 @@ object BlockVTK {
   * @constructor Create a new rock block in format that can be turned into vtk by rockProcessor
   */
 case class BlockVTK(block: Block) {
-  private val orientedVertices = BlockVTK.orientVertices(block)
-  private val tupleVertices = orientedVertices.values.flatten.toSeq.distinct
-  private val connectivityMap = BlockVTK.connectivity(orientedVertices, tupleVertices)
+  val orientedVertices = BlockVTK.orientVertices(block)
+  val tupleVertices = orientedVertices.values.flatten.toSeq.distinct
+  val connectivityMap = BlockVTK.connectivity(orientedVertices, tupleVertices)
   val vertices = tupleVertices flatMap { t =>
     List(t._1, t._2, t._3)
   }

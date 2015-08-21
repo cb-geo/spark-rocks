@@ -153,9 +153,9 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     this.intersects(joint) match {
       case None => Vector(this)
       case Some((x,y,z)) =>
-        val newX = centerX + x
-        val newY = centerY + y
-        val newZ = centerZ + z
+        val newX = NumericUtils.roundToTolerance(centerX + x)
+        val newY = NumericUtils.roundToTolerance(centerY + y)
+        val newZ = NumericUtils.roundToTolerance(centerZ + z)
         val updatedFaces = updateFaces(newX, newY, newZ)
         Vector(
           // New origin is guaranteed to lie within joint, so initial d = 0
@@ -204,12 +204,13 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
               A_matx(1, ::) := n2.t
               A_matx(2, ::) := n3.t
               val p_vect = A_matx \ b_vect
-              Some((p_vect(0) + centerX, p_vect(1) + centerY, p_vect(2) + centerZ))
+              Some((NumericUtils.roundToTolerance(p_vect(0) + centerX),
+                    NumericUtils.roundToTolerance(p_vect(1) + centerY),
+                    NumericUtils.roundToTolerance(p_vect(2) + centerZ)))
             } else None
           }
         }
-        // Reverse is needed to keep the same ordering as faces list since elements are added to the front
-      } map (_.distinct) map (_.reverse)
+      } map (_.distinct)
     ).toMap                              
 
   /**
@@ -333,20 +334,20 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     faces.map { case Face((a,b,c), d, phi, cohesion) =>
       val w = DenseVector.zeros[Double](3)
       if (math.abs(c) >= NumericUtils.EPSILON) {
-        w(0) = localOrigin._1
-        w(1) = localOrigin._2
+        w(0) = localOrigin._1 - centerX
+        w(1) = localOrigin._2 - centerY
         w(2) = localOrigin._3 - (d/c + centerZ)
       } else if (math.abs(b) >= NumericUtils.EPSILON) {
-        w(0) = localOrigin._1
+        w(0) = localOrigin._1 - centerX
         w(1) = localOrigin._2 - (d/b + centerY)
-        w(2) = localOrigin._3
+        w(2) = localOrigin._3 - centerZ
       } else if (math.abs(a) >= NumericUtils.EPSILON) {
         w(0) = localOrigin._1 - (d/a + centerX)
-        w(1) = localOrigin._2
-        w(2) = localOrigin._3
+        w(1) = localOrigin._2 - centerY
+        w(2) = localOrigin._3 - centerZ
       }
       val n = DenseVector[Double](a, b, c)
-      val new_d = -(n dot w) / linalg.norm(n)
+      val new_d = NumericUtils.roundToTolerance(-(n dot w) / linalg.norm(n))
       Face((a, b, c), new_d, phi, cohesion)
     }
   }

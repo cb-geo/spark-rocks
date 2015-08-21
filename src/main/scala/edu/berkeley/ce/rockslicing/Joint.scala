@@ -14,21 +14,11 @@ object Joint {
   private def findDistance(normalVec: (Double, Double, Double), localOrigin: (Double, Double, Double),
                             center: (Double, Double, Double)): Double = {
     val w = DenseVector.zeros[Double](3)
-    if (math.abs(normalVec._3) >= NumericUtils.EPSILON) {
-      w(0) = localOrigin._1
-      w(1) = localOrigin._2
-      w(2) = localOrigin._3 - center._3
-    } else if (math.abs(normalVec._2) >= NumericUtils.EPSILON) {
-      w(0) = localOrigin._1
-      w(1) = localOrigin._2 - center._2
-      w(2) = localOrigin._3
-    } else if (math.abs(normalVec._1) >= NumericUtils.EPSILON) {
-      w(0) = localOrigin._1 - center._1
-      w(1) = localOrigin._2
-      w(2) = localOrigin._3
-    }
+    w(0) = localOrigin._1 - center._1
+    w(1) = localOrigin._2 - center._2
+    w(2) = localOrigin._3 - center._3
     val n = DenseVector[Double](normalVec._1, normalVec._2, normalVec._3)
-    -(n dot w)/linalg.norm(n)
+    NumericUtils.roundToTolerance(-(n dot w)/linalg.norm(n))
   }
 
   /**

@@ -293,9 +293,9 @@ class BlockSpec extends FunSuite {
     val face3 = Face((0.0, 0.0, 1.0), 0.0, phi=0, cohesion=0)
     val face4 = Face((0.0, 1.0, 0.0), 5.0, phi=0, cohesion=0)
     val block = Block((0.0, 0.0, 0.0), List(face1, face2, face3, face4))
-    val face1Verts = List((0.0, 5.0, 0.0), (0.0, 0.0, 0.0))
+    val face1Verts = List((0.0, 0.0, 0.0), (0.0, 5.0, 0.0))
     val face2Verts = List((0.0, 0.0, 0.0))
-    val face3Verts = List((0.0, 5.0, 0.0), (0.0, 0.0, 0.0))
+    val face3Verts = List((0.0, 0.0, 0.0), (0.0, 5.0, 0.0))
     val face4Verts = List((0.0, 5.0, 0.0))
     val expectedIntersection = Map(
       face1 -> face1Verts,
@@ -305,6 +305,23 @@ class BlockSpec extends FunSuite {
     )
     val vertices = block.findVertices
     assert(vertices == expectedIntersection)
+  }
+
+  test("The point of intersection between the three planes should be (1.0, 0.0, 0.0)") {
+    val face1 = Face((0.0, 0.0, 1.0), 0.0, phi = 0.0, cohesion = 0.0)
+    val face2 = Face((0.0, 1.0, 0.0), 0.0, phi = 0.0, cohesion = 0.0)
+    val face3 = Face((1.0/sqrt(2.0), 1.0/sqrt(2.0), 0.0), 1.0/sqrt(2.0), phi = 0.0, cohesion = 0.0)
+    val block = Block((0.0, 0.0, 0.0), List(face1, face2, face3))
+    val face1Verts = List((1.0, 0.0, 0.0))
+    val face2Verts = List((1.0, 0.0, 0.0))
+    val face3Verts = List((1.0, 0.0, 0.0))
+    val expectedIntersetion = Map(
+      face1 -> face1Verts,
+      face2 -> face2Verts,
+      face3 -> face3Verts
+    )
+    val vertices = block.findVertices
+    assert(vertices == expectedIntersetion)
   }
 
   test("There should be no intersection between the planes") {
@@ -330,7 +347,7 @@ class BlockSpec extends FunSuite {
 
     val vertices = block.findVertices
     val mesh = block.meshFaces(vertices)
-    val expectedVertices = List(Delaunay.Vector2(0.0, 1.0), Delaunay.Vector2(1.0,0.0), Delaunay.Vector2(1.0,1.0))
+    val expectedVertices = List(Delaunay.Vector2(1.0, 1.0), Delaunay.Vector2(1.0,0.0), Delaunay.Vector2(0.0,1.0))
 
     val expectedTriangulation = Delaunay.Triangulation(expectedVertices).toList
     assert(mesh(face3) == expectedTriangulation)
