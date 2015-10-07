@@ -173,19 +173,29 @@ object BlockVTK {
   }.toSeq
 
   /**
-   * Determines the offset that defines each face in the connectivity list
-   * @param connectivities Mapping from each face of a block to a Seq of integers that represent
-   *                       tne indices of the vertices in the global vertex list
-   * @return A Seq of integers that represent the offset of each face in the
-   *         connectivity list
-   */
+    * Determines the offset that defines each face in the connectivity list
+    * @param connectivities Mapping from each face of a block to a Seq of integers that represent
+    *                       tne indices of the vertices in the global vertex list
+    * @return A Seq of integers that represent the offset of each face in the
+    *         connectivity list
+    */
   private def faceOffsets(connectivities: Map[Face, Seq[Int]]): Seq[Int] = {
-    val localOffsets = (connectivities map { kv => kv._2.length}).toList
-    var offsets = List[Int](localOffsets.head)
-    for (i <- 1 until localOffsets.length) {
-      offsets = offsets :+ (offsets(i-1) + localOffsets(i))
+    val localOffsets = (connectivities map { case(face, connections) => connections.length}).toList
+    val offsets = List[Int](localOffsets.head)
+
+    def offsetIterator(globalOS: List[Int], localOS: List[Int]): List[Int] = {
+      localOS match {
+        case Nil => globalOS.reverse
+        case list :: offsetList => offsetIterator((offsetList.head + globalOS.takeRight(1).head) :: globalOS,
+                                                  offsetList.tail)
+      }
     }
-    return offsets
+    offsetIterator(offsets, localOffsets)
+
+//    for (i <- 1 until localOffsets.length) {
+//      offsets = offsets :+ (offsets(i-1) + localOffsets(i))
+//    }
+//    return offsets
   }
 }
 
