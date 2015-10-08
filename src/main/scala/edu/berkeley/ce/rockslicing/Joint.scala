@@ -5,12 +5,12 @@ import breeze.linalg.{DenseMatrix, DenseVector}
 
 object Joint {
   /**
-   * Find the distance of the joint plane from the input local origin.
-   * @param normalVec Normal vector to the joint plane
-   * @param localOrigin The local origin from which the distance is referenced. This should be in global coordinates.
-   * @param center The center of the joint plane. This should be in global coordinates.
-   * @return
-   */
+    * Find the distance of the joint plane from the input local origin.
+    * @param normalVec Normal vector to the joint plane
+    * @param localOrigin The local origin from which the distance is referenced. This should be in global coordinates.
+    * @param center The center of the joint plane. This should be in global coordinates.
+    * @return
+    */
   private def findDistance(normalVec: (Double, Double, Double), localOrigin: (Double, Double, Double),
                             center: (Double, Double, Double)): Double = {
     val w = DenseVector.zeros[Double](3)
@@ -22,18 +22,18 @@ object Joint {
   }
 
   /**
-   * Find a bounding sphere for a non-persistent joint. This function is not
-   * intended for use with persistent joints.
-   * @param normalVec The normal vector of the plane in which the joint lies
-   * @param distance The distance of the joint's plane from its local origin
-   * @param centerX The x coordinate of the joint's center
-   * @param centerY The y coordinate of the joint's center
-   * @param centerZ The z coordinate of the joint's center
-   * @param faces A sequence of faces specifying the joint's shape
-   * @return A pair where the first element is a triple giving the center of
-   *         the bounding sphere and the second element is the radius of the
-   *         bounding sphere.
-   */
+    * Find a bounding sphere for a non-persistent joint. This function is not
+    * intended for use with persistent joints.
+    * @param normalVec The normal vector of the plane in which the joint lies
+    * @param distance The distance of the joint's plane from its local origin
+    * @param centerX The x coordinate of the joint's center
+    * @param centerY The y coordinate of the joint's center
+    * @param centerZ The z coordinate of the joint's center
+    * @param faces A sequence of faces specifying the joint's shape
+    * @return A pair where the first element is a triple giving the center of
+    *         the bounding sphere and the second element is the radius of the
+    *         bounding sphere.
+    */
   private def findBoundingSphere(normalVec: (Double,Double,Double), distance: Double, centerX: Double,
       centerY: Double, centerZ: Double, faces: Seq[((Double,Double,Double),Double)]):
       ((Double,Double,Double), Double) = {
@@ -73,11 +73,11 @@ object Joint {
   }
 
   /**
-   * Find the vector indicating dip direction of the joint plane. Global positive x-axis points North and
-   * z-axis oriented with positive upward. Positive y-axis will point west based on this orientation.
-   * @param normalVec Normal vector to the joint plane
-   * @return Dip direction of the plane, indicating direction of greatest increase in z. Return as vector (a, b, 0)
-   */
+    * Find the vector indicating dip direction of the joint plane. Global positive x-axis points North and
+    * z-axis oriented with positive upward. Positive y-axis will point west based on this orientation.
+    * @param normalVec Normal vector to the joint plane
+    * @return Dip direction of the plane, indicating direction of greatest increase in z. Return as vector (a, b, 0)
+    */
   private def dipDirVector(normalVec: (Double, Double, Double)): DenseVector[Double] = {
     // Dip direction is in opposite direction of gradient indicating greatest increase in z.
     if ((math.abs(normalVec._3) > NumericUtils.EPSILON) &&
@@ -93,10 +93,10 @@ object Joint {
   }
 
   /**
-   * Finds the dip direction of the input joint as an azimuth. Global positive x-axis points North.
-   * @param normalVec Normal vector to the joint plane
-   * @return Dip direction as an azimuth in radians
-   */
+    * Finds the dip direction of the input joint as an azimuth. Global positive x-axis points North.
+    * @param normalVec Normal vector to the joint plane
+    * @return Dip direction as an azimuth in radians
+    */
   private def dipDir(normalVec: (Double, Double, Double)): Double = {
     val dipVector = Joint.dipDirVector(normalVec)
     val xAxis = DenseVector[Double](1.0, 0.0, 0.0)
@@ -117,10 +117,10 @@ object Joint {
   }
 
   /**
-   * Finds the dip angle of the input joint.
-   * @param normalVec Normal vector to the joint plane
-   * @return Dip angle in radians
-   */
+    * Finds the dip angle of the input joint.
+    * @param normalVec Normal vector to the joint plane
+    * @return Dip angle in radians
+    */
   private def dipAngle(normalVec: (Double, Double, Double)): Double = {
     val dipVector = Joint.dipDirVector(normalVec)
     val normal = DenseVector[Double](normalVec._1, normalVec._2, normalVec._3)
