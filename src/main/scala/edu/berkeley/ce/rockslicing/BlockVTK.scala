@@ -186,16 +186,11 @@ object BlockVTK {
     def offsetIterator(globalOS: List[Int], localOS: List[Int]): List[Int] = {
       localOS match {
         case Nil => globalOS.reverse
-        case list :: offsetList => offsetIterator((offsetList.head + globalOS.takeRight(1).head) :: globalOS,
-                                                  offsetList.tail)
+        case offsetList => offsetIterator((offsetList.head + globalOS.head) :: globalOS,
+                                          offsetList.tail)
       }
     }
     offsetIterator(offsets, localOffsets)
-
-//    for (i <- 1 until localOffsets.length) {
-//      offsets = offsets :+ (offsets(i-1) + localOffsets(i))
-//    }
-//    return offsets
   }
 }
 
