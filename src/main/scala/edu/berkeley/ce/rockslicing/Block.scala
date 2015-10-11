@@ -225,26 +225,43 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
     val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
     if (math.abs(linalg.norm(linalg.cross(n_c,n_d))) > NumericUtils.EPSILON) {
-      val (u, v, w) = n_current
+      val v = linalg.cross(n_c, n_d)
+      val s = linalg.norm(v)
+      val c = n_c dot n_d
 
-      // Rotation matrix to rotate into x-z plane
-      val Txz = DenseMatrix.zeros[Double](3, 3)
-      Txz(0,0) = u / math.sqrt(u*u + v*v)
-      Txz(1,0) = -v /math.sqrt(u*u + v*v)
-      Txz(0,1) = v / math.sqrt(u*u + v*v)
-      Txz(1,1) = u / math.sqrt(u*u + v*v)
-      Txz(2,2) = 1.0
+      val v_skew = DenseMatrix.zeros[Double](3,3)
+      v_skew(0,1) = -v(2)
+      v_skew(0,2) = v(1)
+      v_skew(1,0) = v(2)
+      v_skew(1,2) = -v(0)
+      v_skew(2,0) = -v(1)
+      v_skew(2,1) = v(0)
 
-      // Rotation matrix to rotate from x-z plane on z-axis
-      val Tz = DenseMatrix.zeros[Double](3, 3)
-      Tz(0,0) = w / math.sqrt(u*u + v*v + w*w)
-      Tz(2,0) = math.sqrt(u*u + v*v) / math.sqrt(u*u + v*v + w*w)
-      Tz(0,2) = -math.sqrt(u*u + v*v)/math.sqrt(u*u + v*v + w*w)
-      Tz(2,2) = w / math.sqrt(u*u + v*v + w*w)
-      Tz(1,1) = 1.0
-      Tz * Txz
-    } else {
+      DenseMatrix.eye[Double](3) + v_skew + (v_skew * v_skew) * (1-c)/(s*s)
+//      val (u, v, w) = n_current
+//
+//      // Rotation matrix to rotate into x-z plane
+//      val Txz = DenseMatrix.zeros[Double](3, 3)
+//      Txz(0,0) = u / math.sqrt(u*u + v*v)
+//      Txz(1,0) = -v /math.sqrt(u*u + v*v)
+//      Txz(0,1) = v / math.sqrt(u*u + v*v)
+//      Txz(1,1) = u / math.sqrt(u*u + v*v)
+//      Txz(2,2) = 1.0
+//
+//      // Rotation matrix to rotate from x-z plane on z-axis
+//      val Tz = DenseMatrix.zeros[Double](3, 3)
+//      Tz(0,0) = w / math.sqrt(u*u + v*v + w*w)
+//      Tz(2,0) = math.sqrt(u*u + v*v) / math.sqrt(u*u + v*v + w*w)
+//      Tz(0,2) = -math.sqrt(u*u + v*v)/math.sqrt(u*u + v*v + w*w)
+//      Tz(2,2) = w / math.sqrt(u*u + v*v + w*w)
+//      Tz(1,1) = 1.0
+//      Tz * Txz
+    } else if ((math.abs(n_c(0) - n_d(0)) < NumericUtils.EPSILON) &&
+               (math.abs(n_c(1) - n_d(1)) < NumericUtils.EPSILON) &&
+               (math.abs(n_c(2) - n_d(2)) < NumericUtils.EPSILON)) {
       DenseMatrix.eye[Double](3)
+    } else {
+      -DenseMatrix.eye[Double](3)
     }
   }
 

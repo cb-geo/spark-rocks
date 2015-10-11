@@ -135,7 +135,7 @@ object BlockVTK {
         val invR = R.t // Inverse of rotation matrix is equal to its transpose
         orderedVerts map { vertex =>
           val orderedVertex = (invR * DenseVector[Double](vertex._1, vertex._2, vertex._3)).map {
-            NumericUtils.roundToTolerance }
+            NumericUtils.roundToTolerance(_) }
           (orderedVertex(0), orderedVertex(1), orderedVertex(2))
         }
       }

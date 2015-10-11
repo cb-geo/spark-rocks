@@ -97,25 +97,19 @@ for joint in masterJoints:
 f = open(outputFile, 'w')
 
 for face in faces:
-    # f.write("%.12f %.12f %.12f %.12f %.12f %.12f\n" % (face.normalVec[0], face.normalVec[1], face.normalVec[2], 
-    #                                face.distance, face.phi, face.cohesion))
-    f.write(str(round(face.normalVec[0], 1))+" "+str(round(face.normalVec[1], 1))+" "+str(round(face.normalVec[2], 1))+" "+
-            str(round(face.distance, 1))+" "+str(round(face.phi, 1))+" "+str(round(face.cohesion, 1))+" \n")
+    f.write("%.12f %.12f %.12f %.12f %.12f %.12f\n" % (face.normalVec[0], face.normalVec[1], face.normalVec[2], 
+                                   face.distance, face.phi, face.cohesion))
 
 # Write symbol to show transition to joint data (Yes, this is silly...)
 f.write("%\n")
 
 # Write joint data to output file
 for joint in joints:
-    # f.write("%.12f %.12f %.12f %.12f %.12f %.12f %.12f %.12f %.12f %.12f %.12f\n" %
-    #         (joint.normalVec[0], joint.normalVec[1], joint.normalVec[2], 
-    #          joint.localOrigin[0], joint.localOrigin[1], joint.localOrigin[2],
-    #          joint.center[0], joint.center[1], joint.center[2],
-    #          joint.phi, joint.cohesion))
-    f.write(str(round(joint.normalVec[0], 1))+" "+str(round(joint.normalVec[1], 1))+" "+str(round(joint.normalVec[2], 1))+" "+
-            str(round(joint.localOrigin[0], 1))+" "+str(round(joint.localOrigin[1], 1))+" "+str(round(joint.localOrigin[2], 1))+
-            " "+str(round(joint.center[0], 1))+" "+str(round(joint.center[1], 1))+" "+str(round(joint.center[2], 1))+" "+
-            str(round(joint.phi, 1))+" "+str(round(joint.cohesion, 1))+" \n")
+    f.write("%.12f %.12f %.12f %.12f %.12f %.12f %.12f %.12f %.12f %.12f %.12f\n" %
+            (joint.normalVec[0], joint.normalVec[1], joint.normalVec[2], 
+             joint.localOrigin[0], joint.localOrigin[1], joint.localOrigin[2],
+             joint.center[0], joint.center[1], joint.center[2],
+             joint.phi, joint.cohesion))
 
 f.close
 

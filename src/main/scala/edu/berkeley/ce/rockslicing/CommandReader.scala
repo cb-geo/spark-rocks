@@ -1,6 +1,7 @@
 package edu.berkeley.ce.rockslicing
 
-/** A simple tool for parsing command line inputs
+/** A simple tool for parsing command line inputs based on the following:
+  * http://stackoverflow.com/questions/2315912/scala-best-way-to-parse-command-line-parameters-cli
   * @constructor Create a new command reader
   */
 object CommandReader {
@@ -20,7 +21,7 @@ object CommandReader {
 
   type OptionMap = Map[Symbol, String]
 
-  def argumentParser(inputs: Array[String]): OptionMap = {
+  def parseArguments(inputs: Array[String]): OptionMap = {
     if (inputs.length == 0) {
       println(usage)
       sys.exit(0)
