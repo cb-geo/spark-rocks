@@ -474,4 +474,20 @@ class BlockSpec extends FunSuite {
     val expectedBlocks = List(bottomLeft, topLeft, bottomRight, topRight)
     assert(cleanedBlocks == expectedBlocks)
   }
+
+  val boundingFaces4 = List(
+    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face((0.0, 0.0, -1.0), -1.0, phi=0, cohesion=0),
+    Face((1.0, 0.0, 0.0), -0.0, phi=0, cohesion=0),
+    Face((0.0, 1.0, 0.0), -0.0, phi=0, cohesion=0),
+    Face((0.0, 0.0, -1.0), -0.0, phi=0, cohesion=0)
+  )
+  val unitCubeSigns = Block((0.0, 0.0, 0.0), boundingFaces4)
+
+  test("Checking if signs cause number format exception") {
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 1/2.0),
+      phi=0, cohesion=0, shape=Nil)
+    assert(unitCubeSigns.intersects(joint).isDefined)
+  }
 }
