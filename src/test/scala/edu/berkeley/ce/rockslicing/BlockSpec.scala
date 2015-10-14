@@ -411,6 +411,25 @@ class BlockSpec extends FunSuite {
     assert(updatedFaces == expectedFaces)
   }
 
+  test("New distances should be shifted based on input local origin - some distances should be negative") {
+    val face1 = Face((1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0)
+    val face2 = Face((0.0, 1.0, 0.0), 2.0, phi=0, cohesion=0)
+    val face3 = Face((0.0, 0.0, -1.0), -2.0, phi=0, cohesion=0)
+    val face4 = Face((1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
+    val face5 = Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0)
+    val face6 = Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0)
+    val block = Block((0.0, 0.0, 0.0), List(face1, face2, face3, face4, face5, face6))
+    val updatedFaces = block.updateFaces((2.0, 2.0, 2.0))
+    val expectedFace1 = Face((1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
+    val expectedFace2 = Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0)
+    val expectedFace3 = Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0)
+    val expectedFace4 = Face((1.0, 0.0, 0.0), -2.0, phi=0, cohesion=0)
+    val expectedFace5 = Face((0.0, 1.0, 0.0), -2.0, phi=0, cohesion=0)
+    val expectedFace6 = Face((0.0, 0.0, -1.0), 2.0, phi=0, cohesion=0)
+    val expectedFaces = List(expectedFace1, expectedFace2, expectedFace3, expectedFace4, expectedFace5, expectedFace6)
+    assert(updatedFaces == expectedFaces)
+  }
+
   test("Cutting the two-cube with faces x=0 and z=0 should produce four blocks") {
     val xPlane = Joint((1.0,0.0,0.0), (1.0,1.0,1.0), (1.0,1.0,1.0),
                        phi=0, cohesion=0, shape=Nil)
@@ -476,18 +495,61 @@ class BlockSpec extends FunSuite {
   }
 
   val boundingFaces4 = List(
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face((-1.0, 0.0, 0.0), -1.0, phi=0, cohesion=0),
+    Face((0.0, -1.0, 0.0), -1.0, phi=0, cohesion=0),
     Face((0.0, 0.0, -1.0), -1.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), -0.0, phi=0, cohesion=0),
-    Face((0.0, 1.0, 0.0), -0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, -1.0), -0.0, phi=0, cohesion=0)
+    Face((1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face((0.0, 0.0, 1.0), 0.0, phi=0, cohesion=0)
   )
   val unitCubeSigns = Block((0.0, 0.0, 0.0), boundingFaces4)
 
+  val boundingFaces5 = List(
+    Face((-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face((0.0, -1.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face((0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0),
+    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
+  )
+  val twoCubeSigns = Block((0.0, 0.0, 0.0), boundingFaces5)
+
+  test("Bounding sphere of the unit cube should have center (0.5, 0.5, 0.5) and radius sqrt(0.5 + 0.5^2)") {
+    val expectedBoundingSphere = ((0.5, 0.5, 0.5), math.sqrt(0.5 + math.pow(0.5, 2)))
+    val unitCubeBS = ((unitCube.sphereCenterX, unitCube.sphereCenterY, unitCube.sphereCenterZ),
+                      unitCube.sphereRadius)
+    assert(unitCubeBS == expectedBoundingSphere)
+  }
+
+  test("Bounding sphere of the two cube should have center (1.0, 1.0, 1.0) and radius sqrt(3.0)") {
+    val expectedBoundingSphere = ((1.0, 1.0, 1.0), math.sqrt(3.0))
+    val twoCubeBS = ((twoCube.sphereCenterX, twoCube.sphereCenterY, twoCube.sphereCenterZ),
+                     twoCube.sphereRadius)
+    assert(twoCubeBS == expectedBoundingSphere)
+  }
+
+  test("Bounding sphere of the unit cube with negative distances should have center (0.5, 0.5, 0.5) and "+
+       "radius sqrt(0.5 + 0.5^2)") {
+    val expectedBoundingSphere = ((0.5, 0.5, 0.5), math.sqrt(0.5 + math.pow(0.5, 2)))
+    val unitCubeSignsBS = ((unitCubeSigns.sphereCenterX, unitCubeSigns.sphereCenterY,
+                            unitCubeSigns.sphereCenterZ), unitCubeSigns.sphereRadius)
+    assert(unitCubeSignsBS == expectedBoundingSphere)
+  }
+
   test("Checking if signs cause number format exception") {
     val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 1/2.0),
-      phi=0, cohesion=0, shape=Nil)
+                      phi=0, cohesion=0, shape=Nil)
+    println("This is the unit cube (signs) sphere radius "+unitCubeSigns.sphereRadius)
+    println("This is the unit cube (signs) sphere center "+unitCubeSigns.sphereCenterX+" "+unitCubeSigns.sphereCenterY+" "+unitCubeSigns.sphereCenterZ)
     assert(unitCubeSigns.intersects(joint).isDefined)
+  }
+
+  test("Checking if signs cause number format exception - faces not through origin") {
+    val joint = Joint((0.0, 0.0, -1.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 1/2.0),
+                      phi=0, cohesion=0, shape=Nil)
+    println("This is the joint distance "+joint.d)
+    println("This is the two cube sphere radius "+twoCubeSigns.sphereRadius)
+    println("This is the two cube sphere center "+twoCubeSigns.sphereCenterX+" "+twoCubeSigns.sphereCenterY+" "+twoCubeSigns.sphereCenterZ)
+    assert(twoCubeSigns.intersects(joint).isDefined)
   }
 }

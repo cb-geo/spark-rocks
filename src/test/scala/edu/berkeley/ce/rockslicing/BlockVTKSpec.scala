@@ -32,9 +32,9 @@ class BlockVTKSpec extends FunSuite {
     val vtkBlocks = nonRedudundantBlocks.map(BlockVTK(_))
     vtkBlocks foreach { case block =>
 //          println(block.orientedVertices)
-      println(block.orientedVertices)
-      println(block.tupleVertices)
-      println(block.faceCount)
+//      println(block.orientedVertices)
+//      println(block.tupleVertices)
+//      println(block.faceCount)
     }
   }
 }

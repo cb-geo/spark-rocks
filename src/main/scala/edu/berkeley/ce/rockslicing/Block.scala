@@ -62,7 +62,10 @@ object Block {
         val rhs = NumericUtils.applyTolerance(face.d)
         linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
       }
-      linProg.solve().get._2
+      val results = linProg.solve().get._1
+      val tester = Seq[Double](results(0), results(1), results(2))
+      // Values of principal axes vectors set to 0.0 exacly, so okay to check for equality of Double
+      if (tester.exists(x => x != 0.0)) tester.filter(_ != 0.0).head else 0.0 
     }
 
     val pairedCoords = maxCoordinates.take(3).zip(maxCoordinates.takeRight(3))
@@ -98,7 +101,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     sphereJoint.boundingSphere match {
       case None =>
         // The joint is persistent
-        if (sphereJoint.d > sphereRadius) None else bruteForceIntersects(joint)
+        if (math.abs(sphereJoint.d) > sphereRadius) None else bruteForceIntersects(joint)
       case Some(((x,y,z),r)) =>
         // The joint is not persistent
         val jointOrigin = DenseVector[Double](x,y,z)
@@ -256,12 +259,8 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
 //      Tz(2,2) = w / math.sqrt(u*u + v*v + w*w)
 //      Tz(1,1) = 1.0
 //      Tz * Txz
-    } else if ((math.abs(n_c(0) - n_d(0)) < NumericUtils.EPSILON) &&
-               (math.abs(n_c(1) - n_d(1)) < NumericUtils.EPSILON) &&
-               (math.abs(n_c(2) - n_d(2)) < NumericUtils.EPSILON)) {
-      DenseMatrix.eye[Double](3)
     } else {
-      -DenseMatrix.eye[Double](3)
+      DenseMatrix.eye[Double](3)
     }
   }
 

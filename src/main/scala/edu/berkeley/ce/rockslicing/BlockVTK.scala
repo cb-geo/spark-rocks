@@ -99,7 +99,7 @@ object BlockVTK {
     // pointA and pointB are on the same line from the center, so check which one is closer to the center
     val d1 = (pointA._1 - center._1) * (pointA._1 - center._1) + (pointA._2 - center._2) * (pointA._2 - center._2)
     val d2 = (pointB._1 - center._1) * (pointB._1 - center._1) + (pointB._2 - center._2) * (pointB._2 - center._2)
-    return d1 > d2
+    d1 > d2
   }
 
   /**
@@ -163,7 +163,7 @@ object BlockVTK {
   /**
     * Creates a sequence of all the normals of all the faces for the list of input blocks
     * @param faces A mapping from each face of the block to a Seq of vertices for that face arranged in counter-
-    *         clockwise order relative to its unit normal
+    *        clockwise order relative to its unit normal
     * @return Sequence of tuples representing normals of all the block faces
     */
   private def normals(faces: Map[Face, Seq[(Double, Double, Double)]]): Seq[(Double, Double, Double)] = {
@@ -175,22 +175,21 @@ object BlockVTK {
   /**
     * Determines the offset that defines each face in the connectivity list
     * @param connectivities Mapping from each face of a block to a Seq of integers that represent
-    *                       tne indices of the vertices in the global vertex list
+    *        the indices of the vertices in the global vertex list
     * @return A Seq of integers that represent the offset of each face in the
     *         connectivity list
     */
   private def faceOffsets(connectivities: Map[Face, Seq[Int]]): Seq[Int] = {
-    val localOffsets = (connectivities map { case(face, connections) => connections.length}).toList
-    val offsets = List[Int](localOffsets.head)
+    val localOffsets = connectivities map { case(_, connections) => connections.length }
+    val offsets = Seq[Int](localOffsets.head)
 
-    def offsetIterator(globalOS: List[Int], localOS: List[Int]): List[Int] = {
+    def offsetIterator(globalOS: Seq[Int], localOS: Seq[Int]): Seq[Int] = {
       localOS match {
         case Nil => globalOS.reverse
-        case offsetList => offsetIterator((offsetList.head + globalOS.head) :: globalOS,
-                                          offsetList.tail)
+        case offset +: rest => offsetIterator((offset + globalOS.head) +: globalOS, rest)
       }
     }
-    offsetIterator(offsets, localOffsets)
+    offsetIterator(offsets, localOffsets.toSeq)
   }
 }
 

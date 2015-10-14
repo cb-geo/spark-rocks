@@ -143,7 +143,7 @@ object Joint {
   * A simple data structure to represent a joint.
   * @constructor Create a new joint.
   * @param normalVec The normal vector to the joint. The individual vector components
-  * can be accessed as 'a', 'b', and 'c'.
+  *        can be accessed as 'a', 'b', and 'c'.
   * @param localOrigin The local origin from which the distance is referenced. The individual
   *        components are accessed as 'localX', 'localY', and 'localZ'.
   * @param center Cartesian coordinates for the center of the joint. The individual
@@ -151,15 +151,15 @@ object Joint {
   * @param phi The joint's friction angle (phi).
   * @param cohesion The cohesion along the joint
   * @param shape A list of lines specifying the shape of the joint. Each item is a
-  * 3-tuple. The first two items specify the line, while the last gives the distance
-  * of the line from the joint's center in the local coordinate system.
+  *        3-tuple. The first two items specify the line, while the last gives the distance
+  *        of the line from the joint's center in the local coordinate system.
   * @param boundingSphereParam An optional parameter that can be used to specify the bounding
-  *                            sphere for the joint, if it is known. This prevents an expensive
-  *                            recalculation of the bounding sphere.
+  *        sphere for the joint, if it is known. This prevents an expensive recalculation
+  *        of the bounding sphere.
   * @param dipAngleParam An optional parameter that can be used to specify the dip angle for the joint.
-  *                 This avoids recalculation of a known dip angle.
+  *        This avoids recalculation of a known dip angle.
   * @param dipDirectionParam An optional parameter that can be used to specify the dip direction for
-  *                     the joint. This avoids recalculation of a known dip direction.
+  *        the joint. This avoids recalculation of a known dip direction.
   */
 case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Double, Double),
                  center: (Double, Double, Double), phi: Double, cohesion: Double,
