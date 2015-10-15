@@ -63,9 +63,9 @@ object Block {
         linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
       }
       val results = linProg.solve().get._1
-      val tester = Seq[Double](results(0), results(1), results(2))
+      val resultsSeq = Seq[Double](results(0), results(1), results(2))
       // Values of principal axes vectors set to 0.0 exacly, so okay to check for equality of Double
-      if (tester.exists(x => x != 0.0)) tester.filter(_ != 0.0).head else 0.0 
+      if (resultsSeq.exists(x => x != 0.0)) resultsSeq.filter(_ != 0.0).head else 0.0 
     }
 
     val pairedCoords = maxCoordinates.take(3).zip(maxCoordinates.takeRight(3))

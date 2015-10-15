@@ -22,6 +22,19 @@ object Joint {
   }
 
   /**
+    * Converts point from local to global coordinates
+    * @param point  The point to transform
+    * @param localOrigin Local origin's global coordinates
+    * @param normal Normal to joint plane
+    * @param dip Dip direction of plane
+    * @return Tuple that contains x, y and z coordinates of point in global cooridinates
+    */
+  private def localPointToGlobal(point: (Double, Double, Doluble,), localOrigin: (Double, Double, Double),
+    normal: (Double, Double, Double), dip: Double): (Double, Double, Double) = {
+    // CONTINUE HERE!!!
+  }
+
+  /**
     * Find a bounding sphere for a non-persistent joint. This function is not
     * intended for use with persistent joints.
     * @param normalVec The normal vector of the plane in which the joint lies
@@ -60,7 +73,10 @@ object Joint {
         val rhs = NumericUtils.applyTolerance(d)
         linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
       }
-      linProg.solve().get._2
+      val results = linProg.solve().get._1
+      val resultsSeq = Seq[Double](results(0), results(1), results(2))
+      // Values of principal axes vectors set to 0.0 exacly, so okay to check for equality of Double
+      if (resultsSeq.exists(x => x != 0.0)) NumericUtils.applyTolerance(resultsSeq.filter(_ != 0.0).head) else 0.0
     }
 
     val pairedCoords = maxCoordinates.take(3).zip(maxCoordinates.takeRight(3))
@@ -69,7 +85,8 @@ object Joint {
     val radius = 0.5 * linalg.norm(DenseVector[Double](diffVector))
 
     // Shift from Joint local coordinates to global coordinates
-    ((center(0) + centerX, center(1) + centerY, center(2) + centerZ), radius)
+    ((center(0), center(1), center(2)), radius)
+    // ((center(0) + centerX, center(1) + centerY, center(2) + centerZ), radius)
   }
 
   /**
