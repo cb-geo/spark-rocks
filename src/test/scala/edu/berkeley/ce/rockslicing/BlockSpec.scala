@@ -505,12 +505,12 @@ class BlockSpec extends FunSuite {
   val unitCubeSigns = Block((0.0, 0.0, 0.0), boundingFaces4)
 
   val boundingFaces5 = List(
-    Face((-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face((0.0, -1.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
+    Face((-1.0, 0.0, 0.0), -1.0, phi=0, cohesion=0),
+    Face((0.0, -1.0, 0.0), -1.0, phi=0, cohesion=0),
+    Face((0.0, 0.0, -1.0), -1.0, phi=0, cohesion=0),
+    Face((1.0, 0.0, 0.0), -1.0, phi=0, cohesion=0),
+    Face((0.0, 1.0, 0.0), -1.0, phi=0, cohesion=0),
+    Face((0.0, 0.0, 1.0), -1.0, phi=0, cohesion=0)
   )
   val twoCubeSigns = Block((0.0, 0.0, 0.0), boundingFaces5)
 
@@ -534,6 +534,12 @@ class BlockSpec extends FunSuite {
     val unitCubeSignsBS = ((unitCubeSigns.sphereCenterX, unitCubeSigns.sphereCenterY,
                             unitCubeSigns.sphereCenterZ), unitCubeSigns.sphereRadius)
     assert(unitCubeSignsBS == expectedBoundingSphere)
+  }
+
+  test("-z=-0.5 should intersect the two cube - negative joint distance check") {
+    val joint = Joint((0.0, 0.0, -1.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 1/2.0),
+                      phi=0, cohesion=0, shape=Nil)
+    assert(twoCube.intersects(joint).isDefined)
   }
 
   test("Checking if signs cause number format exception") {

@@ -34,15 +34,15 @@ case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double
 
 object Block {
   /**
-   * Find a bounding sphere for a rock block.
-   * @param centerX The x coordinate of the block's center
-   * @param centerY The y coordinate of the block's center
-   * @param centerZ The z coordinate of the block's center
-   * @param faces A sequence of faces specifying the block's boundaries
-   * @return A pair where the first element is a triple giving the center of
-   *         the bounding sphere and the second element is the radius of the
-   *         bounding sphere.
-   */
+    * Find a bounding sphere for a rock block.
+    * @param centerX The x coordinate of the block's center
+    * @param centerY The y coordinate of the block's center
+    * @param centerZ The z coordinate of the block's center
+    * @param faces A sequence of faces specifying the block's boundaries
+    * @return A pair where the first element is a triple giving the center of
+    *         the bounding sphere and the second element is the radius of the
+    *         bounding sphere.
+    */
   private def findBoundingSphere(centerX: Double, centerY: Double, centerZ: Double, faces: Seq[Face]):
       ((Double,Double,Double), Double) = {
     val basisVectors = Array(
