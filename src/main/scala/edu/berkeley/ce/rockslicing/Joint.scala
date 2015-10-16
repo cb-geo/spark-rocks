@@ -23,15 +23,33 @@ object Joint {
 
   /**
     * Converts point from local to global coordinates
-    * @param point  The point to transform
+    * @param point The point to transform
     * @param localOrigin Local origin's global coordinates
     * @param normal Normal to joint plane
     * @param dip Dip direction of plane
-    * @return Tuple that contains x, y and z coordinates of point in global cooridinates
+    * @return Tuple that contains x, y and z coordinates of point in global coordinates
     */
-  private def localPointToGlobal(point: (Double, Double, Doluble,), localOrigin: (Double, Double, Double),
+  private def localPointToGlobal(point: (Double, Double, Double), localOrigin: (Double, Double, Double),
     normal: (Double, Double, Double), dip: Double): (Double, Double, Double) = {
-    // CONTINUE HERE!!!
+    val Nplane = if (normal._3 > -NumericUtils.EPSILON) {
+      // Ensures that normal will always point in -z global direction (ensures right-handed local coordinates)
+      -1.0 * DenseVector[Double](normal._1, normal._2, normal._3)
+    } else {
+      DenseVector[Double](normal._1, normal._2, normal._3)
+    }
+    val strike = (dip - math.Pi / 2) % (2 * math.Pi) // strike = dip - pi/2 (US convention)
+    val Nstrike = DenseVector[Double](math.cos(-strike), math.sin(-strike), 0.0)
+    val Ndip = linalg.cross(Nplane, Nstrike)
+
+    // Q defines the linear transformation to convert to global coordinates
+    val Q = DenseMatrix.zeros[Double](3,3)
+    Q(::, 0) := Nstrike
+    Q(::, 1) := Ndip
+    Q(::, 2) := Nplane
+
+    // Transform point from local to global coordinates
+    val transformedPoint = Q * DenseVector[Double](point._1, point._2, point._3)
+    (transformedPoint(0) + localOrigin._1, transformedPoint(1) + localOrigin._2, transformedPoint(2) + localOrigin._3)
   }
 
   /**
@@ -43,12 +61,13 @@ object Joint {
     * @param centerY The y coordinate of the joint's center
     * @param centerZ The z coordinate of the joint's center
     * @param faces A sequence of faces specifying the joint's shape
+    * @param dip Dip direction of joint plane
     * @return A pair where the first element is a triple giving the center of
     *         the bounding sphere and the second element is the radius of the
     *         bounding sphere.
     */
   private def findBoundingSphere(normalVec: (Double,Double,Double), distance: Double, centerX: Double,
-      centerY: Double, centerZ: Double, faces: Seq[((Double,Double,Double),Double)]):
+      centerY: Double, centerZ: Double, faces: Seq[((Double,Double,Double),Double)], dip: Double):
       ((Double,Double,Double), Double) = {
     val basisVectors = Array(
       Array[Double](1.0, 0.0, 0.0),
@@ -85,8 +104,9 @@ object Joint {
     val radius = 0.5 * linalg.norm(DenseVector[Double](diffVector))
 
     // Shift from Joint local coordinates to global coordinates
-    ((center(0), center(1), center(2)), radius)
-    // ((center(0) + centerX, center(1) + centerY, center(2) + centerZ), radius)
+    val transformedCenter = Joint.localPointToGlobal((center(0), center(1), center(2)),
+      (centerX, centerY, centerZ), normalVec, dip)
+    (transformedCenter, radius)
   }
 
   /**
@@ -200,7 +220,7 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
   val boundingSphere = boundingSphereParam match {
     case null => shape match {
       case Nil => None
-      case _ => Some(Joint.findBoundingSphere((a, b, c), d, centerX, centerY, centerZ, shape))
+      case _ => Some(Joint.findBoundingSphere((a, b, c), d, centerX, centerY, centerZ, shape, dipDirection))
     }
     case bs => bs
   }

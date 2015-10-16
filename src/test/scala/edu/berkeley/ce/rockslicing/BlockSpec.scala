@@ -217,21 +217,8 @@ class BlockSpec extends FunSuite {
   }
 
   test("The non-persistent joint z < 0 should intersect the non-global origin two cube ") {
-    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(1.0, 1.0, 1.0), center=(2.0, 3.0, 1.0),
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(1.0, 1.0, 1.0), center=(1.99, 2.99, 1.0),
       phi=0.0, cohesion=0.0, shape=jointBounds)
-    println("This is the jointBS "+joint.boundingSphere)
-    println("Joint BS radius "+joint.boundingSphere.get._2)
-    println("Block BS radius "+twoCubeNonOrigin.sphereRadius)
-    val jointOrigin = DenseVector[Double](joint.boundingSphere.get._1._1, joint.boundingSphere.get._1._2, joint.boundingSphere.get._1._3)
-    val blockOrigin = DenseVector[Double](twoCubeNonOrigin.sphereCenterX, twoCubeNonOrigin.sphereCenterY, twoCubeNonOrigin.sphereCenterZ)
-    val distance = linalg.norm(jointOrigin - blockOrigin)
-    println("This is the distance "+distance)
-    println("B + J radii "+(joint.boundingSphere.get._2 + twoCubeNonOrigin.sphereRadius))
-    val difference = distance - (joint.boundingSphere.get._2 + twoCubeNonOrigin.sphereRadius)
-    println("This should be less than zero: "+difference)
-    println("This is the diff vector "+(jointOrigin - blockOrigin))
-    println("This is joint origin "+jointOrigin)
-    println("This is block origin "+blockOrigin)
     assert(twoCubeNonOrigin.intersects(joint).isDefined)
   }
 

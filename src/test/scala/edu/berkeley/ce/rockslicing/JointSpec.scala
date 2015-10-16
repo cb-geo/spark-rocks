@@ -238,10 +238,10 @@ class JointSpec extends FunSuite {
     assert(math.abs(newJoint.d) < NumericUtils.EPSILON)
   }
 
-  test("Joint bounding sphere should have origin (0.5, 0.5, 0.0) and radius sqrt(0.5^2 + 0.5^2)") {
+  test("Joint bounding sphere should have origin (0.5, -0.5, 0.0) and radius sqrt(0.5^2 + 0.5^2)") {
     val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,0.0), center=(0.0,0.0,0.0),
                        phi=0, cohesion=0, shape=boundaries)
-    val expectedBoundingSphere = ((0.5, 0.5, 0.0), math.sqrt(math.pow(0.5, 2) + math.pow(0.5, 2)))
+    val expectedBoundingSphere = ((0.5, -0.5, 0.0), math.sqrt(math.pow(0.5, 2) + math.pow(0.5, 2)))
     val jointBS = joint.boundingSphere.get
     assert(expectedBoundingSphere == jointBS)
   }
@@ -250,6 +250,14 @@ class JointSpec extends FunSuite {
     val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,0.0), center=(0.0,0.0,0.0),
                        phi=0, cohesion=0, shape=boundaries2)
     val expectedBoundingSphere = ((0.0, 0.0, 0.0), math.sqrt(2))
+    val jointBS = joint.boundingSphere.get
+    assert(expectedBoundingSphere == jointBS)
+  }
+
+  test("Joint bounding sphere should have origin (0.5, 0.0, -0.5) and radius sqrt(0.5^2 + 0.5^2)") {
+    val joint = Joint((0.0, 1.0, 0.0), localOrigin=(0.0,0.0,0.0), center=(0.0,0.0,0.0),
+                       phi=0, cohesion=0, shape=boundaries)
+    val expectedBoundingSphere = ((0.5, 0.0, -0.5), math.sqrt(math.pow(0.5, 2) + math.pow(0.5, 2)))
     val jointBS = joint.boundingSphere.get
     assert(expectedBoundingSphere == jointBS)
   }
