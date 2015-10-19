@@ -58,9 +58,15 @@ object Block {
       val linProg = new LinearProgram(3)
       linProg.setObjFun(v.toArray, LinearProgram.MAX)
       faces foreach { face =>
-        val coeffs = Array[Double](face.a, face.b, face.c).map(NumericUtils.applyTolerance)
-        val rhs = NumericUtils.applyTolerance(face.d)
-        linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
+        if (face.d < 0.0) {
+          val coeffs = Array[Double](-face.a, -face.b, -face.c).map(NumericUtils.applyTolerance)
+          val rhs = NumericUtils.applyTolerance(-face.d)
+          linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
+        } else {
+          val coeffs = Array[Double](face.a, face.b, face.c).map(NumericUtils.applyTolerance)
+          val rhs = NumericUtils.applyTolerance(face.d)
+          linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
+        }        
       }
       val results = linProg.solve().get._1
       val resultsSeq = Seq[Double](results(0), results(1), results(2))

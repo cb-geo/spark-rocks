@@ -81,16 +81,28 @@ object Joint {
     val maxCoordinates = basisVectors.map { v =>
       val linProg = new LinearProgram(3)
       linProg.setObjFun(v.toArray, LinearProgram.MAX)
-      val jointCoeffs = Array[Double](normalVec._1, normalVec._2, normalVec._3).map(NumericUtils.applyTolerance)
-      val jointRhs = NumericUtils.applyTolerance(distance)
-      linProg.addConstraint(jointCoeffs, LinearProgram.LE, jointRhs)
-
+      if (distance < 0.0) {
+        val jointCoeffs = Array[Double](-normalVec._1, -normalVec._2, -normalVec._3).map(NumericUtils.applyTolerance)
+        val jointRhs = NumericUtils.applyTolerance(-distance)
+        linProg.addConstraint(jointCoeffs, LinearProgram.LE, jointRhs)
+      } else {
+        val jointCoeffs = Array[Double](normalVec._1, normalVec._2, normalVec._3).map(NumericUtils.applyTolerance)
+        val jointRhs = NumericUtils.applyTolerance(distance)
+        linProg.addConstraint(jointCoeffs, LinearProgram.LE, jointRhs)
+      }
+      
       faces foreach { face =>
         val (a, b, c) = face._1
         val d = face._2
-        val coeffs = Array[Double](a, b, c).map(NumericUtils.applyTolerance)
-        val rhs = NumericUtils.applyTolerance(d)
-        linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
+        if (d < 0.0) {
+          val coeffs = Array[Double](-a, -b, -c).map(NumericUtils.applyTolerance)
+          val rhs = NumericUtils.applyTolerance(-d)
+          linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
+        } else {
+          val coeffs = Array[Double](a, b, c).map(NumericUtils.applyTolerance)
+          val rhs = NumericUtils.applyTolerance(d)
+          linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
+        }
       }
       val results = linProg.solve().get._1
       val resultsSeq = Seq[Double](results(0), results(1), results(2))
