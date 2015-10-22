@@ -70,53 +70,43 @@ object Joint {
       centerY: Double, centerZ: Double, faces: Seq[((Double,Double,Double),Double)], dip: Double):
       ((Double,Double,Double), Double) = {
     val basisVectors = Array(
-      Array[Double](1.0, 0.0, 0.0),
-      Array[Double](0.0, 1.0, 0.0),
-      Array[Double](0.0, 0.0, 1.0),
-      Array[Double](-1.0, 0.0, 0.0),
-      Array[Double](0.0, -1.0, 0.0),
-      Array[Double](0.0, 0.0, -1.0)
+      Array[Double](1.0, 0.0),
+      Array[Double](0.0, 1.0),
+      Array[Double](-1.0, 0.0),
+      Array[Double](0.0, -1.0)
     )
 
     val maxCoordinates = basisVectors.map { v =>
-      val linProg = new LinearProgram(3)
+      // val linProg = new LinearProgram(3)
+      val linProg = new LinearProgram(2)
       linProg.setObjFun(v.toArray, LinearProgram.MAX)
-      if (distance < 0.0) {
-        val jointCoeffs = Array[Double](-normalVec._1, -normalVec._2, -normalVec._3).map(NumericUtils.applyTolerance)
-        val jointRhs = NumericUtils.applyTolerance(-distance)
-        linProg.addConstraint(jointCoeffs, LinearProgram.LE, jointRhs)
-      } else {
-        val jointCoeffs = Array[Double](normalVec._1, normalVec._2, normalVec._3).map(NumericUtils.applyTolerance)
-        val jointRhs = NumericUtils.applyTolerance(distance)
-        linProg.addConstraint(jointCoeffs, LinearProgram.LE, jointRhs)
-      }
       
       faces foreach { face =>
         val (a, b, c) = face._1
         val d = face._2
         if (d < 0.0) {
-          val coeffs = Array[Double](-a, -b, -c).map(NumericUtils.applyTolerance)
+          val coeffs = Array[Double](-a, -b).map(NumericUtils.applyTolerance)
           val rhs = NumericUtils.applyTolerance(-d)
           linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
         } else {
-          val coeffs = Array[Double](a, b, c).map(NumericUtils.applyTolerance)
+          val coeffs = Array[Double](a, b).map(NumericUtils.applyTolerance)
           val rhs = NumericUtils.applyTolerance(d)
           linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
         }
       }
       val results = linProg.solve().get._1
-      val resultsSeq = Seq[Double](results(0), results(1), results(2))
+      val resultsSeq = Seq[Double](results(0), results(1))
       // Values of principal axes vectors set to 0.0 exacly, so okay to check for equality of Double
       if (resultsSeq.exists(x => x != 0.0)) NumericUtils.applyTolerance(resultsSeq.filter(_ != 0.0).head) else 0.0
     }
 
-    val pairedCoords = maxCoordinates.take(3).zip(maxCoordinates.takeRight(3))
+    val pairedCoords = maxCoordinates.take(2).zip(maxCoordinates.takeRight(2))
     val center = pairedCoords.map { case (x, y) => 0.5 * (x + y) }
     val diffVector = pairedCoords.map { case (x, y) => x - y }
     val radius = 0.5 * linalg.norm(DenseVector[Double](diffVector))
 
     // Shift from Joint local coordinates to global coordinates
-    val transformedCenter = Joint.localPointToGlobal((center(0), center(1), center(2)),
+    val transformedCenter = Joint.localPointToGlobal((center(0), center(1), 0.0),
       (centerX, centerY, centerZ), normalVec, dip)
     (transformedCenter, radius)
   }

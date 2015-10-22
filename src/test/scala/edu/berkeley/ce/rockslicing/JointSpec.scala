@@ -243,7 +243,11 @@ class JointSpec extends FunSuite {
                        phi=0, cohesion=0, shape=boundaries)
     val expectedBoundingSphere = ((0.5, -0.5, 0.0), math.sqrt(math.pow(0.5, 2) + math.pow(0.5, 2)))
     val jointBS = joint.boundingSphere.get
-    assert(expectedBoundingSphere == jointBS)
+    val cleanedBS = ((NumericUtils.applyTolerance(jointBS._1._1),
+                      NumericUtils.applyTolerance(jointBS._1._2),
+                      NumericUtils.applyTolerance(jointBS._1._3)), 
+                     jointBS._2)
+    assert(expectedBoundingSphere == cleanedBS)
   }
 
   test("Joint bounding sphere should have origin (0.0, 0.0, 0.0) and radius sqrt(2)") {
@@ -251,14 +255,34 @@ class JointSpec extends FunSuite {
                        phi=0, cohesion=0, shape=boundaries2)
     val expectedBoundingSphere = ((0.0, 0.0, 0.0), math.sqrt(2))
     val jointBS = joint.boundingSphere.get
-    assert(expectedBoundingSphere == jointBS)
+    val cleanedBS = ((NumericUtils.applyTolerance(jointBS._1._1),
+                      NumericUtils.applyTolerance(jointBS._1._2),
+                      NumericUtils.applyTolerance(jointBS._1._3)), 
+                     jointBS._2)
+    assert(expectedBoundingSphere == cleanedBS)
   }
 
   test("Joint bounding sphere should have origin (0.5, 0.0, -0.5) and radius sqrt(0.5^2 + 0.5^2)") {
-    val joint = Joint((0.0, 1.0, 0.0), localOrigin=(0.0,0.0,0.0), center=(0.0,0.0,0.0),
+    val joint = Joint((0.0, -1.0, 0.0), localOrigin=(0.0,0.0,0.0), center=(0.0,0.0,0.0),
                        phi=0, cohesion=0, shape=boundaries)
     val expectedBoundingSphere = ((0.5, 0.0, -0.5), math.sqrt(math.pow(0.5, 2) + math.pow(0.5, 2)))
     val jointBS = joint.boundingSphere.get
-    assert(expectedBoundingSphere == jointBS)
+    val cleanedBS = ((NumericUtils.applyTolerance(jointBS._1._1),
+                      NumericUtils.applyTolerance(jointBS._1._2),
+                      NumericUtils.applyTolerance(jointBS._1._3)), 
+                     jointBS._2)
+    assert(expectedBoundingSphere == cleanedBS)
+  }
+
+  test("Joint bounding sphere should have origin (1.5, 5.0, -0.5) and radius sqrt(0.5^2 + 0.5^2)") {
+    val joint = Joint((0.0, -1.0, 0.0), localOrigin=(0.0,0.0,0.0), center=(1.0,5.0,0.0),
+                       phi=0, cohesion=0, shape=boundaries)
+    val expectedBoundingSphere = ((1.5, 5.0, -0.5), math.sqrt(math.pow(0.5, 2) + math.pow(0.5, 2)))
+    val jointBS = joint.boundingSphere.get
+    val cleanedBS = ((NumericUtils.applyTolerance(jointBS._1._1),
+                      NumericUtils.applyTolerance(jointBS._1._2),
+                      NumericUtils.applyTolerance(jointBS._1._3)), 
+                     jointBS._2)
+    assert(expectedBoundingSphere == cleanedBS)
   }
 }
