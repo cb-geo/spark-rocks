@@ -124,10 +124,9 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     linProg.setObjFun(Vector[Double](0.0, 0.0, 0.0, 1.0), LinearProgram.MIN)
 
     // Restrict our attention to plane of joint
-    val translatedJoint = joint.updateJoint(centerX, centerY, centerZ)
-    val coeffs = Vector[Double](translatedJoint.a, translatedJoint.b, translatedJoint.c, 0.0).
+    val coeffs = Vector[Double](joint.a, joint.b, joint.c, 0.0).
                     map(NumericUtils.applyTolerance)
-    val rhs = NumericUtils.applyTolerance(translatedJoint.d)
+    val rhs = NumericUtils.applyTolerance(joint.d)
     linProg.addConstraint(coeffs, LinearProgram.EQ, rhs)
 
     // Require s to be within planes defined by faces of block
@@ -138,7 +137,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     }
 
     // Require s to be within planes defining shape of joint
-    translatedJoint.globalCoordinates.foreach { case ((a,b,c),d) =>
+    joint.globalCoordinates.foreach { case ((a,b,c),d) =>
       val jointCoeffs = Vector[Double](a, b, c, -1.0).map(NumericUtils.applyTolerance)
       val rhs = NumericUtils.applyTolerance(d)
       linProg.addConstraint(jointCoeffs, LinearProgram.LE, rhs)
@@ -146,8 +145,12 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
 
     linProg.solve() match {
       case None => None
-      case Some((_, opt)) if opt >= -NumericUtils.EPSILON => None
-      case Some((vars, _)) => Some((vars(0), vars(1), vars(2)))
+      case Some((vars, opt)) if opt >= -NumericUtils.EPSILON => {
+        println("This is vars "+vars)
+        println("This is opt "+opt)
+        None
+      }
+      case Some((vars, _)) => Some((vars(0), vars(1), vars(2)))      
     }
   }
 
@@ -158,21 +161,34 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     * the joint if it intersects this block. Otherwise, returns a one-item Seq
     * containing only this block.
     */
-  def cut(joint: Joint): Seq[Block] =
-    this.intersects(joint) match {
+  def cut(joint: Joint): Seq[Block] = {
+    val translatedJoint = joint.updateJoint(centerX, centerY, centerZ)
+    this.intersects(translatedJoint) match {
       case None => Vector(this)
       case Some((x,y,z)) =>
         val newX = NumericUtils.roundToTolerance(centerX + x)
         val newY = NumericUtils.roundToTolerance(centerY + y)
         val newZ = NumericUtils.roundToTolerance(centerZ + z)
         val updatedFaces = updateFaces(newX, newY, newZ)
-        Vector(
-          // New origin is guaranteed to lie within joint, so initial d = 0
-          Block((newX,newY,newZ), Face((joint.a, joint.b, joint.c), 0.0, joint.phi, joint.cohesion)+:updatedFaces),
-          Block((newX,newY,newZ), Face((-joint.a,-joint.b,-joint.c), 0.0, joint.phi, joint.cohesion)+:updatedFaces)
-        )
+        if (translatedJoint.d < 0.0) {
+          Vector(
+            // New origin is guaranteed to lie within joint, so initial d = 0
+            Block((newX,newY,newZ), Face((-translatedJoint.a, -translatedJoint.b, -translatedJoint.c), 0.0,
+                  translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces),
+            Block((newX,newY,newZ), Face((translatedJoint.a,translatedJoint.b,translatedJoint.c), 0.0, 
+                  translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
+          )
+        } else {
+          Vector(
+            // New origin is guaranteed to lie within joint, so initial d = 0
+            Block((newX,newY,newZ), Face((translatedJoint.a, translatedJoint.b, translatedJoint.c), 0.0,
+                  translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces),
+            Block((newX,newY,newZ), Face((-translatedJoint.a,-translatedJoint.b,-translatedJoint.c), 0.0,
+                  translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
+          )
+        }
     }
-
+  }
   /**
     * Compute the faces of the rock block that are not geometrically redundant.
     * @return A list of faces that uniquely determine this rock block and are not
