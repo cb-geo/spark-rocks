@@ -71,7 +71,10 @@ object Block {
       val results = linProg.solve().get._1
       val resultsSeq = Seq[Double](results(0), results(1), results(2))
       // Values of principal axes vectors set to 0.0 exacly, so okay to check for equality of Double
-      if (resultsSeq.exists(x => x != 0.0)) resultsSeq.filter(_ != 0.0).head else 0.0 
+      resultsSeq.filter(math.abs(_) > NumericUtils.EPSILON) match {
+        case Nil => 0.0
+        case x+:xs => x
+      }
     }
 
     val pairedCoords = maxCoordinates.take(3).zip(maxCoordinates.takeRight(3))
@@ -145,11 +148,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
 
     linProg.solve() match {
       case None => None
-      case Some((vars, opt)) if opt >= -NumericUtils.EPSILON => {
-        println("This is vars "+vars)
-        println("This is opt "+opt)
-        None
-      }
+      case Some((vars, opt)) if opt >= -NumericUtils.EPSILON => None
       case Some((vars, _)) => Some((vars(0), vars(1), vars(2)))      
     }
   }
@@ -263,24 +262,6 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
       v_skew(2,1) = v(0)
 
       DenseMatrix.eye[Double](3) + v_skew + (v_skew * v_skew) * (1-c)/(s*s)
-//      val (u, v, w) = n_current
-//
-//      // Rotation matrix to rotate into x-z plane
-//      val Txz = DenseMatrix.zeros[Double](3, 3)
-//      Txz(0,0) = u / math.sqrt(u*u + v*v)
-//      Txz(1,0) = -v /math.sqrt(u*u + v*v)
-//      Txz(0,1) = v / math.sqrt(u*u + v*v)
-//      Txz(1,1) = u / math.sqrt(u*u + v*v)
-//      Txz(2,2) = 1.0
-//
-//      // Rotation matrix to rotate from x-z plane on z-axis
-//      val Tz = DenseMatrix.zeros[Double](3, 3)
-//      Tz(0,0) = w / math.sqrt(u*u + v*v + w*w)
-//      Tz(2,0) = math.sqrt(u*u + v*v) / math.sqrt(u*u + v*v + w*w)
-//      Tz(0,2) = -math.sqrt(u*u + v*v)/math.sqrt(u*u + v*v + w*w)
-//      Tz(2,2) = w / math.sqrt(u*u + v*v + w*w)
-//      Tz(1,1) = 1.0
-//      Tz * Txz
     } else {
       DenseMatrix.eye[Double](3)
     }

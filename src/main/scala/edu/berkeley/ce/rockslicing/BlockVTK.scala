@@ -14,31 +14,26 @@ object BlockVTK {
     */
   private def rotationMatrix(n_current: (Double, Double, Double), n_desired: (Double, Double, Double)):
                              DenseMatrix[Double] = {
-      val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
-      val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
-      if (math.abs(linalg.norm(linalg.cross(n_c,n_d))) > NumericUtils.EPSILON) {
-        val (u, v, w) = n_current
+    val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
+    val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
+    if (math.abs(linalg.norm(linalg.cross(n_c,n_d))) > NumericUtils.EPSILON) {
+      val v = linalg.cross(n_c, n_d)
+      val s = linalg.norm(v)
+      val c = n_c dot n_d
 
-        // Rotation matrix to rotate into x-z plane
-        val Txz = DenseMatrix.zeros[Double](3, 3)
-        Txz(0,0) = u / math.sqrt(u*u + v*v)
-        Txz(1,0) = -v /math.sqrt(u*u + v*v)
-        Txz(0,1) = v / math.sqrt(u*u + v*v)
-        Txz(1,1) = u / math.sqrt(u*u + v*v)
-        Txz(2,2) = 1.0
+      val v_skew = DenseMatrix.zeros[Double](3,3)
+      v_skew(0,1) = -v(2)
+      v_skew(0,2) = v(1)
+      v_skew(1,0) = v(2)
+      v_skew(1,2) = -v(0)
+      v_skew(2,0) = -v(1)
+      v_skew(2,1) = v(0)
 
-        // Rotation matrix to rotate from x-z plane on z-axis
-        val Tz = DenseMatrix.zeros[Double](3, 3)
-        Tz(0,0) = w / math.sqrt(u*u + v*v + w*w)
-        Tz(2,0) = math.sqrt(u*u + v*v) / math.sqrt(u*u + v*v + w*w)
-        Tz(0,2) = -math.sqrt(u*u + v*v)/math.sqrt(u*u + v*v + w*w)
-        Tz(2,2) = w / math.sqrt(u*u + v*v + w*w)
-        Tz(1,1) = 1.0
-        Tz * Txz
-      } else {
-        DenseMatrix.eye[Double](3)
-      }
+      DenseMatrix.eye[Double](3) + v_skew + (v_skew * v_skew) * (1-c)/(s*s)
+    } else {
+      DenseMatrix.eye[Double](3)
     }
+  }
 
   /**
     * Finds the center of a list of vertices - defined as the average coordinate of all the vertices in the list
@@ -166,11 +161,9 @@ object BlockVTK {
     *        clockwise order relative to its unit normal
     * @return Sequence of tuples representing normals of all the block faces
     */
-  private def normals(faces: Map[Face, Seq[(Double, Double, Double)]]): Seq[(Double, Double, Double)] = {
-    faces map { case (face, _) =>
-      (face.a, face.b, face.c)
-    }
-  }.toSeq
+  private def normals(faces: Seq[Face]): Seq[(Double, Double, Double)] = {
+    faces map { case face => (face.a, face.b, face.c) }
+  }
 
   /**
     * Determines the offset that defines each face in the connectivity list
@@ -181,12 +174,17 @@ object BlockVTK {
     */
   private def faceOffsets(connectivities: Map[Face, Seq[Int]]): Seq[Int] = {
     val localOffsets = connectivities map { case(_, connections) => connections.length }
-    val offsets = Seq[Int](localOffsets.head)
+    // val offsets = Seq[Int](localOffsets.head)
+    val offsets = Seq[Int]()
 
     def offsetIterator(globalOS: Seq[Int], localOS: Seq[Int]): Seq[Int] = {
       localOS match {
         case Nil => globalOS.reverse
-        case offset +: rest => offsetIterator((offset + globalOS.head) +: globalOS, rest)
+        case offset +: rest => if (globalOS.isEmpty) {
+          offsetIterator(Seq[Int](offset), rest)
+        } else {
+          offsetIterator((offset + globalOS.head) +: globalOS, rest)
+        }
       }
     }
     offsetIterator(offsets, localOffsets.toSeq)
@@ -194,7 +192,8 @@ object BlockVTK {
 }
 
 /**
-  * Simple data structure to contain data that represents list of blocks that can be turned into vtk format
+  * Simple data structure to contain data that represents a rock block that can be turned into vtk format
+  * @param Rock block 
   * @constructor Create a new rock block in format that can be turned into vtk by rockProcessor
   */
 case class BlockVTK(block: Block) {
@@ -208,7 +207,7 @@ case class BlockVTK(block: Block) {
   val connectivity = connectivityMap.values.flatten
   val faceCount = orientedVertices.size
   val offsets = BlockVTK.faceOffsets(connectivityMap)
-  val normals = BlockVTK.normals(orientedVertices) flatMap { t =>
+  val normals = BlockVTK.normals(orientedVertices.keys.toSeq) flatMap { t =>
     List(t._1, t._2, t._3)
   }
 }

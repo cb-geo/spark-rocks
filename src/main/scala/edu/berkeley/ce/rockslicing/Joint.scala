@@ -97,7 +97,10 @@ object Joint {
       val results = linProg.solve().get._1
       val resultsSeq = Seq[Double](results(0), results(1))
       // Values of principal axes vectors set to 0.0 exacly, so okay to check for equality of Double
-      if (resultsSeq.exists(x => x != 0.0)) NumericUtils.applyTolerance(resultsSeq.filter(_ != 0.0).head) else 0.0
+      resultsSeq.filter(math.abs(_) > NumericUtils.EPSILON) match {
+        case Nil => 0.0
+        case x+:xs => x
+      }
     }
 
     val pairedCoords = maxCoordinates.take(2).zip(maxCoordinates.takeRight(2))
