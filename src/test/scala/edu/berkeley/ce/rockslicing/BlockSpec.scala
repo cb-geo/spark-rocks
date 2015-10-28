@@ -2,7 +2,6 @@ package edu.berkeley.ce.rockslicing
 
 import org.scalatest._
 import scala.math.sqrt
-import breeze.linalg
 import breeze.linalg.{DenseVector, DenseMatrix}
 
 class BlockSpec extends FunSuite {

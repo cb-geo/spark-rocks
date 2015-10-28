@@ -29,20 +29,12 @@ class BlockVTKSpec extends FunSuite {
 
   def doubleListElementDiff(list1: Seq[Double], list2: Seq[Double]): Seq[Double] = {
     assert(list1.length == list2.length)
-    val listDiff  = Seq.empty[Double]
-    for (i <- 0 until list1.length) {
-      listDiff +: Seq[Double](math.abs(list1(i) - list2(i)))
-    }
-    listDiff
+    list1.zip(list2) map { case (a,b) => a - b }
   }
 
   def intListElementDiff(list1: Seq[Int], list2: Seq[Int]): Seq[Int] = {
     assert(list1.length == list2.length)
-    val listDiff  = Seq.empty[Int]
-    for (i <- 0 until list1.length) {
-      listDiff +: Seq[Int](math.abs(list1(i) - list2(i)))
-    }
-    listDiff
+    list1.zip(list2) map { case (a,b) => a - b }
   }
 
   test("The vertices should be oriented counter-clockwise for each face") {
@@ -67,18 +59,15 @@ class BlockVTKSpec extends FunSuite {
 
   test("List of tuple vertices should flatten into list of doubles") {
     val vtkBlock = BlockVTK(unitCube)
-    val expectedVertices = List((0.0, 1.0, 1.0), (0.0, 0.0, 1.0), (1.0, 0.0, 1.0), (1.0, 1.0, 1.0),
-                                (0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), (1.0, 1.0, 0.0)) flatMap { t =>
-      List(t._1, t._2, t._3)
-    }
+    val expectedVertices = List(0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0,
+                                0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0)
     val verticesDiff = doubleListElementDiff(expectedVertices, vtkBlock.vertices)
     assert(verticesDiff.filter(_ > NumericUtils.EPSILON).isEmpty)
   }
 
   test("Vertex ID's should start from 0 and go up to 7") {
     val vtkBlock = BlockVTK(unitCube)
-    val expectedIDs = List((0.0, 1.0, 1.0), (0.0, 0.0, 1.0), (1.0, 0.0, 1.0), (1.0, 1.0, 1.0),
-                           (0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), (1.0, 1.0, 0.0)).indices
+    val expectedIDs = Seq.range(0, 8)
     val idsDiff = intListElementDiff(expectedIDs.toSeq, vtkBlock.vertexIDs.toSeq)
     assert(idsDiff.filter(_ > NumericUtils.EPSILON).isEmpty)
   }
