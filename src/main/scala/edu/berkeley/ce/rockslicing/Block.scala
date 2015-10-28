@@ -34,6 +34,36 @@ case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double
 
 object Block {
   /**
+    * Calculates the rotation matrix to rotate the input plane (specified by its normal)
+    * to the desired orientation (specified by the desired normal)
+    * @param n_current: Current normal of plane
+    * @param n_desired: Desired new normal
+    * @return 3*3 rotation matrix
+    */
+  def rotationMatrix(n_current: (Double, Double, Double), n_desired: (Double, Double, Double)):
+                             DenseMatrix[Double] = {
+    val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
+    val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
+    if (math.abs(linalg.norm(linalg.cross(n_c,n_d))) > NumericUtils.EPSILON) {
+      val v = linalg.cross(n_c, n_d)
+      val s = linalg.norm(v)
+      val c = n_c dot n_d
+
+      val v_skew = DenseMatrix.zeros[Double](3,3)
+      v_skew(0,1) = -v(2)
+      v_skew(0,2) = v(1)
+      v_skew(1,0) = v(2)
+      v_skew(1,2) = -v(0)
+      v_skew(2,0) = -v(1)
+      v_skew(2,1) = v(0)
+
+      DenseMatrix.eye[Double](3) + v_skew + (v_skew * v_skew) * (1-c)/(s*s)
+    } else {
+      DenseMatrix.eye[Double](3)
+    }
+  }
+
+  /**
     * Find a bounding sphere for a rock block.
     * @param centerX The x coordinate of the block's center
     * @param centerY The y coordinate of the block's center
@@ -148,7 +178,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
 
     linProg.solve() match {
       case None => None
-      case Some((vars, opt)) if opt >= -NumericUtils.EPSILON => None
+      case Some((_, opt)) if opt >= -NumericUtils.EPSILON => None
       case Some((vars, _)) => Some((vars(0), vars(1), vars(2)))      
     }
   }
@@ -238,36 +268,6 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     ).toMap                              
 
   /**
-    * Calculates the rotation matrix to rotate the input plane (specified by its normal)
-    * to the desired orientation (specified by the desired normal)
-    * @param n_current: Current normal of plane
-    * @param n_desired: Desired new normal
-    * @return 3*3 rotation matrix
-    */
-  private def rotationMatrix(n_current: (Double, Double, Double), n_desired: (Double, Double, Double)):
-                             DenseMatrix[Double] = {
-    val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
-    val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
-    if (math.abs(linalg.norm(linalg.cross(n_c,n_d))) > NumericUtils.EPSILON) {
-      val v = linalg.cross(n_c, n_d)
-      val s = linalg.norm(v)
-      val c = n_c dot n_d
-
-      val v_skew = DenseMatrix.zeros[Double](3,3)
-      v_skew(0,1) = -v(2)
-      v_skew(0,2) = v(1)
-      v_skew(1,0) = v(2)
-      v_skew(1,2) = -v(0)
-      v_skew(2,0) = -v(1)
-      v_skew(2,1) = v(0)
-
-      DenseMatrix.eye[Double](3) + v_skew + (v_skew * v_skew) * (1-c)/(s*s)
-    } else {
-      DenseMatrix.eye[Double](3)
-    }
-  }
-
-  /**
     * Mesh the faces using Delaunay triangulation. This meshing is done
     * in order to calculate the volume and centroid of the block
     * @return A Seq of seqs that give the local to global mapping for the
@@ -278,7 +278,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     // are only in the x-y plane which makes triangulation easier.
     faces.zip (
       faces.map { face =>
-        val R = rotationMatrix(face.normalVec, (0.0, 0.0, 1.0))
+        val R = Block.rotationMatrix(face.normalVec, (0.0, 0.0, 1.0))
         val rotatedVertices = vertices(face).map { vertex =>
           val rotatedVertex = R * DenseVector(vertex._1, vertex._2, vertex._3)
           Delaunay.Vector2(rotatedVertex(0), rotatedVertex(1))

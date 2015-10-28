@@ -7,13 +7,13 @@ package edu.berkeley.ce.rockslicing
 object CommandReader {
   val usage =
     """
-       Usage: [spark arguments] sparkRocks-assembly-1.0.jar -inputFile [inputFile] -numberSeedJoints [Int] [output opts]
+       Usage: <spark arguments> sparkRocks-assembly-1.0.jar -inputFile <inputFile> -numberSeedJoints <Int> <output opts>
          where:
-              [spark arguments]    See www.spark.apache.org for details on how to submit Spark applications
-              [inputFile]          File that contains input information on the rock volume of interest and joint sets
-              [Int]                Integer that specifies the number of joints to process before initiating parallel
+              <spark arguments>    See www.spark.apache.org for details on how to submit Spark applications
+              <inputFile>          File that contains input information on the rock volume of interest and joint sets
+              <Int>                Integer that specifies the number of joints to process before initiating parallel
                                    instances
-         and [output opts] is one or all of the following
+         and <output opts> is one or all of the following
               -toVTK               Generate output that can be converted to VTK format by rockProcessor
               -toIE                Generate output that uses inequalities to represent rock blocks along with the
                                    blocks' center of mass

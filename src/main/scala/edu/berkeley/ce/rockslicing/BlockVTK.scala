@@ -6,44 +6,14 @@ import breeze.linalg.{DenseVector, DenseMatrix}
 object BlockVTK {
 
   /**
-    * Calculates the rotation matrix to rotate the input plane (specified by its normal)
-    * to the desired orientation (specified by the desired normal)
-    * @param n_current: Current normal of plane
-    * @param n_desired: Desired new normal
-    * @return 3*3 rotation matrix
-    */
-  private def rotationMatrix(n_current: (Double, Double, Double), n_desired: (Double, Double, Double)):
-                             DenseMatrix[Double] = {
-    val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
-    val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
-    if (math.abs(linalg.norm(linalg.cross(n_c,n_d))) > NumericUtils.EPSILON) {
-      val v = linalg.cross(n_c, n_d)
-      val s = linalg.norm(v)
-      val c = n_c dot n_d
-
-      val v_skew = DenseMatrix.zeros[Double](3,3)
-      v_skew(0,1) = -v(2)
-      v_skew(0,2) = v(1)
-      v_skew(1,0) = v(2)
-      v_skew(1,2) = -v(0)
-      v_skew(2,0) = -v(1)
-      v_skew(2,1) = v(0)
-
-      DenseMatrix.eye[Double](3) + v_skew + (v_skew * v_skew) * (1-c)/(s*s)
-    } else {
-      DenseMatrix.eye[Double](3)
-    }
-  }
-
-  /**
     * Finds the center of a list of vertices - defined as the average coordinate of all the vertices in the list
     * @param vertices List of vertices
     * @return Coordinate of center of vertices
     */
   private def findCenter(vertices: Seq[(Double, Double, Double)]): (Double, Double, Double) = {
     (vertices.map(_._1).sum / vertices.length.toDouble,
-      vertices.map(_._2).sum / vertices.length.toDouble,
-      vertices.map(_._3).sum / vertices.length.toDouble)
+     vertices.map(_._2).sum / vertices.length.toDouble,
+     vertices.map(_._3).sum / vertices.length.toDouble)
   }
 
   /**
@@ -57,7 +27,16 @@ object BlockVTK {
   private def ccwCompare(pointA: (Double, Double, Double), pointB: (Double, Double, Double),
                          center: (Double, Double, Double)): Boolean = {
     // Check that points are in the same x-y plane
-    assert(math.abs(pointA._3 - pointB._3) < NumericUtils.EPSILON)
+    try {
+      if (math.abs(pointA._3 - pointB._3) > NumericUtils.EPSILON) {
+        throw new IllegalArgumentException("Exception thrown")
+      } 
+    } catch {
+      case e: Exception => {
+        println("ERROR in BlockVTK.ccwCompare: Input points are not in the same plane")
+        System.exit(1)
+      }
+    }
 
     // Starts counter-clockwise comparison from 12 o'clock. Center serves as origin and 12 o'clock is along
     // vertical line running through this center.
@@ -76,8 +55,9 @@ object BlockVTK {
       // Points furthest away from the center will be before points that are closer to the center
       if ((pointA._2 - center._2 >= NumericUtils.EPSILON) || (pointB._2 - center._2 >= NumericUtils.EPSILON)) {
         return pointA._2 > pointB._2
-      }
-      return pointB._2 > pointA._2
+      } else {
+        return pointB._2 > pointA._2
+      }      
     }
 
     // The cross product of vectors (pointA - center) and (pointB - center) in determinant form. Since it's
@@ -89,12 +69,12 @@ object BlockVTK {
       return true
     } else if (det < -NumericUtils.EPSILON) {
       return false
+    } else {
+      // pointA and pointB are on the same line from the center, so check which one is closer to the center
+      val d1 = (pointA._1 - center._1) * (pointA._1 - center._1) + (pointA._2 - center._2) * (pointA._2 - center._2)
+      val d2 = (pointB._1 - center._1) * (pointB._1 - center._1) + (pointB._2 - center._2) * (pointB._2 - center._2)
+      return d1 > d2
     }
-
-    // pointA and pointB are on the same line from the center, so check which one is closer to the center
-    val d1 = (pointA._1 - center._1) * (pointA._1 - center._1) + (pointA._2 - center._2) * (pointA._2 - center._2)
-    val d2 = (pointB._1 - center._1) * (pointB._1 - center._1) + (pointB._2 - center._2) * (pointB._2 - center._2)
-    d1 > d2
   }
 
   /**
@@ -109,7 +89,7 @@ object BlockVTK {
     faceVertices.keys.zip(
       faceVertices.map { case (face, vertices) =>
         // Rotate vertices to all be in x-y plane
-        val R = BlockVTK.rotationMatrix(face.normalVec, (0.0, 0.0, 1.0))
+        val R = Block.rotationMatrix(face.normalVec, (0.0, 0.0, 1.0))
         val rotatedVerts = vertices map { vertex =>
           val rotatedVertex = R * DenseVector[Double](vertex._1, vertex._2, vertex._3)
           (rotatedVertex(0), rotatedVertex(1), rotatedVertex(2))
@@ -146,13 +126,9 @@ object BlockVTK {
     */
   private def connectivity(faceOrientedVerts: Map[Face, Seq[(Double, Double, Double)]],
                            vertices: Seq[(Double, Double, Double)]): Map[Face, Seq[Int]] = {
-    faceOrientedVerts.keys.zip(
-      faceOrientedVerts map { case (_, orientedVertices) =>
-        orientedVertices map { vertex =>
-          vertices.indexOf(vertex)
-        }
-      }
-    ).toMap
+    faceOrientedVerts map { case (face, orientedVertices) =>
+      (face, orientedVertices map { vertex => vertices.indexOf(vertex) })
+    }
   }
 
   /**
@@ -174,7 +150,6 @@ object BlockVTK {
     */
   private def faceOffsets(connectivities: Map[Face, Seq[Int]]): Seq[Int] = {
     val localOffsets = connectivities map { case(_, connections) => connections.length }
-    // val offsets = Seq[Int](localOffsets.head)
     val offsets = Seq[Int]()
 
     def offsetIterator(globalOS: Seq[Int], localOS: Seq[Int]): Seq[Int] = {

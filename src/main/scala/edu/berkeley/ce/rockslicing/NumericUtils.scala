@@ -31,13 +31,10 @@ object NumericUtils {
     * Rounds to the specified number of decimal places. If not specified, default
     * is 6 decimal places
     * @param d A Double value
-    * @param decimals Number of decimal places to round to
-    * @return Value with 6 decimal places
+    * @param decimals Number of decimal places to round to.
+    * @return Value with specified number of decimal places. Default is 6 decimal places.
     */
-  def roundToTolerance(d: Double, decimals: Option[Int]=None): Double = {
-    decimals match {
-      case None => BigDecimal(d).setScale(6, BigDecimal.RoundingMode.HALF_UP).toDouble
-      case Some(dec) => BigDecimal(d).setScale(dec, BigDecimal.RoundingMode.HALF_UP).toDouble
-    }
+  def roundToTolerance(d: Double, decimals: Int=6): Double = {
+    BigDecimal(d).setScale(decimals, BigDecimal.RoundingMode.HALF_UP).toDouble
   }
 }

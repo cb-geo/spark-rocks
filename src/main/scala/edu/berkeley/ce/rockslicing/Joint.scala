@@ -69,6 +69,8 @@ object Joint {
   private def findBoundingSphere(normalVec: (Double,Double,Double), distance: Double, centerX: Double,
       centerY: Double, centerZ: Double, faces: Seq[((Double,Double,Double),Double)], dip: Double):
       ((Double,Double,Double), Double) = {
+    // Linear program only in 2-D since constraints are specified entirely 
+    // by persistence of joint within the joint plane
     val basisVectors = Array(
       Array[Double](1.0, 0.0),
       Array[Double](0.0, 1.0),
@@ -77,7 +79,7 @@ object Joint {
     )
 
     val maxCoordinates = basisVectors.map { v =>
-      // val linProg = new LinearProgram(3)
+      // Only 2 variables in linear program - in-plane bounding circle so 2-D
       val linProg = new LinearProgram(2)
       linProg.setObjFun(v.toArray, LinearProgram.MAX)
       
