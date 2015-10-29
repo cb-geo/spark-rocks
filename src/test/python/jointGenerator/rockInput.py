@@ -4,8 +4,58 @@ import sys
 from joint import Joint
 import math
 
-# Reads input text file containing data on rock volume and joints
-# Outputs text file that can be read by SparkRocks
+####################################################################################################
+# Reads input text file containing data on rock volume and joints and
+# outputs text file that can be read by SparkRocks. Currently, this assumes
+# all input joints are persistent.
+# 
+# Usage: ./rockInput.py <inputFile> <outputFile>
+#   
+#         Where:
+#         <inputFile> is the name of the input file containing relevant data
+#         <outputFile> is the name of file to write results to
+#
+# INPUT FILE FORMAT:
+# Format of input file should be as follows:
+# Line1: Coordinates of lowerleft and upper right corners of bounding box than
+#        encapsulates entire rock volume. The lower left corner is specified first
+#        followed by the upper right as follows:
+#        x_l y_l z_l x_r y_r z_r
+# 
+# Line2: Global origin specified as follows:
+#        x_o y_o z_o
+#        The global origin should be within bounding box - NOT ON BOUNDARY - and be as close as 
+#        possible to lower left corner of bounding box. (This is pretty arbitrary for now, but 
+#        will be changes later to be more general)
+#
+# Data that specifies the bounding surfaces(faces) is provided in Line3 and onward, as necessary
+# The data for each face is specified on a new line as follows:
+#     strike dip x_p y_p z_p
+#     x_p, y_p and z_p represent the coordinates of a point on the face
+# 
+# Once all the bounding faces have been specified, the beginning of the joint data is indicated
+# by an empty line. Following the empty line, the joint data is specified as follows:
+#     strike dip jointSpacing
+# 
+# These joints represent the "master joints". The joint set will be generated based on the strike,
+# dip and joint spacing for these joints starting from lower left corner of the bounding box.
+#
+# OUTPUT FILE FORMAT
+# The output file contains the bounding faces and joint data in a format that is understood by 
+# SparkRocks. 
+# The first portion of the file specifies the bounding faces as follows:
+#     a b c d phi cohesion
+#     <a, b, c> represent the components of the normal vector to the face plane.
+#     phi and cohesion are the friction angle and cohesion along the face plane respectively
+# 
+# The transition from the bounding surfaces date to the joint data is indicated by a line 
+# containing "%" only. The lines following this specifiy the joint data as follows:
+#     a b c x_o y_o z_o x_c y_c z_c phi cohesion
+#     <a, b, c> represent the components of the normal vector to the joint plane
+#     x_o, y_o and z_o represent the local origin for the joint
+#     x_c, y_c and z_c represent the center of the joint in the joint plane
+#     phi and cohesion are the friction angle and cohesion along the joint plane respectively
+####################################################################################################
 
 # Process command line arguments:
 if len(sys.argv) != 3:
@@ -52,68 +102,95 @@ for face in facesData:
                                    spacing = None, phi = 0.0, cohesion = 0.0, bound = True))
 
 # Generate "master joint set". These will be copied based on joint spacing
-
-# THIS NEEDS TO BE MODIFIED SO THAT FIRST JOINTS STARTS ONE SPACING AWAY FROM ORIGIN, MAYBE?
 for joint in jointsData:
-    # localOrigin = np.array([boundingBox[0], boundingBox[1], boundingBox[2]])
+    # center of master joints at lower left corner of bounding box
+    center = np.array([boundingBox[0], boundingBox[1], boundingBox[2]])
     masterJoints = np.append(masterJoints, 
-                             Joint(origin, origin, joint[0], joint[1], boundingBox, joint[2]))
+                             Joint(origin, center, joint[0], joint[1], boundingBox, joint[2]))
 
-# Create complete joint set from master joints
+# Create complete joint set from master joints: replicate master joints, but increment center
+# of joint by spacing
 for joint in masterJoints:
     cutoff = origin
     count = 1.0
-    while (((cutoff[0] < boundingBox[3]) and (cutoff[0] > boundingBox[0])) and
-           ((cutoff[1] < boundingBox[4]) and (cutoff[1] > boundingBox[1])) and
-           ((cutoff[2] < boundingBox[5]) and (cutoff[2] > boundingBox[2]))):
-        # Increment center location based on joint spacing
-        centerIncrement = count * joint.spacing * joint.normalVec
-        count = count + 1.0
-        joints = np.append(joints,
-                           Joint(joint.localOrigin,
-                                 np.array([joint.center[0] + centerIncrement[0], 
-                                           joint.center[1] + centerIncrement[1],
-                                           joint.center[2] + centerIncrement[2]]),
-                                 joint.strike, joint.dip, joint.spacing))
-        cutoff = np.array([joint.center[0] + centerIncrement[0], 
-                           joint.center[1] + centerIncrement[1],
-                           joint.center[2] + centerIncrement[2]])
 
-    # cutoff = origin
-    # count = 1.0
-    # while (((cutoff[0] < boundingBox[3]) and (cutoff[0] > boundingBox[0])) and
-    #        ((cutoff[1] < boundingBox[4]) and (cutoff[1] > boundingBox[1])) and
-    #        ((cutoff[2] < boundingBox[5]) and (cutoff[2] > boundingBox[2]))):
-    #     # Increment center location based on joint spacing
-    #     centerIncrement = count * joint.spacing * joint.normalVec
-    #     count = count + 1.0
-    #     joints = np.append(joints,
-    #                        Joint(joint.localOrigin,
-    #                              np.array([joint.center[0] - centerIncrement[0], 
-    #                                        joint.center[1] - centerIncrement[1],
-    #                                        joint.center[2] - centerIncrement[2]]),
-    #                              joint.strike, joint.dip, joint.spacing))
-    #     cutoff = np.array([joint.center[0] - centerIncrement[0], 
-    #                        joint.center[1] - centerIncrement[1],
-    #                        joint.center[2] - centerIncrement[2]])
+    # This checks for joints that have normal vector parallal to one of the global x,y or z-axes.
+    # Iteration constraints are modified accordingly to avoid an infinite loop
+    if ((abs(joint.normalVec[0] - 1.0) < Joint.EPSILON) or
+        (abs(joint.normalVec[1] - 1.0) < Joint.EPSILON) or
+        (abs(joint.normalVec[2] - 1.0) < Joint.EPSILON)):
+
+        while ((boundingBox[0] <= cutoff[0] <= boundingBox[3]) and
+               (boundingBox[1] <= cutoff[1] <= boundingBox[4]) and
+               (boundingBox[2] <= cutoff[2] <= boundingBox[5])):
+            # Increment center location based on joint spacing
+            centerIncrement = count * joint.spacing * joint.normalVec
+            newCenter = np.array([joint.center[0] + centerIncrement[0], 
+                                  joint.center[1] + centerIncrement[1],
+                                  joint.center[2] + centerIncrement[2]])
+            
+            # Check that increment is into bounding box. If not, reverse direction in which incremented
+            if ((newCenter[0] < boundingBox[0]) or
+                (newCenter[1] < boundingBox[1]) or
+                (newCenter[2] < boundingBox[2])):
+                centerIncrement = -count * joint.spacing * joint.normalVec
+
+            count = count + 1.0
+            joints = np.append(joints,
+                               Joint(joint.localOrigin,
+                                     np.array([joint.center[0] + centerIncrement[0], 
+                                               joint.center[1] + centerIncrement[1],
+                                               joint.center[2] + centerIncrement[2]]),
+                                     joint.strike, joint.dip, boundingBox, joint.spacing))
+            cutoff = np.array([joint.center[0] + centerIncrement[0], 
+                               joint.center[1] + centerIncrement[1],
+                               joint.center[2] + centerIncrement[2]])
+
+
+    else:
+        while ((boundingBox[0] < cutoff[0] < boundingBox[3]) or
+               (boundingBox[1] < cutoff[1] < boundingBox[4]) or
+               (boundingBox[2] < cutoff[2] < boundingBox[5])):
+            # Increment center location based on joint spacing
+            centerIncrement = count * joint.spacing * joint.normalVec
+            newCenter = np.array([joint.center[0] + centerIncrement[0], 
+                                  joint.center[1] + centerIncrement[1],
+                                  joint.center[2] + centerIncrement[2]])
+            
+            # Check that increment is into bounding box. If not, reverse direction in which incremented
+            if ((newCenter[0] < boundingBox[0]) or
+                (newCenter[1] < boundingBox[1]) or
+                (newCenter[2] < boundingBox[2])):
+                centerIncrement = -count * joint.spacing * joint.normalVec
+
+            count = count + 1.0
+            joints = np.append(joints,
+                               Joint(joint.localOrigin,
+                                     np.array([joint.center[0] + centerIncrement[0], 
+                                               joint.center[1] + centerIncrement[1],
+                                               joint.center[2] + centerIncrement[2]]),
+                                     joint.strike, joint.dip, boundingBox, joint.spacing))
+            cutoff = np.array([joint.center[0] + centerIncrement[0], 
+                               joint.center[1] + centerIncrement[1],
+                               joint.center[2] + centerIncrement[2]])
 
 # Write face data to output file:
 f = open(outputFile, 'w')
 
 for face in faces:
-    f.write("%.12f %.12f %.12f %.12f %.12f %.12f\n" % (face.normalVec[0], face.normalVec[1], face.normalVec[2], 
-                                   face.distance, face.phi, face.cohesion))
+    f.write(str(face.normalVec[0])+" "+str(face.normalVec[1])+" "+str(face.normalVec[2])+" "+
+            str(face.distance)+" "+str(face.phi)+" "+str(face.cohesion)+" \n")
+
 
 # Write symbol to show transition to joint data (Yes, this is silly...)
 f.write("%\n")
 
 # Write joint data to output file
 for joint in joints:
-    f.write("%.12f %.12f %.12f %.12f %.12f %.12f %.12f %.12f %.12f %.12f %.12f\n" %
-            (joint.normalVec[0], joint.normalVec[1], joint.normalVec[2], 
-             joint.localOrigin[0], joint.localOrigin[1], joint.localOrigin[2],
-             joint.center[0], joint.center[1], joint.center[2],
-             joint.phi, joint.cohesion))
+    f.write(str(joint.normalVec[0])+" "+str(joint.normalVec[1])+" "+str(joint.normalVec[2])+" "+
+            str(joint.localOrigin[0])+" "+str(joint.localOrigin[1])+" "+str(joint.localOrigin[2])+
+            " "+str(joint.center[0])+" "+str(joint.center[1])+" "+str(joint.center[2])+" "+
+            str(joint.phi)+" "+str(joint.cohesion)+" \n")
 
 f.close
 

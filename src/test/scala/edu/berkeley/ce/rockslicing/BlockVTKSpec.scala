@@ -87,14 +87,8 @@ class BlockVTKSpec extends FunSuite {
 
   test("Connectivity map should flatten into list of integers") {
     val vtkBlock = BlockVTK(unitCube)
-    val faceConnectivities = Map(
-      face1 -> List[Int](4, 5, 1, 0),
-      face2 -> List[Int](3, 2, 6, 7),
-      face3 -> List[Int](1, 5, 6, 2),
-      face4 -> List[Int](4, 0, 3, 7),
-      face5 -> List[Int](7, 6, 5, 4),
-      face6 -> List[Int](0, 1, 2, 3)
-    ).values.flatten
+    val faceConnectivities = Seq[Int](0, 1, 2, 3, 4, 5, 1, 0, 3, 2, 6, 7,
+                                      4, 0, 3, 7, 7, 6, 5, 4, 1, 5, 6, 2)
     val connectionsDiff = intListElementDiff(faceConnectivities.toSeq, vtkBlock.connectivity.toSeq)
     assert(connectionsDiff.filter(_ > NumericUtils.EPSILON).isEmpty)
   }
@@ -114,12 +108,12 @@ class BlockVTKSpec extends FunSuite {
   test("Normals tuples should flatten into list of integers") {
     val vtkBlock = BlockVTK(unitCube)
     val expectedNormals = Seq[Double](
+      face6.a, face6.b, face6.c,
       face1.a, face1.b, face1.c,
       face2.a, face2.b, face2.c,
-      face3.a, face3.b, face3.c,
       face4.a, face4.b, face4.c,
       face5.a, face5.b, face5.c,
-      face6.a, face6.b, face6.c
+      face3.a, face3.b, face3.c
     ) 
     val normals = vtkBlock.normals
     val normalsDiff = doubleListElementDiff(expectedNormals, normals)
