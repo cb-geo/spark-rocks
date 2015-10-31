@@ -48,12 +48,12 @@ object RockSlicer {
     }
 
     // Convert list of rock blocks to requested output
-    if (arguments.contains('toIE)) {
+    if (arguments('toIE) == "true") {
       // Convert the list of rock blocks to JSON and save this to a file
       val jsonBlocks = squeakyClean.map(Json.blockToMinimalJson)
       jsonBlocks.saveAsTextFile("blocks.json")
     }
-    if (arguments.contains('toVTK)) {
+    if (arguments('toVTK) == "true") {
       // Convert the list of rock blocks to JSON with vertices, normals and connectivity in format easily converted
       // to vtk my rockProcessor module
       val vtkBlocks = squeakyClean.map(BlockVTK(_))

@@ -27,12 +27,12 @@ class BlockVTKSpec extends FunSuite {
   val face5Verts = List((1.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 1.0, 0.0))
   val face6Verts = List((0.0, 1.0, 1.0), (0.0, 0.0, 1.0), (1.0, 0.0, 1.0), (1.0, 1.0, 1.0))
 
-  def doubleListElementDiff(list1: Seq[Double], list2: Seq[Double]): Seq[Double] = {
+  private def doubleListElementDiff(list1: Seq[Double], list2: Seq[Double]): Seq[Double] = {
     assert(list1.length == list2.length)
     list1.zip(list2) map { case (a,b) => a - b }
   }
 
-  def intListElementDiff(list1: Seq[Int], list2: Seq[Int]): Seq[Int] = {
+  private def intListElementDiff(list1: Seq[Int], list2: Seq[Int]): Seq[Int] = {
     assert(list1.length == list2.length)
     list1.zip(list2) map { case (a,b) => a - b }
   }

@@ -33,8 +33,7 @@ object BlockVTK {
       } 
     } catch {
       case e: Exception => {
-        println("ERROR in BlockVTK.ccwCompare: Input points are not in the same plane")
-        System.exit(1)
+        println("ERROR in BlockVTK.ccwCompare: Input points are not in the same plane")        
       }
     }
 
