@@ -5,89 +5,123 @@ import breeze.linalg.{DenseMatrix, DenseVector}
 
 object Joint {
   /**
-   * Find the distance of the joint plane from the input local origin.
-   * @param normalVec Normal vector to the joint plane
-   * @param localOrigin The local origin from which the distance is referenced. This should be in global coordinates.
-   * @param center The center of the joint plane. This should be in global coordinates.
-   * @return
-   */
+    * Find the distance of the joint plane from the input local origin.
+    * @param normalVec Normal vector to the joint plane
+    * @param localOrigin The local origin from which the distance is referenced. This should be in global coordinates.
+    * @param center The center of the joint plane. This should be in global coordinates.
+    * @return
+    */
   private def findDistance(normalVec: (Double, Double, Double), localOrigin: (Double, Double, Double),
                             center: (Double, Double, Double)): Double = {
     val w = DenseVector.zeros[Double](3)
-    if (math.abs(normalVec._3) >= NumericUtils.EPSILON) {
-      w(0) = localOrigin._1
-      w(1) = localOrigin._2
-      w(2) = localOrigin._3 - center._3
-    } else if (math.abs(normalVec._2) >= NumericUtils.EPSILON) {
-      w(0) = localOrigin._1
-      w(1) = localOrigin._2 - center._2
-      w(2) = localOrigin._3
-    } else if (math.abs(normalVec._1) >= NumericUtils.EPSILON) {
-      w(0) = localOrigin._1 - center._1
-      w(1) = localOrigin._2
-      w(2) = localOrigin._3
-    }
+    w(0) = localOrigin._1 - center._1
+    w(1) = localOrigin._2 - center._2
+    w(2) = localOrigin._3 - center._3
     val n = DenseVector[Double](normalVec._1, normalVec._2, normalVec._3)
-    -(n dot w)/linalg.norm(n)
+    NumericUtils.roundToTolerance(-(n dot w)/linalg.norm(n))
   }
 
   /**
-   * Find a bounding sphere for a non-persistent joint. This function is not
-   * intended for use with persistent joints.
-   * @param normalVec The normal vector of the plane in which the joint lies
-   * @param distance The distance of the joint's plane from its local origin
-   * @param centerX The x coordinate of the joint's center
-   * @param centerY The y coordinate of the joint's center
-   * @param centerZ The z coordinate of the joint's center
-   * @param faces A sequence of faces specifying the joint's shape
-   * @return A pair where the first element is a triple giving the center of
-   *         the bounding sphere and the second element is the radius of the
-   *         bounding sphere.
-   */
+    * Converts point from local to global coordinates
+    * @param point The point to transform
+    * @param localOrigin Local origin's global coordinates
+    * @param normal Normal to joint plane
+    * @param dip Dip direction of plane
+    * @return Tuple that contains x, y and z coordinates of point in global coordinates
+    */
+  private def localPointToGlobal(point: (Double, Double, Double), localOrigin: (Double, Double, Double),
+    normal: (Double, Double, Double), dip: Double): (Double, Double, Double) = {
+    val Nplane = if (normal._3 > -NumericUtils.EPSILON) {
+      // Ensures that normal will always point in -z global direction (ensures right-handed local coordinates)
+      -1.0 * DenseVector[Double](normal._1, normal._2, normal._3)
+    } else {
+      DenseVector[Double](normal._1, normal._2, normal._3)
+    }
+    val strike = (dip - math.Pi / 2) % (2 * math.Pi) // strike = dip - pi/2 (US convention)
+    val Nstrike = DenseVector[Double](math.cos(-strike), math.sin(-strike), 0.0)
+    val Ndip = linalg.cross(Nplane, Nstrike)
+
+    // Q defines the linear transformation to convert to global coordinates
+    val Q = DenseMatrix.zeros[Double](3,3)
+    Q(::, 0) := Nstrike
+    Q(::, 1) := Ndip
+    Q(::, 2) := Nplane
+
+    // Transform point from local to global coordinates
+    val transformedPoint = Q * DenseVector[Double](point._1, point._2, point._3)
+    (transformedPoint(0) + localOrigin._1, transformedPoint(1) + localOrigin._2, transformedPoint(2) + localOrigin._3)
+  }
+
+  /**
+    * Find a bounding sphere for a non-persistent joint. This function is not
+    * intended for use with persistent joints.
+    * @param normalVec The normal vector of the plane in which the joint lies
+    * @param distance The distance of the joint's plane from its local origin
+    * @param centerX The x coordinate of the joint's center
+    * @param centerY The y coordinate of the joint's center
+    * @param centerZ The z coordinate of the joint's center
+    * @param faces A sequence of faces specifying the joint's shape
+    * @param dip Dip direction of joint plane
+    * @return A pair where the first element is a triple giving the center of
+    *         the bounding sphere and the second element is the radius of the
+    *         bounding sphere.
+    */
   private def findBoundingSphere(normalVec: (Double,Double,Double), distance: Double, centerX: Double,
-      centerY: Double, centerZ: Double, faces: Seq[((Double,Double,Double),Double)]):
+      centerY: Double, centerZ: Double, faces: Seq[((Double,Double,Double),Double)], dip: Double):
       ((Double,Double,Double), Double) = {
+    // Linear program only in 2-D since constraints are specified entirely 
+    // by persistence of joint within the joint plane
     val basisVectors = Array(
-      Array[Double](1.0, 0.0, 0.0),
-      Array[Double](0.0, 1.0, 0.0),
-      Array[Double](0.0, 0.0, 1.0),
-      Array[Double](-1.0, 0.0, 0.0),
-      Array[Double](0.0, -1.0, 0.0),
-      Array[Double](0.0, 0.0, -1.0)
+      Array[Double](1.0, 0.0),
+      Array[Double](0.0, 1.0),
+      Array[Double](-1.0, 0.0),
+      Array[Double](0.0, -1.0)
     )
 
     val maxCoordinates = basisVectors.map { v =>
-      val linProg = new LinearProgram(3)
+      // Only 2 variables in linear program - in-plane bounding circle so 2-D
+      val linProg = new LinearProgram(2)
       linProg.setObjFun(v.toArray, LinearProgram.MAX)
-      val jointCoeffs = Array[Double](normalVec._1, normalVec._2, normalVec._3).map(NumericUtils.applyTolerance)
-      val jointRhs = NumericUtils.applyTolerance(distance)
-      linProg.addConstraint(jointCoeffs, LinearProgram.LE, jointRhs)
-
+      
       faces foreach { face =>
         val (a, b, c) = face._1
         val d = face._2
-        val coeffs = Array[Double](a, b, c).map(NumericUtils.applyTolerance)
-        val rhs = NumericUtils.applyTolerance(d)
-        linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
+        if (d < 0.0) {
+          val coeffs = Array[Double](-a, -b).map(NumericUtils.applyTolerance)
+          val rhs = NumericUtils.applyTolerance(-d)
+          linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
+        } else {
+          val coeffs = Array[Double](a, b).map(NumericUtils.applyTolerance)
+          val rhs = NumericUtils.applyTolerance(d)
+          linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
+        }
       }
-      linProg.solve().get._2
+      val results = linProg.solve().get._1
+      val resultsSeq = Seq[Double](results(0), results(1))
+      // Values of principal axes vectors set to 0.0 exacly, so okay to check for equality of Double
+      resultsSeq.filter(math.abs(_) > NumericUtils.EPSILON) match {
+        case Nil => 0.0
+        case x+:xs => x
+      }
     }
 
-    val pairedCoords = maxCoordinates.take(3).zip(maxCoordinates.takeRight(3))
+    val pairedCoords = maxCoordinates.take(2).zip(maxCoordinates.takeRight(2))
     val center = pairedCoords.map { case (x, y) => 0.5 * (x + y) }
     val diffVector = pairedCoords.map { case (x, y) => x - y }
     val radius = 0.5 * linalg.norm(DenseVector[Double](diffVector))
 
     // Shift from Joint local coordinates to global coordinates
-    ((center(0) + centerX, center(1) + centerY, center(2) + centerZ), radius)
+    val transformedCenter = Joint.localPointToGlobal((center(0), center(1), 0.0),
+      (centerX, centerY, centerZ), normalVec, dip)
+    (transformedCenter, radius)
   }
 
   /**
-   * Find the vector indicating dip direction of the joint plane. Global positive x-axis points North and
-   * z-axis oriented with positive upward. Positive y-axis will point west based on this orientation.
-   * @param normalVec Normal vector to the joint plane
-   * @return Dip direction of the plane, indicating direction of greatest increase in z. Return as vector (a, b, 0)
-   */
+    * Find the vector indicating dip direction of the joint plane. Global positive x-axis points North and
+    * z-axis oriented with positive upward. Positive y-axis will point west based on this orientation.
+    * @param normalVec Normal vector to the joint plane
+    * @return Dip direction of the plane, indicating direction of greatest increase in z. Return as vector (a, b, 0)
+    */
   private def dipDirVector(normalVec: (Double, Double, Double)): DenseVector[Double] = {
     // Dip direction is in opposite direction of gradient indicating greatest increase in z.
     if ((math.abs(normalVec._3) > NumericUtils.EPSILON) &&
@@ -103,10 +137,10 @@ object Joint {
   }
 
   /**
-   * Finds the dip direction of the input joint as an azimuth. Global positive x-axis points North.
-   * @param normalVec Normal vector to the joint plane
-   * @return Dip direction as an azimuth in radians
-   */
+    * Finds the dip direction of the input joint as an azimuth. Global positive x-axis points North.
+    * @param normalVec Normal vector to the joint plane
+    * @return Dip direction as an azimuth in radians
+    */
   private def dipDir(normalVec: (Double, Double, Double)): Double = {
     val dipVector = Joint.dipDirVector(normalVec)
     val xAxis = DenseVector[Double](1.0, 0.0, 0.0)
@@ -127,10 +161,10 @@ object Joint {
   }
 
   /**
-   * Finds the dip angle of the input joint.
-   * @param normalVec Normal vector to the joint plane
-   * @return Dip angle in radians
-   */
+    * Finds the dip angle of the input joint.
+    * @param normalVec Normal vector to the joint plane
+    * @return Dip angle in radians
+    */
   private def dipAngle(normalVec: (Double, Double, Double)): Double = {
     val dipVector = Joint.dipDirVector(normalVec)
     val normal = DenseVector[Double](normalVec._1, normalVec._2, normalVec._3)
@@ -153,7 +187,7 @@ object Joint {
   * A simple data structure to represent a joint.
   * @constructor Create a new joint.
   * @param normalVec The normal vector to the joint. The individual vector components
-  * can be accessed as 'a', 'b', and 'c'.
+  *        can be accessed as 'a', 'b', and 'c'.
   * @param localOrigin The local origin from which the distance is referenced. The individual
   *        components are accessed as 'localX', 'localY', and 'localZ'.
   * @param center Cartesian coordinates for the center of the joint. The individual
@@ -161,15 +195,15 @@ object Joint {
   * @param phi The joint's friction angle (phi).
   * @param cohesion The cohesion along the joint
   * @param shape A list of lines specifying the shape of the joint. Each item is a
-  * 3-tuple. The first two items specify the line, while the last gives the distance
-  * of the line from the joint's center in the local coordinate system.
+  *        3-tuple. The first two items specify the line, while the last gives the distance
+  *        of the line from the joint's center in the local coordinate system.
   * @param boundingSphereParam An optional parameter that can be used to specify the bounding
-  *                            sphere for the joint, if it is known. This prevents an expensive
-  *                            recalculation of the bounding sphere.
+  *        sphere for the joint, if it is known. This prevents an expensive recalculation
+  *        of the bounding sphere.
   * @param dipAngleParam An optional parameter that can be used to specify the dip angle for the joint.
-  *                 This avoids recalculation of a known dip angle.
+  *        This avoids recalculation of a known dip angle.
   * @param dipDirectionParam An optional parameter that can be used to specify the dip direction for
-  *                     the joint. This avoids recalculation of a known dip direction.
+  *        the joint. This avoids recalculation of a known dip direction.
   */
 case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Double, Double),
                  center: (Double, Double, Double), phi: Double, cohesion: Double,
@@ -193,7 +227,7 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
   val boundingSphere = boundingSphereParam match {
     case null => shape match {
       case Nil => None
-      case _ => Some(Joint.findBoundingSphere((a, b, c), d, centerX, centerY, centerZ, shape))
+      case _ => Some(Joint.findBoundingSphere((a, b, c), d, centerX, centerY, centerZ, shape, dipDirection))
     }
     case bs => bs
   }

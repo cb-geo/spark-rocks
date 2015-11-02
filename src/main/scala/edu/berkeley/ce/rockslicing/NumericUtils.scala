@@ -1,5 +1,6 @@
 package edu.berkeley.ce.rockslicing
 
+import scala.math.BigDecimal
 /**
  * Numerical utilities for implementation and test cases.
  */
@@ -25,4 +26,15 @@ object NumericUtils {
    */
   def applyTolerance(values: Seq[Double]): Seq[Double] =
     values map applyTolerance
+
+  /**
+    * Rounds to the specified number of decimal places. If not specified, default
+    * is 6 decimal places
+    * @param d A Double value
+    * @param decimals Number of decimal places to round to.
+    * @return Value with specified number of decimal places. Default is 6 decimal places.
+    */
+  def roundToTolerance(d: Double, decimals: Int=6): Double = {
+    BigDecimal(d).setScale(decimals, BigDecimal.RoundingMode.HALF_UP).toDouble
+  }
 }

@@ -2,6 +2,7 @@ package edu.berkeley.ce.rockslicing
 
 import org.scalatest._
 import scala.math.sqrt
+import breeze.linalg.{DenseVector, DenseMatrix}
 
 class BlockSpec extends FunSuite {
   val boundingFaces = List(
@@ -33,6 +34,26 @@ class BlockSpec extends FunSuite {
     Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)   // z = 1
   )
   val twoCubeNonOrigin = Block((1.0, 1.0, 1.0), boundingFaces3)
+
+  val boundingFaces4 = List(
+    Face((-1.0, 0.0, 0.0), -1.0, phi=0, cohesion=0),
+    Face((0.0, -1.0, 0.0), -1.0, phi=0, cohesion=0),
+    Face((0.0, 0.0, -1.0), -1.0, phi=0, cohesion=0),
+    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0)
+  )
+  val unitCubeSigns = Block((0.0, 0.0, 0.0), boundingFaces4)
+
+  val boundingFaces5 = List(
+    Face((-1.0, 0.0, 0.0), -1.0, phi=0, cohesion=0),
+    Face((0.0, -1.0, 0.0), -1.0, phi=0, cohesion=0),
+    Face((0.0, 0.0, -1.0), -1.0, phi=0, cohesion=0),
+    Face((1.0, 0.0, 0.0), -1.0, phi=0, cohesion=0),
+    Face((0.0, 1.0, 0.0), -1.0, phi=0, cohesion=0),
+    Face((0.0, 0.0, 1.0), -1.0, phi=0, cohesion=0)
+  )
+  val twoCubeSigns = Block((0.0, 0.0, 0.0), boundingFaces5)
 
   val jointBounds = Seq(
     ((1.0, 0.0, 0.0), 1.0),
@@ -107,7 +128,8 @@ class BlockSpec extends FunSuite {
   test("The plane y = 1/2.0 with non-zero origin should not intersect the unit cube") {
     val joint = Joint((0.0, 1.0, 0.0), localOrigin=(0.0,1/2.0,0.0), center=(0.0, 1.0, 0.0),
                        phi=0, cohesion=0, shape=Nil)
-    assert(unitCube.intersects(joint).isEmpty)
+    val translatedJoint = joint.updateJoint(0.0, 0.0, 0.0)
+    assert(unitCube.intersects(translatedJoint).isEmpty)
   }
 
   test("The plane -y = 1 should not intersect the unit cube") {
@@ -143,7 +165,8 @@ class BlockSpec extends FunSuite {
   test("The plane x/sqrt(2.0) - z/sqrt(2.0) = 1 at non-zero origin should intersect the unit cube") {
     val joint = Joint((1.0/sqrt(2.0), 0.0, -1.0/sqrt(2.0)), localOrigin=(-1.0/sqrt(2.0),0.0,1.0/sqrt(2.0)),
                       center=(0.0, 0.0, 0.0), phi=0, cohesion=0, shape=Nil)
-    assert(unitCube.intersects(joint).isDefined)
+    val translatedJoint = joint.updateJoint(0.0, 0.0, 0.0)
+    assert(unitCube.intersects(translatedJoint).isDefined)
   }
 
   test("The plane x/sqrt(2.0) - z/sqrt(2.0) = 1 at (0.0,0.0,1.0) should not intersect the unit cube") {
@@ -179,7 +202,8 @@ class BlockSpec extends FunSuite {
   test("The non-persistent joint z < 1.0 with non-global origin should not intersect the two cube") {
     val joint = Joint((0.0, 0.0, 1.0), localOrigin=(3.0, 0.0, 0.0), center=(3.0, 0.0, 1.0),
                       phi=0.0, cohesion=0.0, shape=jointBounds2)
-    assert(twoCube.intersects(joint).isEmpty)
+    val translatedJoint = joint.updateJoint(0.0, 0.0, 0.0)
+    assert(twoCube.intersects(translatedJoint).isEmpty)
   }
 
   test("The non-persistent joint z < 1.0 with non-global origin should intersect the two cube") {
@@ -209,7 +233,7 @@ class BlockSpec extends FunSuite {
   }
 
   test("The non-persistent joint z < 0 should not intersect the non-global origin two cube ") {
-    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(1.0, 1.0, 1.0), center=(2.0, 3.0, 1.0),
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(1.0, 1.0, 1.0), center=(1.0, 3.0, 1.0),
                       phi=0.0, cohesion=0.0, shape=jointBounds)
     assert(twoCubeNonOrigin.intersects(joint).isEmpty)
   }
@@ -292,10 +316,10 @@ class BlockSpec extends FunSuite {
     val face2 = Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0)
     val face3 = Face((0.0, 0.0, 1.0), 0.0, phi=0, cohesion=0)
     val face4 = Face((0.0, 1.0, 0.0), 5.0, phi=0, cohesion=0)
-    val block = Block((1.0, 1.0, 1.0), List(face1, face2, face3, face4))
-    val face1Verts = List((0.0, 5.0, 0.0), (0.0, 0.0, 0.0))
+    val block = Block((0.0, 0.0, 0.0), List(face1, face2, face3, face4))
+    val face1Verts = List((0.0, 0.0, 0.0), (0.0, 5.0, 0.0))
     val face2Verts = List((0.0, 0.0, 0.0))
-    val face3Verts = List((0.0, 5.0, 0.0), (0.0, 0.0, 0.0))
+    val face3Verts = List((0.0, 0.0, 0.0), (0.0, 5.0, 0.0))
     val face4Verts = List((0.0, 5.0, 0.0))
     val expectedIntersection = Map(
       face1 -> face1Verts,
@@ -305,6 +329,23 @@ class BlockSpec extends FunSuite {
     )
     val vertices = block.findVertices
     assert(vertices == expectedIntersection)
+  }
+
+  test("The point of intersection between the three planes should be (1.0, 0.0, 0.0)") {
+    val face1 = Face((0.0, 0.0, 1.0), 0.0, phi = 0.0, cohesion = 0.0)
+    val face2 = Face((0.0, 1.0, 0.0), 0.0, phi = 0.0, cohesion = 0.0)
+    val face3 = Face((1.0/sqrt(2.0), 1.0/sqrt(2.0), 0.0), 1.0/sqrt(2.0), phi = 0.0, cohesion = 0.0)
+    val block = Block((0.0, 0.0, 0.0), List(face1, face2, face3))
+    val face1Verts = List((1.0, 0.0, 0.0))
+    val face2Verts = List((1.0, 0.0, 0.0))
+    val face3Verts = List((1.0, 0.0, 0.0))
+    val expectedIntersetion = Map(
+      face1 -> face1Verts,
+      face2 -> face2Verts,
+      face3 -> face3Verts
+    )
+    val vertices = block.findVertices
+    assert(vertices == expectedIntersetion)
   }
 
   test("There should be no intersection between the planes") {
@@ -330,7 +371,7 @@ class BlockSpec extends FunSuite {
 
     val vertices = block.findVertices
     val mesh = block.meshFaces(vertices)
-    val expectedVertices = List(Delaunay.Vector2(0.0, 1.0), Delaunay.Vector2(1.0,0.0), Delaunay.Vector2(1.0,1.0))
+    val expectedVertices = List(Delaunay.Vector2(1.0, 1.0), Delaunay.Vector2(1.0,0.0), Delaunay.Vector2(0.0,1.0))
 
     val expectedTriangulation = Delaunay.Triangulation(expectedVertices).toList
     assert(mesh(face3) == expectedTriangulation)
@@ -390,6 +431,25 @@ class BlockSpec extends FunSuite {
     val expectedFace4 = Face((-1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0)
     val expectedFace5 = Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0)
     val expectedFace6 = Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0)
+    val expectedFaces = List(expectedFace1, expectedFace2, expectedFace3, expectedFace4, expectedFace5, expectedFace6)
+    assert(updatedFaces == expectedFaces)
+  }
+
+  test("New distances should be shifted based on input local origin - some distances should be negative") {
+    val face1 = Face((1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0)
+    val face2 = Face((0.0, 1.0, 0.0), 2.0, phi=0, cohesion=0)
+    val face3 = Face((0.0, 0.0, -1.0), -2.0, phi=0, cohesion=0)
+    val face4 = Face((1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
+    val face5 = Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0)
+    val face6 = Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0)
+    val block = Block((0.0, 0.0, 0.0), List(face1, face2, face3, face4, face5, face6))
+    val updatedFaces = block.updateFaces((2.0, 2.0, 2.0))
+    val expectedFace1 = Face((1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
+    val expectedFace2 = Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0)
+    val expectedFace3 = Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0)
+    val expectedFace4 = Face((1.0, 0.0, 0.0), -2.0, phi=0, cohesion=0)
+    val expectedFace5 = Face((0.0, 1.0, 0.0), -2.0, phi=0, cohesion=0)
+    val expectedFace6 = Face((0.0, 0.0, -1.0), 2.0, phi=0, cohesion=0)
     val expectedFaces = List(expectedFace1, expectedFace2, expectedFace3, expectedFace4, expectedFace5, expectedFace6)
     assert(updatedFaces == expectedFaces)
   }
@@ -456,5 +516,41 @@ class BlockSpec extends FunSuite {
 
     val expectedBlocks = List(bottomLeft, topLeft, bottomRight, topRight)
     assert(cleanedBlocks == expectedBlocks)
+  }
+
+  test("Bounding sphere of the unit cube should have center (0.5, 0.5, 0.5) and radius sqrt(0.5 + 0.5^2)") {
+    val expectedBoundingSphere = ((0.5, 0.5, 0.5), math.sqrt(0.5 + math.pow(0.5, 2)))
+    val unitCubeBS = ((unitCube.sphereCenterX, unitCube.sphereCenterY, unitCube.sphereCenterZ),
+                      unitCube.sphereRadius)
+    assert(unitCubeBS == expectedBoundingSphere)
+  }
+
+  test("Bounding sphere of the two cube should have center (1.0, 1.0, 1.0) and radius sqrt(3.0)") {
+    val expectedBoundingSphere = ((1.0, 1.0, 1.0), math.sqrt(3.0))
+    val twoCubeBS = ((twoCube.sphereCenterX, twoCube.sphereCenterY, twoCube.sphereCenterZ),
+                     twoCube.sphereRadius)
+    assert(twoCubeBS == expectedBoundingSphere)
+  }
+
+  test("Bounding sphere of the unit cube with negative distances should have center (0.5, 0.5, 0.5) and "+
+       "radius sqrt(0.5 + 0.5^2)") {
+    val expectedBoundingSphere = ((0.5, 0.5, 0.5), math.sqrt(0.5 + math.pow(0.5, 2)))
+    val unitCubeSignsBS = ((unitCubeSigns.sphereCenterX, unitCubeSigns.sphereCenterY,
+                            unitCubeSigns.sphereCenterZ), unitCubeSigns.sphereRadius)
+    assert(unitCubeSignsBS == expectedBoundingSphere)
+  }
+
+  test("Bounding sphere of the two cube with negative distances should have center (0.0, 0.0, 0.0) and "+
+       "radius sqrt(3.0)") {
+    val expectedBoundingSphere = ((0.0, 0.0, 0.0), math.sqrt(3.0))
+    val twoCubeSignsBS = ((twoCubeSigns.sphereCenterX, twoCubeSigns.sphereCenterY,
+                            twoCubeSigns.sphereCenterZ), twoCubeSigns.sphereRadius)
+    assert(twoCubeSignsBS == expectedBoundingSphere)
+  }
+
+  test("-z=-0.5 should intersect the two cube - negative joint distance check") {
+    val joint = Joint((0.0, 0.0, -1.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 1/2.0),
+                      phi=0, cohesion=0, shape=Nil)
+    assert(twoCube.intersects(joint).isDefined)
   }
 }

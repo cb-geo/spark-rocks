@@ -10,17 +10,16 @@ object RockSlicer {
   def main(args: Array[String]) {
     val conf = new SparkConf().setAppName("SparkRocks")
     val sc = new SparkContext(conf)
-    val inputFile = args(0)
-    val numberSeedJoints = args(1).toInt
+    val arguments = CommandReader.parseArguments(args)
 
     // Open and read input file specifying rock volume and joints
-    val inputSource = Source.fromFile(inputFile)
+    val inputSource = Source.fromFile(arguments('inputFile).toString)
     val (rockVolume, joints) = InputProcessor.readInput(inputSource)
     inputSource.close()
     var blocks = Vector(Block((0.0, 0.0, 0.0), rockVolume))
 
     // Generate a list of initial blocks before RDD-ifying it
-    val (seedJoints, remainingJoints) = generateSeedJoints(joints, numberSeedJoints)
+    val (seedJoints, remainingJoints) = generateSeedJoints(joints, arguments('numberSeedJoints).trim.toInt)
     seedJoints foreach { joint => blocks = blocks.flatMap(_.cut(joint)) }
     val blockRdd = sc.parallelize(blocks)
     val broadcastJoints = sc.broadcast(remainingJoints)
@@ -48,9 +47,19 @@ object RockSlicer {
       Block(center, faces.map(_.applyTolerance))
     }
 
-    // Convert the list of rock blocks to JSON and save this to a file
-    val jsonBlocks = squeakyClean.map(Json.blockToMinimalJson)
-    jsonBlocks.saveAsTextFile("blocks.json")
+    // Convert list of rock blocks to requested output
+    if (arguments('toIE) == "true") {
+      // Convert the list of rock blocks to JSON and save this to a file
+      val jsonBlocks = squeakyClean.map(Json.blockToMinimalJson)
+      jsonBlocks.saveAsTextFile("blocks.json")
+    }
+    if (arguments('toVTK) == "true") {
+      // Convert the list of rock blocks to JSON with vertices, normals and connectivity in format easily converted
+      // to vtk my rockProcessor module
+      val vtkBlocks = squeakyClean.map(BlockVTK(_))
+      val jsonVtkBlocks = vtkBlocks.map(JsonToVtk.blockVtkToMinimalJson)
+      jsonVtkBlocks.saveAsTextFile("vtkBlocks.json")
+    }
     sc.stop()
   }
 

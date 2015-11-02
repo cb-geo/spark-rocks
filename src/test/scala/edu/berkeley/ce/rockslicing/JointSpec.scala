@@ -18,6 +18,11 @@ class JointSpec extends FunSuite {
                     ((0.0, 1.0, 0.0), 1.0),      // y = 1
                     ((0.0, -1.0, 0.0), 0.0))     // -y = 0
 
+  val boundaries2 = List(((1.0, 0.0, 0.0), 1.0),  // x = 1
+                    ((-1.0, 0.0, 0.0), 1.0),     // -x = 1
+                    ((0.0, 1.0, 0.0), 1.0),      // y = 1
+                    ((0.0, -1.0, 0.0), 1.0))     // -y = 1
+
   test("Dip direction for horizontal joint should be pi/2.0 exactly") {
     val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,-1.0), center=(0.0,0.0,0.0),
                       phi=0, cohesion=0, shape=Nil)
@@ -217,5 +222,67 @@ class JointSpec extends FunSuite {
                       phi=0, cohesion=0, shape=boundaries)
     val newJoint = joint.updateJoint(8.0, 0.0, 8.0)
     assert(math.abs(newJoint.d + 5.0) < NumericUtils.EPSILON)
+  }
+
+  test("Oblique joint should have updated distance of 1/sqrt(2.0)") {
+    val joint = Joint((1.0/sqrt(2.0), 1.0/sqrt(2.0), 0.0), localOrigin = (0.0, 0.0, 0.0),
+                      center = (1.0, 0.0, 0.0), phi = 0.0, cohesion = 0.0, shape = Nil)
+    val newJoint = joint.updateJoint(0.0, 0.0, 0.0)
+    assert(math.abs(newJoint.d - 1.0/sqrt(2.0)) < NumericUtils.EPSILON)
+  }
+
+  test("Oblique joint should have updated distance of 0.0") {
+    val joint = Joint((-1.0/sqrt(2.0), 1.0/sqrt(2.0), 0.0), localOrigin = (0.0, 0.0, 0.0),
+                      center = (1.0, 0.0, 0.0), phi = 0.0, cohesion = 0.0, shape = Nil)
+    val newJoint = joint.updateJoint(1.0, 0.0, 0.0)
+    assert(math.abs(newJoint.d) < NumericUtils.EPSILON)
+  }
+
+  test("Joint bounding sphere should have origin (0.5, -0.5, 0.0) and radius sqrt(0.5^2 + 0.5^2)") {
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,0.0), center=(0.0,0.0,0.0),
+                       phi=0, cohesion=0, shape=boundaries)
+    val expectedBoundingSphere = ((0.5, -0.5, 0.0), math.sqrt(math.pow(0.5, 2) + math.pow(0.5, 2)))
+    val jointBS = joint.boundingSphere.get
+    val cleanedBS = ((NumericUtils.applyTolerance(jointBS._1._1),
+                      NumericUtils.applyTolerance(jointBS._1._2),
+                      NumericUtils.applyTolerance(jointBS._1._3)), 
+                     jointBS._2)
+    assert(expectedBoundingSphere == cleanedBS)
+  }
+
+  test("Joint bounding sphere should have origin (0.0, 0.0, 0.0) and radius sqrt(2)") {
+    val joint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0,0.0,0.0), center=(0.0,0.0,0.0),
+                       phi=0, cohesion=0, shape=boundaries2)
+    val expectedBoundingSphere = ((0.0, 0.0, 0.0), math.sqrt(2))
+    val jointBS = joint.boundingSphere.get
+    val cleanedBS = ((NumericUtils.applyTolerance(jointBS._1._1),
+                      NumericUtils.applyTolerance(jointBS._1._2),
+                      NumericUtils.applyTolerance(jointBS._1._3)), 
+                     jointBS._2)
+    assert(expectedBoundingSphere == cleanedBS)
+  }
+
+  test("Joint bounding sphere should have origin (0.5, 0.0, -0.5) and radius sqrt(0.5^2 + 0.5^2)") {
+    val joint = Joint((0.0, -1.0, 0.0), localOrigin=(0.0,0.0,0.0), center=(0.0,0.0,0.0),
+                       phi=0, cohesion=0, shape=boundaries)
+    val expectedBoundingSphere = ((0.5, 0.0, -0.5), math.sqrt(math.pow(0.5, 2) + math.pow(0.5, 2)))
+    val jointBS = joint.boundingSphere.get
+    val cleanedBS = ((NumericUtils.applyTolerance(jointBS._1._1),
+                      NumericUtils.applyTolerance(jointBS._1._2),
+                      NumericUtils.applyTolerance(jointBS._1._3)), 
+                     jointBS._2)
+    assert(expectedBoundingSphere == cleanedBS)
+  }
+
+  test("Joint bounding sphere should have origin (1.5, 5.0, -0.5) and radius sqrt(0.5^2 + 0.5^2)") {
+    val joint = Joint((0.0, -1.0, 0.0), localOrigin=(0.0,0.0,0.0), center=(1.0,5.0,0.0),
+                       phi=0, cohesion=0, shape=boundaries)
+    val expectedBoundingSphere = ((1.5, 5.0, -0.5), math.sqrt(math.pow(0.5, 2) + math.pow(0.5, 2)))
+    val jointBS = joint.boundingSphere.get
+    val cleanedBS = ((NumericUtils.applyTolerance(jointBS._1._1),
+                      NumericUtils.applyTolerance(jointBS._1._2),
+                      NumericUtils.applyTolerance(jointBS._1._3)), 
+                     jointBS._2)
+    assert(expectedBoundingSphere == cleanedBS)
   }
 }

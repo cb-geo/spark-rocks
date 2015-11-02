@@ -34,15 +34,45 @@ case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double
 
 object Block {
   /**
-   * Find a bounding sphere for a rock block.
-   * @param centerX The x coordinate of the block's center
-   * @param centerY The y coordinate of the block's center
-   * @param centerZ The z coordinate of the block's center
-   * @param faces A sequence of faces specifying the block's boundaries
-   * @return A pair where the first element is a triple giving the center of
-   *         the bounding sphere and the second element is the radius of the
-   *         bounding sphere.
-   */
+    * Calculates the rotation matrix to rotate the input plane (specified by its normal)
+    * to the desired orientation (specified by the desired normal)
+    * @param n_current: Current normal of plane
+    * @param n_desired: Desired new normal
+    * @return 3*3 rotation matrix
+    */
+  def rotationMatrix(n_current: (Double, Double, Double), n_desired: (Double, Double, Double)):
+                             DenseMatrix[Double] = {
+    val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
+    val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
+    if (math.abs(linalg.norm(linalg.cross(n_c,n_d))) > NumericUtils.EPSILON) {
+      val v = linalg.cross(n_c, n_d)
+      val s = linalg.norm(v)
+      val c = n_c dot n_d
+
+      val A_skew = DenseMatrix.zeros[Double](3,3)
+      A_skew(0,1) = -v(2)
+      A_skew(0,2) = v(1)
+      A_skew(1,0) = v(2)
+      A_skew(1,2) = -v(0)
+      A_skew(2,0) = -v(1)
+      A_skew(2,1) = v(0)
+
+      DenseMatrix.eye[Double](3) + A_skew + (A_skew * A_skew) * (1-c)/(s*s)
+    } else {
+      DenseMatrix.eye[Double](3)
+    }
+  }
+
+  /**
+    * Find a bounding sphere for a rock block.
+    * @param centerX The x coordinate of the block's center
+    * @param centerY The y coordinate of the block's center
+    * @param centerZ The z coordinate of the block's center
+    * @param faces A sequence of faces specifying the block's boundaries
+    * @return A pair where the first element is a triple giving the center of
+    *         the bounding sphere and the second element is the radius of the
+    *         bounding sphere.
+    */
   private def findBoundingSphere(centerX: Double, centerY: Double, centerZ: Double, faces: Seq[Face]):
       ((Double,Double,Double), Double) = {
     val basisVectors = Array(
@@ -58,11 +88,23 @@ object Block {
       val linProg = new LinearProgram(3)
       linProg.setObjFun(v.toArray, LinearProgram.MAX)
       faces foreach { face =>
-        val coeffs = Array[Double](face.a, face.b, face.c).map(NumericUtils.applyTolerance)
-        val rhs = NumericUtils.applyTolerance(face.d)
-        linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
+        if (face.d < 0.0) {
+          val coeffs = Array[Double](-face.a, -face.b, -face.c).map(NumericUtils.applyTolerance)
+          val rhs = NumericUtils.applyTolerance(-face.d)
+          linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
+        } else {
+          val coeffs = Array[Double](face.a, face.b, face.c).map(NumericUtils.applyTolerance)
+          val rhs = NumericUtils.applyTolerance(face.d)
+          linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
+        }        
       }
-      linProg.solve().get._2
+      val results = linProg.solve().get._1
+      val resultsSeq = Seq[Double](results(0), results(1), results(2))
+      // Values of principal axes vectors set to 0.0 exacly, so okay to check for equality of Double
+      resultsSeq.filter(math.abs(_) > NumericUtils.EPSILON) match {
+        case Nil => 0.0
+        case x+:xs => x
+      }
     }
 
     val pairedCoords = maxCoordinates.take(3).zip(maxCoordinates.takeRight(3))
@@ -98,7 +140,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     sphereJoint.boundingSphere match {
       case None =>
         // The joint is persistent
-        if (sphereJoint.d > sphereRadius) None else bruteForceIntersects(joint)
+        if (math.abs(sphereJoint.d) > sphereRadius) None else bruteForceIntersects(joint)
       case Some(((x,y,z),r)) =>
         // The joint is not persistent
         val jointOrigin = DenseVector[Double](x,y,z)
@@ -115,10 +157,9 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     linProg.setObjFun(Vector[Double](0.0, 0.0, 0.0, 1.0), LinearProgram.MIN)
 
     // Restrict our attention to plane of joint
-    val translatedJoint = joint.updateJoint(centerX, centerY, centerZ)
-    val coeffs = Vector[Double](translatedJoint.a, translatedJoint.b, translatedJoint.c, 0.0).
+    val coeffs = Vector[Double](joint.a, joint.b, joint.c, 0.0).
                     map(NumericUtils.applyTolerance)
-    val rhs = NumericUtils.applyTolerance(translatedJoint.d)
+    val rhs = NumericUtils.applyTolerance(joint.d)
     linProg.addConstraint(coeffs, LinearProgram.EQ, rhs)
 
     // Require s to be within planes defined by faces of block
@@ -129,7 +170,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     }
 
     // Require s to be within planes defining shape of joint
-    translatedJoint.globalCoordinates.foreach { case ((a,b,c),d) =>
+    joint.globalCoordinates.foreach { case ((a,b,c),d) =>
       val jointCoeffs = Vector[Double](a, b, c, -1.0).map(NumericUtils.applyTolerance)
       val rhs = NumericUtils.applyTolerance(d)
       linProg.addConstraint(jointCoeffs, LinearProgram.LE, rhs)
@@ -138,7 +179,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     linProg.solve() match {
       case None => None
       case Some((_, opt)) if opt >= -NumericUtils.EPSILON => None
-      case Some((vars, _)) => Some((vars(0), vars(1), vars(2)))
+      case Some((vars, _)) => Some((vars(0), vars(1), vars(2)))      
     }
   }
 
@@ -149,21 +190,34 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     * the joint if it intersects this block. Otherwise, returns a one-item Seq
     * containing only this block.
     */
-  def cut(joint: Joint): Seq[Block] =
-    this.intersects(joint) match {
+  def cut(joint: Joint): Seq[Block] = {
+    val translatedJoint = joint.updateJoint(centerX, centerY, centerZ)
+    this.intersects(translatedJoint) match {
       case None => Vector(this)
       case Some((x,y,z)) =>
-        val newX = centerX + x
-        val newY = centerY + y
-        val newZ = centerZ + z
+        val newX = NumericUtils.roundToTolerance(centerX + x)
+        val newY = NumericUtils.roundToTolerance(centerY + y)
+        val newZ = NumericUtils.roundToTolerance(centerZ + z)
         val updatedFaces = updateFaces(newX, newY, newZ)
-        Vector(
-          // New origin is guaranteed to lie within joint, so initial d = 0
-          Block((newX,newY,newZ), Face((joint.a, joint.b, joint.c), 0.0, joint.phi, joint.cohesion)+:updatedFaces),
-          Block((newX,newY,newZ), Face((-joint.a,-joint.b,-joint.c), 0.0, joint.phi, joint.cohesion)+:updatedFaces)
-        )
+        if (translatedJoint.d < 0.0) {
+          Vector(
+            // New origin is guaranteed to lie within joint, so initial d = 0
+            Block((newX,newY,newZ), Face((-translatedJoint.a, -translatedJoint.b, -translatedJoint.c), 0.0,
+                  translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces),
+            Block((newX,newY,newZ), Face((translatedJoint.a,translatedJoint.b,translatedJoint.c), 0.0, 
+                  translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
+          )
+        } else {
+          Vector(
+            // New origin is guaranteed to lie within joint, so initial d = 0
+            Block((newX,newY,newZ), Face((translatedJoint.a, translatedJoint.b, translatedJoint.c), 0.0,
+                  translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces),
+            Block((newX,newY,newZ), Face((-translatedJoint.a,-translatedJoint.b,-translatedJoint.c), 0.0,
+                  translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
+          )
+        }
     }
-
+  }
   /**
     * Compute the faces of the rock block that are not geometrically redundant.
     * @return A list of faces that uniquely determine this rock block and are not
@@ -204,48 +258,14 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
               A_matx(1, ::) := n2.t
               A_matx(2, ::) := n3.t
               val p_vect = A_matx \ b_vect
-              Some((p_vect(0), p_vect(1), p_vect(2)))
+              Some((NumericUtils.roundToTolerance(p_vect(0) + centerX),
+                    NumericUtils.roundToTolerance(p_vect(1) + centerY),
+                    NumericUtils.roundToTolerance(p_vect(2) + centerZ)))
             } else None
           }
         }
-        // Reverse is needed to keep the same ordering as faces list since elements are added to the front
-      } map (_.distinct) map (_.reverse)
+      } map (_.distinct)
     ).toMap                              
-
-  /**
-    * Calculates the rotation matrix to rotate the input plane (specified by its normal)
-    * to the desired orientation (specified by the desired normal)
-    * @param n_current: Current normal of plane
-    * @param n_desired: Desired new normal
-    * @return 3*3 rotation matrix
-    */
-  private def rotationMatrix(n_current: (Double, Double, Double), n_desired: (Double, Double, Double)):
-                             DenseMatrix[Double] = {
-    val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
-    val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
-    if (math.abs(linalg.norm(linalg.cross(n_c,n_d))) > NumericUtils.EPSILON) {
-      val (u, v, w) = n_current
-
-      // Rotation matrix to rotate into x-z plane
-      val Txz = DenseMatrix.zeros[Double](3, 3)
-      Txz(0,0) = u / math.sqrt(u*u + v*v)
-      Txz(1,0) = -v /math.sqrt(u*u + v*v)
-      Txz(0,1) = v / math.sqrt(u*u + v*v)
-      Txz(1,1) = u / math.sqrt(u*u + v*v)
-      Txz(2,2) = 1.0
-
-      // Rotation matrix to rotate from x-z plane on z-axis
-      val Tz = DenseMatrix.zeros[Double](3, 3)
-      Tz(0,0) = w / math.sqrt(u*u + v*v + w*w)
-      Tz(2,0) = math.sqrt(u*u + v*v) / math.sqrt(u*u + v*v + w*w)
-      Tz(0,2) = -math.sqrt(u*u + v*v)/math.sqrt(u*u + v*v + w*w)
-      Tz(2,2) = w / math.sqrt(u*u + v*v + w*w)
-      Tz(1,1) = 1.0
-      Tz * Txz
-    } else {
-      DenseMatrix.eye[Double](3)
-    }
-  }
 
   /**
     * Mesh the faces using Delaunay triangulation. This meshing is done
@@ -258,7 +278,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     // are only in the x-y plane which makes triangulation easier.
     faces.zip (
       faces.map { face =>
-        val R = rotationMatrix(face.normalVec, (0.0, 0.0, 1.0))
+        val R = Block.rotationMatrix(face.normalVec, (0.0, 0.0, 1.0))
         val rotatedVertices = vertices(face).map { vertex =>
           val rotatedVertex = R * DenseVector(vertex._1, vertex._2, vertex._3)
           Delaunay.Vector2(rotatedVertex(0), rotatedVertex(1))
@@ -318,9 +338,9 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     }
     (
       // Factor of 3 comes from: centroid / (2.0 * (volume/6.0))
-      3.0 * centroidX / totalVolume + centerX,
-      3.0 * centroidY / totalVolume + centerY,
-      3.0 * centroidZ / totalVolume + centerZ
+      3.0 * centroidX / totalVolume,
+      3.0 * centroidY / totalVolume,
+      3.0 * centroidZ / totalVolume
     )
   }
 
@@ -333,20 +353,20 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     faces.map { case Face((a,b,c), d, phi, cohesion) =>
       val w = DenseVector.zeros[Double](3)
       if (math.abs(c) >= NumericUtils.EPSILON) {
-        w(0) = localOrigin._1
-        w(1) = localOrigin._2
+        w(0) = localOrigin._1 - centerX
+        w(1) = localOrigin._2 - centerY
         w(2) = localOrigin._3 - (d/c + centerZ)
       } else if (math.abs(b) >= NumericUtils.EPSILON) {
-        w(0) = localOrigin._1
+        w(0) = localOrigin._1 - centerX
         w(1) = localOrigin._2 - (d/b + centerY)
-        w(2) = localOrigin._3
+        w(2) = localOrigin._3 - centerZ
       } else if (math.abs(a) >= NumericUtils.EPSILON) {
         w(0) = localOrigin._1 - (d/a + centerX)
-        w(1) = localOrigin._2
-        w(2) = localOrigin._3
+        w(1) = localOrigin._2 - centerY
+        w(2) = localOrigin._3 - centerZ
       }
       val n = DenseVector[Double](a, b, c)
-      val new_d = -(n dot w) / linalg.norm(n)
+      val new_d = NumericUtils.roundToTolerance(-(n dot w) / linalg.norm(n))
       Face((a, b, c), new_d, phi, cohesion)
     }
   }
