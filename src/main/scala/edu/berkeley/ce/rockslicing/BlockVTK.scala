@@ -27,15 +27,10 @@ object BlockVTK {
   private def ccwCompare(pointA: (Double, Double, Double), pointB: (Double, Double, Double),
                          center: (Double, Double, Double)): Boolean = {
     // Check that points are in the same x-y plane
-    try {
-      if (math.abs(pointA._3 - pointB._3) > NumericUtils.EPSILON) {
-        throw new IllegalArgumentException("Exception thrown")
-      } 
-    } catch {
-      case e: Exception => {
-        println("ERROR in BlockVTK.ccwCompare: Input points are not in the same plane")        
-      }
-    }
+    if (math.abs(pointA._3 - pointB._3) > NumericUtils.EPSILON) {
+      throw new IllegalArgumentException("ERROR: Input to BlockVTK.ccwCompare: "+
+                                         "Input points are not in the same plane")
+    }    
 
     // Starts counter-clockwise comparison from 12 o'clock. Center serves as origin and 12 o'clock is along
     // vertical line running through this center.

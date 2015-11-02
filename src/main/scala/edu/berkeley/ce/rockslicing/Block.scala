@@ -49,15 +49,15 @@ object Block {
       val s = linalg.norm(v)
       val c = n_c dot n_d
 
-      val v_skew = DenseMatrix.zeros[Double](3,3)
-      v_skew(0,1) = -v(2)
-      v_skew(0,2) = v(1)
-      v_skew(1,0) = v(2)
-      v_skew(1,2) = -v(0)
-      v_skew(2,0) = -v(1)
-      v_skew(2,1) = v(0)
+      val A_skew = DenseMatrix.zeros[Double](3,3)
+      A_skew(0,1) = -v(2)
+      A_skew(0,2) = v(1)
+      A_skew(1,0) = v(2)
+      A_skew(1,2) = -v(0)
+      A_skew(2,0) = -v(1)
+      A_skew(2,1) = v(0)
 
-      DenseMatrix.eye[Double](3) + v_skew + (v_skew * v_skew) * (1-c)/(s*s)
+      DenseMatrix.eye[Double](3) + A_skew + (A_skew * A_skew) * (1-c)/(s*s)
     } else {
       DenseMatrix.eye[Double](3)
     }
