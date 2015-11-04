@@ -14,6 +14,17 @@ class BlockVTKSpec extends FunSuite {
   )
   val unitCube = Block((0.0, 0.0, 0.0), boundingFaces)
 
+  val boundingFaces2 = List(
+    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0), // -x <= 0
+    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),  // x <= 1
+    Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0), // -y <= 0
+    Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),  // y <= 1
+    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), // -z <= 0
+    Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0),  // z <= 1
+    Face((0.707106781187, 0.707106781187, 0.0), 0.707106781187 - 0.5, phi=0, cohesion=0) // sqrt(2)*x + sqrt(2)*y <= 1
+  )
+  val sevenSidedBlock = Block((0.0, 0.0, 0.0), boundingFaces2)
+
   val face1 = Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
   val face2 = Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
   val face3 = Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0)
@@ -47,6 +58,20 @@ class BlockVTKSpec extends FunSuite {
       face6 -> face6Verts
     )
     val vtkBlock = BlockVTK(unitCube)
+    assert(expectedVertices == vtkBlock.orientedVertices)
+  }
+
+  test("The vertices should be oriented counter-clockwise for each face (seven-sided block)") {
+    val expectedVertices = Map(
+      face1 -> face1Verts,
+      face2 -> face2Verts,
+      face3 -> face3Verts,
+      face4 -> face4Verts,
+      face5 -> face5Verts,
+      face6 -> face6Verts
+    )
+    val vtkBlock = BlockVTK(sevenSidedBlock)
+    println(vtkBlock.tupleVertices)
     assert(expectedVertices == vtkBlock.orientedVertices)
   }
 
