@@ -312,9 +312,9 @@ class BlockSpec extends FunSuite {
   }
 
   test("The points of intersection between the four planes should (0.0, 0.0, 0.0) & (0.0, 5.0, 0.0)") {
-    val face1 = Face((1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
-    val face2 = Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0)
-    val face3 = Face((0.0, 0.0, 1.0), 0.0, phi=0, cohesion=0)
+    val face1 = Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
+    val face2 = Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0)
+    val face3 = Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0)
     val face4 = Face((0.0, 1.0, 0.0), 5.0, phi=0, cohesion=0)
     val block = Block((0.0, 0.0, 0.0), List(face1, face2, face3, face4))
     val face1Verts = List((0.0, 0.0, 0.0), (0.0, 5.0, 0.0))
@@ -366,7 +366,7 @@ class BlockSpec extends FunSuite {
     val face1 = Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
     val face2 = Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
     val face3 = Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
-    val face4 = Face((1/sqrt(2.0), 1/sqrt(2.0), 0.0), 1/sqrt(2.0), phi=0, cohesion=0)
+    val face4 = Face((-1/sqrt(2.0), -1/sqrt(2.0), 0.0), 1/sqrt(2.0), phi=0, cohesion=0)
     val block = Block((1.0, 1.0, 1.0), List(face1, face2, face3, face4))
 
     val vertices = block.findVertices
