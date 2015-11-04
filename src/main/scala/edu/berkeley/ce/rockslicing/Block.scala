@@ -75,7 +75,7 @@ object Block {
       val faceNormal = DenseVector[Double](face.a, face.b, face.c)
       // If distance is negative, point lies within block - planes will not intersect within block
       // since block is convex
-      (pointVector dot faceNormal - face.d) < NumericUtils.EPSILON
+      ((pointVector dot faceNormal) - face.d) < NumericUtils.EPSILON
     }
     !distanceChecks.contains(false)
   }
