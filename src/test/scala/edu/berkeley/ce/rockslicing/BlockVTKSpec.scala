@@ -14,6 +14,8 @@ class BlockVTKSpec extends FunSuite {
   )
   val unitCube = Block((0.0, 0.0, 0.0), boundingFaces)
 
+  // Seven sided block
+  val distance = 1.0 // Should be greater than 1/sqrt(2.0) for intercept calcs to hold
   val boundingFaces2 = List(
     Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0), // -x <= 0
     Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),  // x <= 1
@@ -21,10 +23,11 @@ class BlockVTKSpec extends FunSuite {
     Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),  // y <= 1
     Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), // -z <= 0
     Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0),  // z <= 1
-    Face((0.707106781187, 0.707106781187, 0.0), 0.707106781187 - 0.5, phi=0, cohesion=0) // sqrt(2)*x + sqrt(2)*y <= 1
+    Face((0.707106781187, 0.707106781187, 0.0), distance, phi=0, cohesion=0) // sqrt(2)*x + sqrt(2)*y <= 1
   )
   val sevenSidedBlock = Block((0.0, 0.0, 0.0), boundingFaces2)
 
+  // Faces for unit Cube
   val face1 = Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
   val face2 = Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
   val face3 = Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0)
@@ -37,6 +40,24 @@ class BlockVTKSpec extends FunSuite {
   val face4Verts = List((0.0, 1.0, 0.0), (0.0, 1.0, 1.0), (1.0, 1.0, 1.0), (1.0, 1.0, 0.0))
   val face5Verts = List((1.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 1.0, 0.0))
   val face6Verts = List((0.0, 1.0, 1.0), (0.0, 0.0, 1.0), (1.0, 0.0, 1.0), (1.0, 1.0, 1.0))
+
+  // Faces for seven sided cube
+  val x_intercept = NumericUtils.roundToTolerance(distance - sqrt(2.0)*(sqrt(2.0) - distance))
+  val y_intercept = NumericUtils.roundToTolerance(distance - sqrt(2.0)*(sqrt(2.0) - distance))
+  val face1_s7 = Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
+  val face2_s7 = Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
+  val face3_s7 = Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0)
+  val face4_s7 = Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
+  val face5_s7 = Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0)
+  val face6_s7 = Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
+  val face7_s7 = Face((0.707106781187, 0.707106781187, 0.0), 1.0, phi=0, cohesion=0)
+  val face1Verts_s7 = List((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 1.0), (0.0, 1.0, 1.0))
+  val face2Verts_s7 = List((1.0, y_intercept, 1.0), (1.0, 0.0, 1.0), (1.0, 0.0, 0.0), (1.0, y_intercept, 0.0))
+  val face3Verts_s7 = List((0.0, 0.0, 1.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), (1.0, 0.0, 1.0))
+  val face4Verts_s7 = List((0.0, 1.0, 0.0), (0.0, 1.0, 1.0), (x_intercept, 1.0, 1.0), (x_intercept, 1.0, 0.0))
+  val face5Verts_s7 = List((1.0, y_intercept, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 1.0, 0.0), (x_intercept, 1.0, 0.0))
+  val face6Verts_s7 = List((x_intercept, 1.0, 1.0), (0.0, 1.0, 1.0), (0.0, 0.0, 1.0), (1.0, 0.0, 1.0), (1.0, y_intercept, 1.0))
+  val face7Verts_s7 = List((x_intercept, 1.0, 1.0), (1.0, y_intercept, 1.0), (1.0, y_intercept, 0.0), (x_intercept, 1.0, 0.0))
 
   private def doubleListElementDiff(list1: Seq[Double], list2: Seq[Double]): Seq[Double] = {
     assert(list1.length == list2.length)
@@ -61,24 +82,34 @@ class BlockVTKSpec extends FunSuite {
     assert(expectedVertices == vtkBlock.orientedVertices)
   }
 
-  // test("The vertices should be oriented counter-clockwise for each face (seven-sided block)") {
-  //   val expectedVertices = Map(
-  //     face1 -> face1Verts,
-  //     face2 -> face2Verts,
-  //     face3 -> face3Verts,
-  //     face4 -> face4Verts,
-  //     face5 -> face5Verts,
-  //     face6 -> face6Verts
-  //   )
-  //   val vtkBlock = BlockVTK(sevenSidedBlock)
-  //   println(vtkBlock.tupleVertices)
-  //   assert(expectedVertices == vtkBlock.orientedVertices)
-  // }
+  test("The vertices should be oriented counter-clockwise for each face (seven-sided block)") {
+    val expectedVertices = Map(
+      face1_s7 -> face1Verts_s7,
+      face2_s7 -> face2Verts_s7,
+      face3_s7 -> face3Verts_s7,
+      face4_s7 -> face4Verts_s7,
+      face5_s7 -> face5Verts_s7,
+      face6_s7 -> face6Verts_s7,
+      face7_s7 -> face7Verts_s7
+    )
+    val vtkBlock = BlockVTK(sevenSidedBlock)
+    assert(expectedVertices == vtkBlock.orientedVertices)
+  }
 
   test("List of vertices should contain only distinct vertices as tuples") {
     val vtkBlock = BlockVTK(unitCube)
     val expectedVertices = List((0.0, 1.0, 1.0), (0.0, 0.0, 1.0), (1.0, 0.0, 1.0), (1.0, 1.0, 1.0),
                                 (0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), (1.0, 1.0, 0.0))
+    assert(expectedVertices == vtkBlock.tupleVertices)
+  }
+
+  test("List of vertices should contain only distinct vertices as tuples (seven-sided block)") {
+    val vtkBlock = BlockVTK(sevenSidedBlock)
+    val expectedVertices = List((x_intercept, 1.0, 1.0), (1.0, y_intercept, 1.0),
+                                (1.0, y_intercept, 0.0), (x_intercept, 1.0, 0.0),
+                                (0.0, 1.0, 1.0), (0.0, 0.0, 1.0), (1.0, 0.0, 1.0),
+                                (0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0))
+    println(vtkBlock.tupleVertices)
     assert(expectedVertices == vtkBlock.tupleVertices)
   }
 
@@ -90,9 +121,26 @@ class BlockVTKSpec extends FunSuite {
     assert(verticesDiff.filter(_ > NumericUtils.EPSILON).isEmpty)
   }
 
+  test("List of tuple vertices should flatten into list of doubles (seven-sided block)") {
+    val vtkBlock = BlockVTK(sevenSidedBlock)
+    val expectedVertices = List(x_intercept, 1.0, 1.0, 1.0, y_intercept, 1.0,
+                                1.0, y_intercept, 0.0, x_intercept, 1.0, 0.0,
+                                0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+                                0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0)
+    val verticesDiff = doubleListElementDiff(expectedVertices, vtkBlock.vertices)
+    assert(verticesDiff.filter(_ > NumericUtils.EPSILON).isEmpty)
+  }
+
   test("Vertex ID's should start from 0 and go up to 7") {
     val vtkBlock = BlockVTK(unitCube)
     val expectedIDs = Seq.range(0, 8)
+    val idsDiff = intListElementDiff(expectedIDs.toSeq, vtkBlock.vertexIDs.toSeq)
+    assert(idsDiff.filter(_ > NumericUtils.EPSILON).isEmpty)
+  }
+
+  test("Vertex ID's should start from 0 and go up to 9 (seven-sided block)") {
+    val vtkBlock = BlockVTK(sevenSidedBlock)
+    val expectedIDs = Seq.range(0, 10)
     val idsDiff = intListElementDiff(expectedIDs.toSeq, vtkBlock.vertexIDs.toSeq)
     assert(idsDiff.filter(_ > NumericUtils.EPSILON).isEmpty)
   }
@@ -106,6 +154,22 @@ class BlockVTKSpec extends FunSuite {
       face4 -> List[Int](4, 0, 3, 7),
       face5 -> List[Int](7, 6, 5, 4),
       face6 -> List[Int](0, 1, 2, 3)
+    )
+    assert(faceConnectivities == vtkBlock.connectivityMap)
+  }
+
+  // CONTINUE HERE
+  test("Connectivities for each face should be in terms of vertex ID's (seven-sided block)") {
+    val vtkBlock = BlockVTK(sevenSidedBlock)
+    val faceConnectivities = Map(
+      //fix these
+      face1_s7 -> List[Int](4, 5, 1, 0),
+      face2_s7 -> List[Int](3, 2, 6, 7),
+      face3_s7 -> List[Int](1, 5, 6, 2),
+      face4_s7 -> List[Int](4, 0, 3, 7),
+      face5_s7 -> List[Int](7, 6, 5, 4),
+      face6_s7 -> List[Int](0, 1, 2, 3),
+      face7_s7 -> List[Int](//Put some number is here)
     )
     assert(faceConnectivities == vtkBlock.connectivityMap)
   }
