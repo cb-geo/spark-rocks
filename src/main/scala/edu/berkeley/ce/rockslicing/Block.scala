@@ -277,9 +277,9 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
               val p_vect = A_matx \ b_vect
               // Check if point is within block, otherwise discard it
               if (Block.pointInBlock((p_vect(0), p_vect(1), p_vect(2)), faces)) {
-                Some((NumericUtils.roundToTolerance(p_vect(0) + centerX),
-                      NumericUtils.roundToTolerance(p_vect(1) + centerY),
-                      NumericUtils.roundToTolerance(p_vect(2) + centerZ)))
+                Some((p_vect(0) + centerX,
+                      p_vect(1) + centerY,
+                      p_vect(2) + centerZ))
               } else None
             } else None
           }
