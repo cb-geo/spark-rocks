@@ -70,15 +70,13 @@ object Block {
     * @return True if the point is outside the block, false otherwise
     */
   private def pointOutsideBlock(point: (Double, Double, Double), faces: Seq[Face]): Boolean = {
-    val distanceChecks = faces map { face =>
+    faces exists { face =>
       val pointVector = DenseVector[Double](point._1, point._2, point._3)
       val faceNormal = DenseVector[Double](face.a, face.b, face.c)
       // If distance is negative, point lies within block - planes will not intersect within block
       // since block is convex
-      ((pointVector dot faceNormal) - face.d) < NumericUtils.EPSILON
+      ((pointVector dot faceNormal) - face.d) > NumericUtils.EPSILON
     }
-    distanceChecks.exists(_ == false)
-    // !distanceChecks.contains(false)
   }
 
   /**
