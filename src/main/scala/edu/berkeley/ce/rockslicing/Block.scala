@@ -63,6 +63,22 @@ object Block {
     }
   }
 
+  /** 
+    * Determines whether the input point is outside the input block
+    * @param point The point as a tuple
+    * @param block The block that the point is being checked agains
+    * @return True if the point is outside the block, false otherwise
+    */
+  private def pointOutsideBlock(point: (Double, Double, Double), faces: Seq[Face]): Boolean = {
+    faces exists { face =>
+      val pointVector = DenseVector[Double](point._1, point._2, point._3)
+      val faceNormal = DenseVector[Double](face.a, face.b, face.c)
+      // If distance is negative, point lies within block - planes will not intersect within block
+      // since block is convex
+      ((pointVector dot faceNormal) - face.d) > NumericUtils.EPSILON
+    }
+  }
+
   /**
     * Find a bounding sphere for a rock block.
     * @param centerX The x coordinate of the block's center
@@ -258,9 +274,12 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
               A_matx(1, ::) := n2.t
               A_matx(2, ::) := n3.t
               val p_vect = A_matx \ b_vect
-              Some((NumericUtils.roundToTolerance(p_vect(0) + centerX),
-                    NumericUtils.roundToTolerance(p_vect(1) + centerY),
-                    NumericUtils.roundToTolerance(p_vect(2) + centerZ)))
+              // Check if point is within block, otherwise discard it
+              if (!Block.pointOutsideBlock((p_vect(0), p_vect(1), p_vect(2)), faces)) {
+                Some((p_vect(0) + centerX,
+                      p_vect(1) + centerY,
+                      p_vect(2) + centerZ))
+              } else None
             } else None
           }
         }

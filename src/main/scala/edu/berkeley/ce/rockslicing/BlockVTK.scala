@@ -27,7 +27,8 @@ object BlockVTK {
   private def ccwCompare(pointA: (Double, Double, Double), pointB: (Double, Double, Double),
                          center: (Double, Double, Double)): Boolean = {
     // Check that points are in the same x-y plane
-    if (math.abs(pointA._3 - pointB._3) > NumericUtils.EPSILON) {
+    if (math.abs(NumericUtils.roundToTolerance(pointA._3, 5) -
+        NumericUtils.roundToTolerance(pointB._3, 5)) > NumericUtils.EPSILON) {
       throw new IllegalArgumentException("ERROR: Input to BlockVTK.ccwCompare: "+
                                          "Input points are not in the same plane")
     }    
