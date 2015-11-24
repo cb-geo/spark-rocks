@@ -2,7 +2,6 @@ package edu.berkeley.ce.rockslicing
 
 import org.scalatest._
 import scala.math.sqrt
-import breeze.linalg.{DenseVector, DenseMatrix}
 
 class BlockSpec extends FunSuite {
   val boundingFaces = List(
@@ -16,12 +15,12 @@ class BlockSpec extends FunSuite {
   val unitCube = Block((0.0, 0.0, 0.0), boundingFaces)
 
   val boundingFaces2 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0), // -x = 0
-    Face((1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0),  // x = 2
-    Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0), // -y = 0
-    Face((0.0, 1.0, 0.0), 2.0, phi=0, cohesion=0),  // y = 2
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), // -z = 0
-    Face((0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0)   // z = 2
+    Face((-1.0, 0.0, 0.0), 0.0, phi = 0, cohesion = 0), // -x = 0
+    Face((1.0, 0.0, 0.0), 2.0, phi = 0, cohesion = 0), // x = 2
+    Face((0.0, -1.0, 0.0), 0.0, phi = 0, cohesion = 0), // -y = 0
+    Face((0.0, 1.0, 0.0), 2.0, phi = 0, cohesion = 0), // y = 2
+    Face((0.0, 0.0, -1.0), 0.0, phi = 0, cohesion = 0), // -z = 0
+    Face((0.0, 0.0, 1.0), 2.0, phi = 0, cohesion = 0) // z = 2
   )
   val twoCube = Block((0.0, 0.0, 0.0), boundingFaces2)
 
@@ -55,6 +54,16 @@ class BlockSpec extends FunSuite {
   )
   val twoCubeSigns = Block((0.0, 0.0, 0.0), boundingFaces5)
 
+  val boundingFaces6 = List(
+    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0), // -x = 0
+    Face((1.0, 0.0, 0.0), 0.5, phi=0, cohesion=0), // x = 0.5
+    Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0), // -y = 0
+    Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0), // y = 1
+    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), // -z = 0
+    Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0) // z = 1
+  )
+  val rectPrism = Block((0.0, 0.0, 0.0), boundingFaces6)
+
   val jointBounds = Seq(
     ((1.0, 0.0, 0.0), 1.0),
     ((-1.0, 0.0, 0.0), 0.0),
@@ -76,10 +85,10 @@ class BlockSpec extends FunSuite {
     ((1.0/sqrt(2.0), -1.0/sqrt(2.0), 0.0), 1.0)
   )
 
-  def centroidDifference(c1: (Double, Double, Double), c2: (Double, Double, Double)) : Double =
+  def centroidDifference(c1: (Double, Double, Double), c2: (Double, Double, Double)): Double =
     c1 match {
-      case (a,b,c) => c2 match {
-        case (x,y,z) => math.abs(x-a) + math.abs(y-b) + math.abs(z-c)
+      case (a, b, c) => c2 match {
+        case (x, y, z) => math.abs(x - a) + math.abs(y - b) + math.abs(z - c)
       }
     }
 
@@ -250,12 +259,12 @@ class BlockSpec extends FunSuite {
 
   test("Adding planes x,y,z = +- 2 to the unit cube should be considered redundant") {
     val redundantBoundingFaces = boundingFaces ++ List(
-      Face((-1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0), // -x = 2
-      Face((1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0),  // x = 2
-      Face((0.0, -1.0, 0.0), 2.0, phi=0, cohesion=0), // -y = 2
-      Face((0.0, 1.0, 0.0), 2.0, phi=0, cohesion=0),  // y = 2
-      Face((0.0, 0.0, -1.0), 2.0, phi=0, cohesion=0), // -z = 2
-      Face((0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0)   // z = 2
+      Face((-1.0, 0.0, 0.0), 2.0, phi = 0, cohesion = 0), // -x = 2
+      Face((1.0, 0.0, 0.0), 2.0, phi = 0, cohesion = 0), // x = 2
+      Face((0.0, -1.0, 0.0), 2.0, phi = 0, cohesion = 0), // -y = 2
+      Face((0.0, 1.0, 0.0), 2.0, phi = 0, cohesion = 0), // y = 2
+      Face((0.0, 0.0, -1.0), 2.0, phi = 0, cohesion = 0), // -z = 2
+      Face((0.0, 0.0, 1.0), 2.0, phi = 0, cohesion = 0) // z = 2
     )
     val redundantUnitCube = Block((0.0, 0.0, 0.0), redundantBoundingFaces)
 
@@ -371,7 +380,7 @@ class BlockSpec extends FunSuite {
 
     val vertices = block.findVertices
     val mesh = block.meshFaces(vertices)
-    val expectedVertices = List(Delaunay.Vector2(1.0, 1.0), Delaunay.Vector2(1.0,0.0), Delaunay.Vector2(0.0,1.0))
+    val expectedVertices = List(Delaunay.Vector2(1.0, 1.0), Delaunay.Vector2(1.0, 0.0), Delaunay.Vector2(0.0, 1.0))
 
     val expectedTriangulation = Delaunay.Triangulation(expectedVertices).toList
     assert(mesh(face3) == expectedTriangulation)
@@ -478,40 +487,40 @@ class BlockSpec extends FunSuite {
     }
 
     // Names describe block positions when locking from fourth octant to first octant
-    val bottomLeft = Block((0.5,1.0,0.5), List(
-      Face((0.0,0.0,1.0), 0.5, 0.0, 0.0),
-      Face((1.0,0.0,0.0), 0.5, 0.0, 0.0),
-      Face((-1.0,0.0,0.0), 0.5, 0.0, 0.0),
-      Face((0.0,-1.0,0.0), 1.0, 0.0, 0.0),
-      Face((0.0,1.0,0.0), 1.0, 0.0, 0.0),
-      Face((0.0,0.0,-1.0), 0.5, 0.0, 0.0)
+    val bottomLeft = Block((0.5, 1.0, 0.5), List(
+      Face((0.0, 0.0, 1.0), 0.5, 0.0, 0.0),
+      Face((1.0, 0.0, 0.0), 0.5, 0.0, 0.0),
+      Face((-1.0, 0.0, 0.0), 0.5, 0.0, 0.0),
+      Face((0.0, -1.0, 0.0), 1.0, 0.0, 0.0),
+      Face((0.0, 1.0, 0.0), 1.0, 0.0, 0.0),
+      Face((0.0, 0.0, -1.0), 0.5, 0.0, 0.0)
     ))
 
-    val topLeft = Block((0.5,1.0,1.5), List(
-      Face((0.0,0.0,-1.0), 0.5, 0.0, 0.0),
-      Face((1.0,0.0,0.0), 0.5, 0.0, 0.0),
-      Face((-1.0,0.0,0.0), 0.5, 0.0, 0.0),
-      Face((0.0,-1.0,0.0), 1.0, 0.0, 0.0),
-      Face((0.0,1.0,0.0), 1.0, 0.0, 0.0),
-      Face((0.0,0.0,1.0), 0.5, 0.0, 0.0)
+    val topLeft = Block((0.5, 1.0, 1.5), List(
+      Face((0.0, 0.0, -1.0), 0.5, 0.0, 0.0),
+      Face((1.0, 0.0, 0.0), 0.5, 0.0, 0.0),
+      Face((-1.0, 0.0, 0.0), 0.5, 0.0, 0.0),
+      Face((0.0, -1.0, 0.0), 1.0, 0.0, 0.0),
+      Face((0.0, 1.0, 0.0), 1.0, 0.0, 0.0),
+      Face((0.0, 0.0, 1.0), 0.5, 0.0, 0.0)
     ))
 
-    val bottomRight = Block((1.5,1.0,0.5), List(
-      Face((0.0,0.0,1.0), 0.5, 0.0, 0.0),
-      Face((-1.0,0.0,0.0), 0.5, 0.0, 0.0),
-      Face((1.0,0.0,0.0), 0.5, 0.0, 0.0),
-      Face((0.0,-1.0,0.0), 1.0, 0.0, 0.0),
-      Face((0.0,1.0,0.0), 1.0, 0.0, 0.0),
-      Face((0.0,0.0,-1.0), 0.5, 0.0, 0.0)
+    val bottomRight = Block((1.5, 1.0, 0.5), List(
+      Face((0.0, 0.0, 1.0), 0.5, 0.0, 0.0),
+      Face((-1.0, 0.0, 0.0), 0.5, 0.0, 0.0),
+      Face((1.0, 0.0, 0.0), 0.5, 0.0, 0.0),
+      Face((0.0, -1.0, 0.0), 1.0, 0.0, 0.0),
+      Face((0.0, 1.0, 0.0), 1.0, 0.0, 0.0),
+      Face((0.0, 0.0, -1.0), 0.5, 0.0, 0.0)
     ))
 
-    val topRight = Block((1.5,1.0,1.5), List(
-      Face((0.0,0.0,-1.0), 0.5, 0.0, 0.0),
-      Face((-1.0,0.0,0.0), 0.5, 0.0, 0.0),
-      Face((1.0,0.0,0.0), 0.5, 0.0, 0.0),
-      Face((0.0,-1.0,0.0), 1.0, 0.0, 0.0),
-      Face((0.0,1.0,0.0), 1.0, 0.0, 0.0),
-      Face((0.0,0.0,1.0), 0.5, 0.0, 0.0)
+    val topRight = Block((1.5, 1.0, 1.5), List(
+      Face((0.0, 0.0, -1.0), 0.5, 0.0, 0.0),
+      Face((-1.0, 0.0, 0.0), 0.5, 0.0, 0.0),
+      Face((1.0, 0.0, 0.0), 0.5, 0.0, 0.0),
+      Face((0.0, -1.0, 0.0), 1.0, 0.0, 0.0),
+      Face((0.0, 1.0, 0.0), 1.0, 0.0, 0.0),
+      Face((0.0, 0.0, 1.0), 0.5, 0.0, 0.0)
     ))
 
     val expectedBlocks = List(bottomLeft, topLeft, bottomRight, topRight)
@@ -520,37 +529,103 @@ class BlockSpec extends FunSuite {
 
   test("Bounding sphere of the unit cube should have center (0.5, 0.5, 0.5) and radius sqrt(0.5 + 0.5^2)") {
     val expectedBoundingSphere = ((0.5, 0.5, 0.5), math.sqrt(0.5 + math.pow(0.5, 2)))
-    val unitCubeBS = ((unitCube.sphereCenterX, unitCube.sphereCenterY, unitCube.sphereCenterZ),
-                      unitCube.sphereRadius)
+    val unitCubeBS = ((unitCube.sphereCenterX, unitCube.sphereCenterY, unitCube.sphereCenterZ), unitCube.sphereRadius)
     assert(unitCubeBS == expectedBoundingSphere)
   }
 
   test("Bounding sphere of the two cube should have center (1.0, 1.0, 1.0) and radius sqrt(3.0)") {
     val expectedBoundingSphere = ((1.0, 1.0, 1.0), math.sqrt(3.0))
-    val twoCubeBS = ((twoCube.sphereCenterX, twoCube.sphereCenterY, twoCube.sphereCenterZ),
-                     twoCube.sphereRadius)
+    val twoCubeBS = ((twoCube.sphereCenterX, twoCube.sphereCenterY, twoCube.sphereCenterZ), twoCube.sphereRadius)
     assert(twoCubeBS == expectedBoundingSphere)
   }
 
-  test("Bounding sphere of the unit cube with negative distances should have center (0.5, 0.5, 0.5) and "+
-       "radius sqrt(0.5 + 0.5^2)") {
+  test("Bounding sphere of the unit cube with negative distances should have center (0.5, 0.5, 0.5) and " +
+    "radius sqrt(0.5 + 0.5^2)") {
     val expectedBoundingSphere = ((0.5, 0.5, 0.5), math.sqrt(0.5 + math.pow(0.5, 2)))
     val unitCubeSignsBS = ((unitCubeSigns.sphereCenterX, unitCubeSigns.sphereCenterY,
                             unitCubeSigns.sphereCenterZ), unitCubeSigns.sphereRadius)
     assert(unitCubeSignsBS == expectedBoundingSphere)
   }
 
-  test("Bounding sphere of the two cube with negative distances should have center (0.0, 0.0, 0.0) and "+
-       "radius sqrt(3.0)") {
+  test("Bounding sphere of the two cube with negative distances should have center (0.0, 0.0, 0.0) and " +
+    "radius sqrt(3.0)") {
     val expectedBoundingSphere = ((0.0, 0.0, 0.0), math.sqrt(3.0))
     val twoCubeSignsBS = ((twoCubeSigns.sphereCenterX, twoCubeSigns.sphereCenterY,
-                            twoCubeSigns.sphereCenterZ), twoCubeSigns.sphereRadius)
+                           twoCubeSigns.sphereCenterZ), twoCubeSigns.sphereRadius)
     assert(twoCubeSignsBS == expectedBoundingSphere)
   }
 
   test("-z=-0.5 should intersect the two cube - negative joint distance check") {
-    val joint = Joint((0.0, 0.0, -1.0), localOrigin=(0.0,0.0,0.0), center=(0.0, 0.0, 1/2.0),
-                      phi=0, cohesion=0, shape=Nil)
+    val joint = Joint((0.0, 0.0, -1.0), localOrigin = (0.0, 0.0, 0.0), center = (0.0, 0.0, 1 / 2.0),
+      phi = 0, cohesion = 0, shape = Nil)
     assert(twoCube.intersects(joint).isDefined)
   }
+
+  test("The unit cube should have an inscribable sphere with max radius 0.5") {
+    assert(Math.abs(Math.abs(unitCube.maxInscribableRadius) - 0.5) <= NumericUtils.EPSILON)
+  }
+
+  test("The two cube should have an inscribable sphere with max radius 1.0") {
+    assert(Math.abs(twoCube.maxInscribableRadius - 1.0) <= NumericUtils.EPSILON)
+  }
+
+  test("The unit cube with negative distances should have an inscribable sphere with max radius 0.5") {
+    assert(Math.abs(unitCubeSigns.maxInscribableRadius - 0.5) <= NumericUtils.EPSILON)
+  }
+
+  test("The two cube with negative distances should have an inscribable sphere with max radius 1.0") {
+    assert(Math.abs(twoCubeSigns.maxInscribableRadius - 1.0) <= NumericUtils.EPSILON)
+  }
+
+  test("The two cube with non-zero origin should have an inscribable sphere with max radius 1.0") {
+    assert(Math.abs(twoCubeNonOrigin.maxInscribableRadius - 1.0) <= NumericUtils.EPSILON)
+  }
+
+  test("Rectangular prism should have an inscribable sphere with max radius 0.25") {
+    assert(Math.abs(rectPrism.maxInscribableRadius - 0.25) <= NumericUtils.EPSILON)
+  }
+
+  test("Cutting the unit cube at x=0.5 with a minimum inscribable radius of 0.25 should produce two children") {
+    val cutJoint = Joint((1.0, 0.0, 0.0), localOrigin=(0.0, 0.0, 0.0), center=(0.5, 0.0, 0.0),
+      phi = 0, cohesion = 0, shape = Nil)
+    assert(unitCube.cut(cutJoint, minSize=0.25).length == 2)
+  }
+
+  test("Cutting the unit cube at x=0.5 with a minimum inscribable radius of 0.26 should produce no new children") {
+    val cutJoint = Joint((1.0, 0.0, 0.0), localOrigin=(0.0, 0.0, 0.0), center=(0.5, 0.0, 0.0),
+      phi = 0, cohesion = 0, shape = Nil)
+    val children = unitCube.cut(cutJoint, minSize=0.26)
+    assert(children.length == 1)
+    assert(children.head == unitCube)
+  }
+
+  test("Cutting non-origin two-cube at z=1 with minimum inscribable radius of 0.5 should produce two new children") {
+    val cutJoint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0, 0.0, 0.0), center=(0.0, 0.0, 1.0),
+                         phi=0.0, cohesion=0.0, shape=Nil)
+    assert(twoCubeNonOrigin.cut(cutJoint, minSize=0.5).length == 2)
+  }
+
+  test("Cutting non-origin two-cube at z=1 with minimum inscribable radius of 0.6 should produce no new children") {
+    val cutJoint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0, 0.0, 0.0), center=(0.0, 0.0, 1.0),
+                         phi=0.0, cohesion=0.0, shape=Nil)
+    val children = twoCubeNonOrigin.cut(cutJoint, minSize=0.6)
+    assert(children.length == 1)
+    assert(children.head == twoCubeNonOrigin)
+  }
+
+  /*
+  test("Cutting two cube with negative distances at z=0 with minimum inscribable radius of 0.5 should produce two new children") {
+    val cutJoint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0, 0.0, 0.0), center=(0.0, 0.0, 0.0),
+      phi=0.0, cohesion=0.0, shape=Nil)
+    assert(twoCubeSigns.cut(cutJoint).length == 2)
+  }
+
+  test("Cutting two-cube with negative distances at z=0 with minimum inscribable radius of 0.6 should produce no new children") {
+    val cutJoint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0, 0.0, 0.0), center=(0.0, 0.0, 0.0),
+      phi=0.0, cohesion=0.0, shape=Nil)
+    val children = twoCubeSigns.cut(cutJoint, minSize=0.6)
+    assert(children.length == 1)
+    assert(children.head == twoCubeSigns)
+  }
+  */
 }

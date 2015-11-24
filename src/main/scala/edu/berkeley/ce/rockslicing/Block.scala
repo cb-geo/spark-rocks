@@ -62,19 +62,30 @@ object Block {
       DenseMatrix.eye[Double](3)
     }
   }
+}
+
+/**
+  * A rock block.
+  * @constructor Create a new rock block
+  * @param center Cartesian coordinates for the center of the rock block. The individual
+  * components can be accessed as 'centerX', 'centerY', and 'centerZ'.
+  * @param faces: The faces that define the boundaries of the rock block.
+  */
+case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
+  val (centerX, centerY, centerZ) = center
+
+  // Computing a bounding sphere is expensive, so we only do it if necessary
+  lazy val ((sphereCenterX, sphereCenterY, sphereCenterZ), sphereRadius) = findBoundingSphere
+  // Computing the maximum radius of an inscribed sphere is also expensive
+  lazy val maxInscribableRadius = findMaxInscribableRadius
 
   /**
-    * Find a bounding sphere for a rock block.
-    * @param centerX The x coordinate of the block's center
-    * @param centerY The y coordinate of the block's center
-    * @param centerZ The z coordinate of the block's center
-    * @param faces A sequence of faces specifying the block's boundaries
-    * @return A pair where the first element is a triple giving the center of
-    *         the bounding sphere and the second element is the radius of the
-    *         bounding sphere.
-    */
-  private def findBoundingSphere(centerX: Double, centerY: Double, centerZ: Double, faces: Seq[Face]):
-      ((Double,Double,Double), Double) = {
+   * Find a bounding sphere for a rock block.
+   * @return A pair where the first element is a triple giving the center of
+   *         the bounding sphere and the second element is the radius of the
+   *         bounding sphere.
+   */
+  private def findBoundingSphere: ((Double,Double,Double), Double) = {
     val basisVectors = Array(
       Array[Double](1.0, 0.0, 0.0),
       Array[Double](0.0, 1.0, 0.0),
@@ -96,11 +107,11 @@ object Block {
           val coeffs = Array[Double](face.a, face.b, face.c).map(NumericUtils.applyTolerance)
           val rhs = NumericUtils.applyTolerance(face.d)
           linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
-        }        
+        }
       }
       val results = linProg.solve().get._1
       val resultsSeq = Seq[Double](results(0), results(1), results(2))
-      // Values of principal axes vectors set to 0.0 exacly, so okay to check for equality of Double
+      // Values of principal axes vectors set to 0.0 exactly, so okay to check for equality of Double
       resultsSeq.filter(math.abs(_) > NumericUtils.EPSILON) match {
         case Nil => 0.0
         case x+:xs => x
@@ -115,19 +126,28 @@ object Block {
     // Shift from Block local coordinates to global coordinates
     ((center(0) + centerX, center(1) + centerY, center(2) + centerZ), radius)
   }
-}
 
-/**
-  * A rock block.
-  * @constructor Create a new rock block
-  * @param center Cartesian coordinates for the center of the rock block. The individual
-  * components can be accessed as 'centerX', 'centerY', and 'centerZ'.
-  * @param faces: The faces that define the boundaries of the rock block.
-  */
-case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
-  val (centerX, centerY, centerZ) = center
-  val ((sphereCenterX, sphereCenterY, sphereCenterZ), sphereRadius) =
-      Block.findBoundingSphere(centerX, centerY, centerZ, faces)
+  private def findMaxInscribableRadius: Double = {
+    /*
+     * Equation (18) in Boon et. al., 2015 expresses this as a minimization.
+     * We use a maximization LP to deal with negative distances explicitly
+     * rather than falling back on absolute value.
+     */
+    val linProg = new LinearProgram(4)
+    linProg.setObjFun(Seq[Double](0.0, 0.0, 0.0, 1.0), LinearProgram.MAX)
+    faces foreach { face =>
+      val (coeffs, rhs) = if (face.d < 0.0) {
+        val normalVec = linalg.normalize(DenseVector[Double](-face.a, -face.b, -face.c))
+        (Seq[Double](normalVec(0), normalVec(1), normalVec(2), 1.0), -face.d)
+      } else {
+        val normalVec = linalg.normalize(DenseVector[Double](face.a, face.b, face.c))
+        (Seq[Double](normalVec(0), normalVec(1), normalVec(2), 1.0), face.d)
+      }
+      linProg.addConstraint(coeffs map NumericUtils.applyTolerance, LinearProgram.LE,
+                            NumericUtils.applyTolerance(rhs))
+    }
+    linProg.solve().get._2
+  }
 
   /**
     * Determine whether or not a joint intersects this rock block.
@@ -190,7 +210,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     * the joint if it intersects this block. Otherwise, returns a one-item Seq
     * containing only this block.
     */
-  def cut(joint: Joint): Seq[Block] = {
+  def cut(joint: Joint, minSize: Double=Double.NegativeInfinity): Seq[Block] = {
     val translatedJoint = joint.updateJoint(centerX, centerY, centerZ)
     this.intersects(translatedJoint) match {
       case None => Vector(this)
@@ -199,22 +219,33 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
         val newY = NumericUtils.roundToTolerance(centerY + y)
         val newZ = NumericUtils.roundToTolerance(centerZ + z)
         val updatedFaces = updateFaces(newX, newY, newZ)
-        if (translatedJoint.d < 0.0) {
-          Vector(
-            // New origin is guaranteed to lie within joint, so initial d = 0
-            Block((newX,newY,newZ), Face((-translatedJoint.a, -translatedJoint.b, -translatedJoint.c), 0.0,
-                  translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces),
-            Block((newX,newY,newZ), Face((translatedJoint.a,translatedJoint.b,translatedJoint.c), 0.0, 
-                  translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
-          )
+
+        // New origin is guaranteed to lie within joint, so initial d = 0 for all child blocks
+        val childBlockA = if (translatedJoint.d < 0.0) {
+          Block((newX,newY,newZ), Face((-translatedJoint.a, -translatedJoint.b, -translatedJoint.c), 0.0,
+            translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
         } else {
-          Vector(
-            // New origin is guaranteed to lie within joint, so initial d = 0
-            Block((newX,newY,newZ), Face((translatedJoint.a, translatedJoint.b, translatedJoint.c), 0.0,
-                  translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces),
-            Block((newX,newY,newZ), Face((-translatedJoint.a,-translatedJoint.b,-translatedJoint.c), 0.0,
-                  translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
-          )
+          Block((newX,newY,newZ), Face((translatedJoint.a, translatedJoint.b, translatedJoint.c), 0.0,
+            translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
+        }
+        val childBlockB = if (translatedJoint.d < 0.0) {
+          Block((newX,newY,newZ), Face((translatedJoint.a,translatedJoint.b,translatedJoint.c), 0.0,
+            translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
+        } else {
+          Block((newX,newY,newZ), Face((-translatedJoint.a,-translatedJoint.b,-translatedJoint.c), 0.0,
+            translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
+        }
+
+        if (minSize != Double.NegativeInfinity) {
+          val inscribedRadiusA = childBlockA.maxInscribableRadius
+          val inscribedRadiusB = childBlockB.maxInscribableRadius
+          if (inscribedRadiusA < minSize || inscribedRadiusB < minSize) {
+            Vector(this)
+          } else {
+            Vector(childBlockA, childBlockB)
+          }
+        } else {
+          Vector(childBlockA, childBlockB)
         }
     }
   }
