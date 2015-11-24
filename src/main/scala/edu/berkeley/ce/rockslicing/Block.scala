@@ -206,11 +206,18 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
   /**
     * Divide this block into two child blocks if a joint intersects this block.
     * @param joint A joint that may or may not divide this block.
+    *  @param minSize The minimum radius of a sphere that can be inscribed in the child blocks.
+    *                 If either child block falls below this minimum, no cut is performed.
+    *  @param maxAspectRatio The maximum ratio of a child block's bounding sphere to the radius
+    *                        of the largest sphere that can be inscribed in the block. If either
+    *                        child falls above this minimum, no cut is performed.
     * @return A Seq of Block objects, containing the two child blocks divided by
-    * the joint if it intersects this block. Otherwise, returns a one-item Seq
-    * containing only this block.
+    * the joint if it intersects this block and any minimum requirements for radius
+    * or aspect ratio are met. Otherwise, returns a one-item Se containing
+    * only this block.
     */
-  def cut(joint: Joint, minSize: Double=Double.NegativeInfinity): Seq[Block] = {
+  def cut(joint: Joint, minSize: Double=Double.NegativeInfinity,
+          maxAspectRatio: Double=Double.PositiveInfinity): Seq[Block] = {
     val translatedJoint = joint.updateJoint(centerX, centerY, centerZ)
     this.intersects(translatedJoint) match {
       case None => Vector(this)
@@ -236,17 +243,27 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
             translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
         }
 
+        var childBlocks = Vector(childBlockA, childBlockB)
+        // Check maximum radius of inscribable sphere for both children
         if (minSize != Double.NegativeInfinity) {
           val inscribedRadiusA = childBlockA.maxInscribableRadius
           val inscribedRadiusB = childBlockB.maxInscribableRadius
           if (inscribedRadiusA < minSize || inscribedRadiusB < minSize) {
-            Vector(this)
-          } else {
-            Vector(childBlockA, childBlockB)
+            childBlocks = Vector(this)
           }
-        } else {
-          Vector(childBlockA, childBlockB)
         }
+        // If necessary, also check the aspect ratio of both children
+        if (maxAspectRatio != Double.PositiveInfinity && childBlocks.length != 1) {
+          val aspectRatioA = childBlockA.sphereRadius / childBlockA.maxInscribableRadius
+          val aspectRatioB = childBlockB.sphereRadius / childBlockB.maxInscribableRadius
+          println(childBlockA.sphereRadius)
+          println(childBlockA.maxInscribableRadius)
+          if (aspectRatioA > maxAspectRatio || aspectRatioB > maxAspectRatio) {
+            childBlocks = Vector(this)
+          }
+        }
+
+        childBlocks
     }
   }
   /**

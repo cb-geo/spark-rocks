@@ -253,6 +253,13 @@ class BlockSpec extends FunSuite {
     assert(twoCubeNonOrigin.intersects(joint).isDefined)
   }
 
+  // TODO This test is failing
+  test("The plane x=0.5 should intersect the two cube with signed distances") {
+    val joint = Joint((1.0, 0.0, 0.0), localOrigin=(0.0, 0.0, 0.0), center=(0.5, 0.0, 0.0),
+                      phi=0.0, cohesion=0.0, shape=Nil)
+    assert(twoCubeSigns.intersects(joint).isDefined)
+  }
+
   test("The unit cube should not contain any redundant faces") {
     assert(unitCube.nonRedundantFaces == boundingFaces)
   }
@@ -628,4 +635,32 @@ class BlockSpec extends FunSuite {
     assert(children.head == twoCubeSigns)
   }
   */
+
+  test("Cutting the unit cube at x=0.5 with maximum aspect ratio of 3 should produce two new children") {
+    val cutJoint = Joint((1.0, 0.0, 0.0), localOrigin=(0.0, 0.0, 0.0), center=(0.5, 0.0, 0.0),
+      phi = 0, cohesion = 0, shape = Nil)
+    assert(unitCube.cut(cutJoint, maxAspectRatio=3.0).length == 2)
+  }
+
+  test("Cutting the unit cube at x=0.5 with maximum aspect ratio of 2.9 should produce no new children") {
+    val cutJoint = Joint((1.0, 0.0, 0.0), localOrigin=(0.0, 0.0, 0.0), center=(0.5, 0.0, 0.0),
+      phi = 0, cohesion = 0, shape = Nil)
+    val children = unitCube.cut(cutJoint, maxAspectRatio=2.9)
+    assert(children.length == 1)
+    assert(children.head == unitCube)
+  }
+
+  test("Cutting non-origin two-cube at z=1 with maximum aspect ratio of 3 should produce two new children") {
+    val cutJoint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0, 0.0, 0.0), center=(0.0, 0.0, 1.0),
+      phi=0.0, cohesion=0.0, shape=Nil)
+    assert(twoCubeNonOrigin.cut(cutJoint, maxAspectRatio=3.0).length == 2)
+  }
+
+  test("Cutting non-origin two-cube at z=1 with maximum aspect ratio of 2.9 should produce no new children") {
+    val cutJoint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0, 0.0, 0.0), center=(0.0, 0.0, 1.0),
+      phi=0.0, cohesion=0.0, shape=Nil)
+    val children = twoCubeNonOrigin.cut(cutJoint, maxAspectRatio=2.9)
+    assert(children.length == 1)
+    assert(children.head == twoCubeNonOrigin)
+  }
 }
