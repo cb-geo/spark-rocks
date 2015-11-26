@@ -12,15 +12,21 @@ object RockSlicer {
     val sc = new SparkContext(conf)
     val parsedArgs = CommandReader.parseArguments(args)
     if (parsedArgs.isEmpty) {
+      // Error message will already be printed out by CommandReader
       System.exit(-1)
     }
     val arguments = CommandReader.parseArguments(args).get
 
     // Open and read input file specifying rock volume and joints
     val inputSource = Source.fromFile(arguments.inputFile)
-    val (rockVolume, joints) = InputProcessor.readInput(inputSource)
+    val inputOpt = InputProcessor.readInput(inputSource)
     inputSource.close()
-    var blocks = Vector(Block((0.0, 0.0, 0.0), rockVolume))
+    if (inputOpt.isEmpty) {
+      // Error message will already be printed out by InputProcessor
+      System.exit(-1)
+    }
+    val (rockVolume, joints) = inputOpt.get
+    var blocks = Seq(Block((0.0, 0.0, 0.0), rockVolume))
 
     // Generate a list of initial blocks before RDD-ifying it
     val (seedJoints, remainingJoints) = generateSeedJoints(joints, arguments.numSeedJoints)

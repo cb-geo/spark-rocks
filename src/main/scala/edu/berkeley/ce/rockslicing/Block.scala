@@ -7,7 +7,7 @@ import breeze.linalg.{DenseVector, DenseMatrix}
   *
   * @constructor Create a new rock face.
   * @param normalVec The normal vector to the face. The individual vector components can
-  * be accessed as 'a', 'b', and 'c'.
+  * be accessed as 'a', 'b', and 'c'. Assumed to be a unit vector.
   * @param distance The distance from the face to the center of the rock block.
   * Accessed as 'd'.
   * @param phi The friction angle (phi) of the face.
@@ -99,15 +99,9 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
       val linProg = new LinearProgram(3)
       linProg.setObjFun(v.toArray, LinearProgram.MAX)
       faces foreach { face =>
-        if (face.d < 0.0) {
-          val coeffs = Array[Double](-face.a, -face.b, -face.c).map(NumericUtils.applyTolerance)
-          val rhs = NumericUtils.applyTolerance(-face.d)
-          linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
-        } else {
-          val coeffs = Array[Double](face.a, face.b, face.c).map(NumericUtils.applyTolerance)
-          val rhs = NumericUtils.applyTolerance(face.d)
-          linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
-        }
+        val coeffs = Array[Double](face.a, face.b, face.c).map(NumericUtils.applyTolerance)
+        val rhs = NumericUtils.applyTolerance(face.d)
+        linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
       }
       val results = linProg.solve().get._1
       val resultsSeq = Seq[Double](results(0), results(1), results(2))
@@ -136,15 +130,9 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     val linProg = new LinearProgram(4)
     linProg.setObjFun(Seq[Double](0.0, 0.0, 0.0, 1.0), LinearProgram.MAX)
     faces foreach { face =>
-      val (coeffs, rhs) = if (face.d < 0.0) {
-        val normalVec = linalg.normalize(DenseVector[Double](-face.a, -face.b, -face.c))
-        (Seq[Double](normalVec(0), normalVec(1), normalVec(2), 1.0), -face.d)
-      } else {
-        val normalVec = linalg.normalize(DenseVector[Double](face.a, face.b, face.c))
-        (Seq[Double](normalVec(0), normalVec(1), normalVec(2), 1.0), face.d)
-      }
+      val coeffs = Seq[Double](face.a, face.b, face.c, 1.0)
       linProg.addConstraint(coeffs map NumericUtils.applyTolerance, LinearProgram.LE,
-                            NumericUtils.applyTolerance(rhs))
+                            NumericUtils.applyTolerance(face.d))
     }
     linProg.solve().get._2
   }
@@ -256,8 +244,6 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
         if (maxAspectRatio != Double.PositiveInfinity && childBlocks.length != 1) {
           val aspectRatioA = childBlockA.sphereRadius / childBlockA.maxInscribableRadius
           val aspectRatioB = childBlockB.sphereRadius / childBlockB.maxInscribableRadius
-          println(childBlockA.sphereRadius)
-          println(childBlockA.maxInscribableRadius)
           if (aspectRatioA > maxAspectRatio || aspectRatioB > maxAspectRatio) {
             childBlocks = Vector(this)
           }

@@ -34,26 +34,6 @@ class BlockSpec extends FunSuite {
   )
   val twoCubeNonOrigin = Block((1.0, 1.0, 1.0), boundingFaces3)
 
-  val boundingFaces4 = List(
-    Face((-1.0, 0.0, 0.0), -1.0, phi=0, cohesion=0),
-    Face((0.0, -1.0, 0.0), -1.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, -1.0), -1.0, phi=0, cohesion=0),
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0)
-  )
-  val unitCubeSigns = Block((0.0, 0.0, 0.0), boundingFaces4)
-
-  val boundingFaces5 = List(
-    Face((-1.0, 0.0, 0.0), -1.0, phi=0, cohesion=0),
-    Face((0.0, -1.0, 0.0), -1.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, -1.0), -1.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), -1.0, phi=0, cohesion=0),
-    Face((0.0, 1.0, 0.0), -1.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), -1.0, phi=0, cohesion=0)
-  )
-  val twoCubeSigns = Block((0.0, 0.0, 0.0), boundingFaces5)
-
   val boundingFaces6 = List(
     Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0), // -x = 0
     Face((1.0, 0.0, 0.0), 0.5, phi=0, cohesion=0), // x = 0.5
@@ -251,13 +231,6 @@ class BlockSpec extends FunSuite {
     val joint = Joint((0.0, 0.0, 1.0), localOrigin=(1.0, 1.0, 1.0), center=(1.99, 2.99, 1.0),
       phi=0.0, cohesion=0.0, shape=jointBounds)
     assert(twoCubeNonOrigin.intersects(joint).isDefined)
-  }
-
-  // TODO This test is failing
-  test("The plane x=0.5 should intersect the two cube with signed distances") {
-    val joint = Joint((1.0, 0.0, 0.0), localOrigin=(0.0, 0.0, 0.0), center=(0.5, 0.0, 0.0),
-                      phi=0.0, cohesion=0.0, shape=Nil)
-    assert(twoCubeSigns.intersects(joint).isDefined)
   }
 
   test("The unit cube should not contain any redundant faces") {
@@ -548,22 +521,6 @@ class BlockSpec extends FunSuite {
     assert(twoCubeBS == expectedBoundingSphere)
   }
 
-  test("Bounding sphere of the unit cube with negative distances should have center (0.5, 0.5, 0.5) and " +
-    "radius sqrt(0.5 + 0.5^2)") {
-    val expectedBoundingSphere = ((0.5, 0.5, 0.5), math.sqrt(0.5 + math.pow(0.5, 2)))
-    val unitCubeSignsBS = ((unitCubeSigns.sphereCenterX, unitCubeSigns.sphereCenterY,
-                            unitCubeSigns.sphereCenterZ), unitCubeSigns.sphereRadius)
-    assert(unitCubeSignsBS == expectedBoundingSphere)
-  }
-
-  test("Bounding sphere of the two cube with negative distances should have center (0.0, 0.0, 0.0) and " +
-    "radius sqrt(3.0)") {
-    val expectedBoundingSphere = ((0.0, 0.0, 0.0), math.sqrt(3.0))
-    val twoCubeSignsBS = ((twoCubeSigns.sphereCenterX, twoCubeSigns.sphereCenterY,
-                           twoCubeSigns.sphereCenterZ), twoCubeSigns.sphereRadius)
-    assert(twoCubeSignsBS == expectedBoundingSphere)
-  }
-
   test("-z=-0.5 should intersect the two cube - negative joint distance check") {
     val joint = Joint((0.0, 0.0, -1.0), localOrigin=(0.0, 0.0, 0.0), center=(0.0, 0.0, 1/2.0),
       phi=0, cohesion=0, shape=Nil)
@@ -576,14 +533,6 @@ class BlockSpec extends FunSuite {
 
   test("The two cube should have an inscribable sphere with max radius 1.0") {
     assert(Math.abs(twoCube.maxInscribableRadius - 1.0) <= NumericUtils.EPSILON)
-  }
-
-  test("The unit cube with negative distances should have an inscribable sphere with max radius 0.5") {
-    assert(Math.abs(unitCubeSigns.maxInscribableRadius - 0.5) <= NumericUtils.EPSILON)
-  }
-
-  test("The two cube with negative distances should have an inscribable sphere with max radius 1.0") {
-    assert(Math.abs(twoCubeSigns.maxInscribableRadius - 1.0) <= NumericUtils.EPSILON)
   }
 
   test("The two cube with non-zero origin should have an inscribable sphere with max radius 1.0") {
@@ -621,22 +570,6 @@ class BlockSpec extends FunSuite {
     assert(children.length == 1)
     assert(children.head == twoCubeNonOrigin)
   }
-
-  /*
-  test("Cutting two cube with negative distances at z=0 with minimum inscribable radius of 0.5 should produce two new children") {
-    val cutJoint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0, 0.0, 0.0), center=(0.0, 0.0, 0.0),
-      phi=0.0, cohesion=0.0, shape=Nil)
-    assert(twoCubeSigns.cut(cutJoint).length == 2)
-  }
-
-  test("Cutting two-cube with negative distances at z=0 with minimum inscribable radius of 0.6 should produce no new children") {
-    val cutJoint = Joint((0.0, 0.0, 1.0), localOrigin=(0.0, 0.0, 0.0), center=(0.0, 0.0, 0.0),
-      phi=0.0, cohesion=0.0, shape=Nil)
-    val children = twoCubeSigns.cut(cutJoint, minSize=0.6)
-    assert(children.length == 1)
-    assert(children.head == twoCubeSigns)
-  }
-  */
 
   test("Cutting the unit cube at x=0.5 with maximum aspect ratio of 3 should produce two new children") {
     val cutJoint = Joint((1.0, 0.0, 0.0), localOrigin=(0.0, 0.0, 0.0), center=(0.5, 0.0, 0.0),
