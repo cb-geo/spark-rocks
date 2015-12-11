@@ -105,7 +105,6 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
       }
       val results = linProg.solve().get._1
       val resultsSeq = Seq[Double](results(0), results(1), results(2))
-      // Values of principal axes vectors set to 0.0 exactly, so okay to check for equality of Double
       resultsSeq.filter(math.abs(_) > NumericUtils.EPSILON) match {
         case Nil => 0.0
         case x+:xs => x
@@ -194,18 +193,17 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
   /**
     * Divide this block into two child blocks if a joint intersects this block.
     * @param joint A joint that may or may not divide this block.
-    *  @param minSize The minimum radius of a sphere that can be inscribed in the child blocks.
-    *                 If either child block falls below this minimum, no cut is performed.
-    *  @param maxAspectRatio The maximum ratio of a child block's bounding sphere to the radius
-    *                        of the largest sphere that can be inscribed in the block. If either
-    *                        child falls above this minimum, no cut is performed.
+    * @param minSize The minimum radius of a sphere that can be inscribed in the child blocks.
+    *                If either child block falls below this minimum, no cut is performed.
+    * @param maxAspectRatio The maximum ratio of a child block's bounding sphere to the radius
+    *                       of the largest sphere that can be inscribed in the block. If either
+    *                       child falls above this minimum, no cut is performed.
     * @return A Seq of Block objects, containing the two child blocks divided by
     * the joint if it intersects this block and any minimum requirements for radius
-    * or aspect ratio are met. Otherwise, returns a one-item Se containing
+    * or aspect ratio are met. Otherwise, returns a one-item Seq containing
     * only this block.
     */
-  def cut(joint: Joint, minSize: Double=Double.NegativeInfinity,
-          maxAspectRatio: Double=Double.PositiveInfinity): Seq[Block] = {
+  def cut(joint: Joint, minSize: Double=0.0, maxAspectRatio: Double=Double.PositiveInfinity): Seq[Block] = {
     val translatedJoint = joint.updateJoint(centerX, centerY, centerZ)
     this.intersects(translatedJoint) match {
       case None => Vector(this)
@@ -233,7 +231,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
 
         var childBlocks = Vector(childBlockA, childBlockB)
         // Check maximum radius of inscribable sphere for both children
-        if (minSize != Double.NegativeInfinity) {
+        if (minSize > 0.0) {
           val inscribedRadiusA = childBlockA.maxInscribableRadius
           val inscribedRadiusB = childBlockB.maxInscribableRadius
           if (inscribedRadiusA < minSize || inscribedRadiusB < minSize) {

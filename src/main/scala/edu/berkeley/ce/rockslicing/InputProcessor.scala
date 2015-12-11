@@ -7,16 +7,27 @@ import scala.util.Try
 
 object InputProcessor {
   // Processes input file: Add rock volume faces and joints to respective input list
-  def readInput(inputSource: Source): Option[(Seq[Face], Seq[Joint])] = {
+  def readInput(inputSource: Source): Option[((Double, Double, Double), Seq[Face], Seq[Joint])] = {
     val lines = inputSource.getLines().zipWithIndex.toVector
-    val transitionIndex = lines.indexWhere(_._1 == "%")
+    val globalOriginLine = lines.head._1
+    // Attempt to convert each token to a Double, ignoring those that fail
+    val globalOrigin = globalOriginLine.split(" ") map { x => Try(x.toDouble) } filter(_.isSuccess) map(_.get)
+    if (globalOrigin.length != 3) {
+      println("Error, Line 1: Input file must begin with definition of global origin as 3 double values")
+      return None
+    }
+    val globalOriginTuple = (globalOrigin(0), globalOrigin(1), globalOrigin(2))
+
+
+    val remainingLines = lines.tail
+    val transitionIndex = remainingLines.indexWhere(_._1 == "%")
     if (transitionIndex == -1) {
       println("Error: Input file must contain \"%\" to mark transition from rock volume to joints")
       return None
     }
 
-    val rockVolumeData = lines.take(transitionIndex)
-    val jointData = lines.drop(transitionIndex + 1)
+    val rockVolumeData = remainingLines.take(transitionIndex)
+    val jointData = remainingLines.drop(transitionIndex + 1)
 
     val rockVolume = rockVolumeData.map { case (line, index) =>
       // Attempt to convert each token to a Double, ignoring those that fail
@@ -41,11 +52,13 @@ object InputProcessor {
       val bPrime = unitNormVec(1)
       val cPrime = unitNormVec(2)
 
-      // Eliminate any inward-pointing normals
-      if (d >= 0.0) {
+      // Eliminate any inward-pointing normals, and round extremely small distances to 0
+      if (math.abs(d) >= NumericUtils.EPSILON) {
         Face((aPrime, bPrime, cPrime), d, phi, cohesion)
-      } else {
+      } else if (d < -NumericUtils.EPSILON) {
         Face((-aPrime, -bPrime, -cPrime), -d, phi, cohesion)
+      } else {
+        Face((aPrime, bPrime, cPrime), 0, phi, cohesion)
       }
     }
 
@@ -82,15 +95,16 @@ object InputProcessor {
       val cohesion = mandatoryValues(10)
 
       val shape = optionalValues grouped(4) map { group =>
-        // These don't have to be unit vectors, so we leave them alone
-        val normalVec = (group(0), group(1), group(2))
+        // Again, we want to be sure the normal vector is also a unit vector
+        val normVec = DenseVector[Double](group(0), group(1), group(2))
+        val unitNormVec = breeze.linalg.normalize(normVec)
         val d = group(3)
-        (normalVec, d)
+        ((unitNormVec(0), unitNormVec(1), unitNormVec(2)), d)
       }
 
       Joint((unitNormVec(0), unitNormVec(1), unitNormVec(2)), localOrigin, center, phi, cohesion, shape.toSeq)
     }
 
-    Some((rockVolume, joints))
+    Some((globalOriginTuple, rockVolume, joints))
   }
 }

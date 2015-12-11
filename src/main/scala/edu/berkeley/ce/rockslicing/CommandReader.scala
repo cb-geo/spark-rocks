@@ -5,9 +5,9 @@ package edu.berkeley.ce.rockslicing
  */
 object CommandReader {
   case class Config(
-    inputFile: String = ".",
+    inputFile: String = "",
     numSeedJoints: Int = 25,
-    minRadius: Double = Double.NegativeInfinity,
+    minRadius: Double = 0.0,
     maxAspectRatio: Double = Double.PositiveInfinity,
     toVTK: Boolean = false,
     toInequalities: Boolean = false

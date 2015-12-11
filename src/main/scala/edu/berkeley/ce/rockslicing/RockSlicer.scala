@@ -25,8 +25,8 @@ object RockSlicer {
       // Error message will already be printed out by InputProcessor
       System.exit(-1)
     }
-    val (rockVolume, joints) = inputOpt.get
-    var blocks = Seq(Block((0.0, 0.0, 0.0), rockVolume))
+    val (globalOrigin, rockVolume, joints) = inputOpt.get
+    var blocks = Seq(Block(globalOrigin, rockVolume))
 
     // Generate a list of initial blocks before RDD-ifying it
     val (seedJoints, remainingJoints) = generateSeedJoints(joints, arguments.numSeedJoints)
