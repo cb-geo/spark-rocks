@@ -29,6 +29,18 @@ class InputProcessingSpec extends FunSuite {
     assert(InputProcessor.readInput(inputSrc).isEmpty)
   }
 
+  test("Input file with invalid double in definition of global origin should produce error") {
+    val inputStr = "0.0 foo 0.0\n" +
+      "1.0 0.0 0.0 2.0 0.0 0.0\n" +
+      "0.0 -1.0 0.0 0.0 0.0 0.0\n" +
+      "0.0 1.0 0.0 2.0 0.0 0.0\n" +
+      "0.0 0.0 -1.0 0.0 0.0 0.0\n" +
+      "0.0 0.0 1.0 2.0 0.0 0.0\n" +
+      "1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0\n"
+    val inputSrc = Source.fromString(inputStr)
+    assert(InputProcessor.readInput(inputSrc).isEmpty)
+  }
+
   test("Input file without \"%\" should produce error") {
     val inputStr = "0.0 0.0 0.0\n" +
       "-1.0 0.0 0.0 0.0 0.0 0.0\n" +
@@ -42,10 +54,24 @@ class InputProcessingSpec extends FunSuite {
     assert(InputProcessor.readInput(inputSrc).isEmpty)
   }
 
-  test("Input file with rock volume face should produce error") {
+  test("Input file with improper rock volume face should produce error") {
     val inputStr = "0.0 0.0 0.0\n" +
       "-1.0 0.0 0.0 0.0 0.0 0.0\n" +
       "1.0 0.0 0.0 2.0 0.0\n" + // Invalid face
+      "0.0 -1.0 0.0 0.0 0.0 0.0\n" +
+      "0.0 1.0 0.0 2.0 0.0 0.0\n" +
+      "0.0 0.0 -1.0 0.0 0.0 0.0\n" +
+      "0.0 0.0 1.0 2.0 0.0 0.0\n" +
+      "%\n" +
+      "1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0\n"
+    val inputSrc = Source.fromString(inputStr)
+    assert(InputProcessor.readInput(inputSrc).isEmpty)
+  }
+
+  test("Input file with invalid double in definition of rock volume face should produce error") {
+    val inputStr = "0.0 0.0 0.0\n" +
+      "-1.0 0.0 0.0 0.0 0.0 0.0\n" +
+      "1.0 0.0 0.0 2.0 0.0 bar\n" + // Invalid face
       "0.0 -1.0 0.0 0.0 0.0 0.0\n" +
       "0.0 1.0 0.0 2.0 0.0 0.0\n" +
       "0.0 0.0 -1.0 0.0 0.0 0.0\n" +
@@ -82,6 +108,21 @@ class InputProcessingSpec extends FunSuite {
       "1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0\n" +
       // Invalid joint
       "0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 -1.0 0.0 0.5 -1.0 0.0 0.0 0.0 1.0 0.0 0.0"
+    val inputSrc = Source.fromString(inputStr)
+    assert(InputProcessor.readInput(inputSrc).isEmpty)
+  }
+
+  test("Input file with invalid double in definition of joint should produce error") {
+    val inputStr = "4.0 8.0 15.0\n" +
+      "-1.0 0.0 0.0 0.0 0.0 0.0\n" +
+      "1.0 0.0 0.0 2.0 0.0 0.0\n" +
+      "0.0 -1.0 0.0 0.0 0.0 0.0\n" +
+      "0.0 1.0 0.0 2.0 0.0 0.0\n" +
+      "0.0 0.0 -1.0 0.0 0.0 0.0\n" +
+      "0.0 0.0 1.0 2.0 0.0 0.0\n" +
+      "%\n" +
+      "1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0\n" +
+      "0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 0.0 baz 0.0 -1.0 0.0 0.5 -1.0 0.0 0.0 0.0 1.0 0.0 0.0 0.5"
     val inputSrc = Source.fromString(inputStr)
     assert(InputProcessor.readInput(inputSrc).isEmpty)
   }

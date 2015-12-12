@@ -10,12 +10,17 @@ object InputProcessor {
   def readInput(inputSource: Source): Option[((Double, Double, Double), Seq[Face], Seq[Joint])] = {
     val lines = inputSource.getLines().zipWithIndex.toVector
     val globalOriginLine = lines.head._1
-    // Attempt to convert each token to a Double, ignoring those that fail
-    val globalOrigin = globalOriginLine.split(" ") map { x => Try(x.toDouble) } filter(_.isSuccess) map(_.get)
-    if (globalOrigin.length != 3) {
+
+    val globalOriginTokens = globalOriginLine.split(" ") map { x => Try(x.toDouble) }
+    val errIndex = globalOriginTokens.indexWhere(_.isFailure)
+    if (errIndex != -1) {
+      println(s"Error, Line 1, Token $errIndex: Invalid double found in definition of global origin")
+      return None
+    } else if (globalOriginTokens.length != 3) {
       println("Error, Line 1: Input file must begin with definition of global origin as 3 double values")
       return None
     }
+    val globalOrigin = globalOriginTokens map(_.get)
     val globalOriginTuple = (globalOrigin(0), globalOrigin(1), globalOrigin(2))
 
 
@@ -30,8 +35,12 @@ object InputProcessor {
     val jointData = remainingLines.drop(transitionIndex + 1)
 
     val rockVolume = rockVolumeData.map { case (line, index) =>
-      // Attempt to convert each token to a Double, ignoring those that fail
-      val tokens = line.split(" ") map { x => Try(x.toDouble) } filter(_.isSuccess)
+      val tokens = line.split(" ") map { x => Try(x.toDouble) }
+      val errIndex = tokens.indexWhere(_.isFailure)
+      if (errIndex != -1) {
+        println(s"Error, Line $index, Token $errIndex: Invalid double found in definition of rock volume face")
+        return None
+      }
       val doubleVals = tokens map(_.get)
       if (doubleVals.length != 6) {
         println(s"Error, Line $index: Each face of input rock volume is defined by values: a, b, c, d, phi and cohesion")
@@ -63,8 +72,12 @@ object InputProcessor {
     }
 
     val joints = jointData.map { case (line, index) =>
-      // Again, convert each token to Double and ignore failing tokens
-      val tokens = line.split(" ") map { x => Try(x.toDouble) } filter (_.isSuccess)
+      val tokens = line.split(" ") map { x => Try(x.toDouble) }
+      val errIndex = tokens.indexWhere(_.isFailure)
+      if (errIndex != -1) {
+        println(s"Error, Line $index, Token $errIndex: Invalid double found in definition of joint")
+        return None
+      }
       val doubleVals = tokens map(_.get)
       if (doubleVals.length < 11) {
         println(s"""Error, Line $index: Each input joint is defined by at least 11 values:
