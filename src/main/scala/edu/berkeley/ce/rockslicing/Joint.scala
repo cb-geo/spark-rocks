@@ -187,7 +187,7 @@ object Joint {
   * A simple data structure to represent a joint.
   * @constructor Create a new joint.
   * @param normalVec The normal vector to the joint. The individual vector components
-  *        can be accessed as 'a', 'b', and 'c'.
+  *        can be accessed as 'a', 'b', and 'c'. Assumed to be a unit vector.
   * @param localOrigin The local origin from which the distance is referenced. The individual
   *        components are accessed as 'localX', 'localY', and 'localZ'.
   * @param center Cartesian coordinates for the center of the joint. The individual

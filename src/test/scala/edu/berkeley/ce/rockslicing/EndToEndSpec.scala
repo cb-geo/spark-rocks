@@ -11,11 +11,11 @@ class EndToEndSpec extends FunSuite {
   test("Simple end-to-end test using unit cube and simple planes") {
     // Read input file to generate list of joints and initial rock block
     val inputSource = Source.fromURL(getClass.getResource(s"/$INPUT_FILE_NAME"))
-    val (rockVolume, jointList) = InputProcessor.readInput(inputSource)
+    val (globalOrigin, rockVolume, jointList) = InputProcessor.readInput(inputSource).get
     inputSource.close()
 
     // Create an initial block
-    val blocks = Vector(Block((0.0, 0.0, 0.0), rockVolume))
+    val blocks = Seq(Block(globalOrigin, rockVolume))
 
     // Iterate through joints, cutting blocks where appropriate
     var cutBlocks = blocks
@@ -24,7 +24,7 @@ class EndToEndSpec extends FunSuite {
     }
 
     // Remove geometrically redundant joints
-    val nonRedundantBlocks = cutBlocks.map { case block @ Block(center, _) =>
+    val nonRedundantBlocks = cutBlocks.map { case block@Block(center, _) =>
       Block(center, block.nonRedundantFaces)
     }
 
