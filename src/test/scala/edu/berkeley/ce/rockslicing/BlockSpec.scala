@@ -598,4 +598,14 @@ class BlockSpec extends FunSuite {
     assert(children.length == 1)
     assert(children.head == twoCubeNonOrigin)
   }
+
+  test("Volume of unit cube should be 1.0") {
+    val volume = unitCube.volume
+    assert(volume == 1.0)
+  }
+
+  test("Volume of two cube should be 8.0") {
+    val volume = twoCube.volume
+    assert(volume == 8.0)
+  }
 }

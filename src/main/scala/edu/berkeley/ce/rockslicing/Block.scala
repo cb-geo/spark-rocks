@@ -396,6 +396,32 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
   }
 
   /**
+    * Calculates the volume of the block
+    * @return The volume of the block
+    */
+  def volume: Double = {
+    val vertices = findVertices
+    val mesh = meshFaces(vertices)
+
+    val volIncrements = faces.flatMap { face =>
+      mesh(face).map { m =>
+        // Access triangulation entries backwards so they are in counterclockwise order
+        val a_vals = vertices(face)(m._3)
+        val b_vals = vertices(face)(m._2)
+        val c_vals = vertices(face)(m._1)
+        val a = DenseVector[Double](a_vals._1, a_vals._2, a_vals._3)
+        val b = DenseVector[Double](b_vals._1, b_vals._2, b_vals._3)
+        val c = DenseVector[Double](c_vals._1, c_vals._2, c_vals._3)
+
+        val n = linalg.cross(b - a, c - a)
+        a dot n
+      }
+    }
+
+    volIncrements.fold(0.0) (_ + _)/6.0
+  }
+
+  /**
     * Calculates the distances of the joints relative to a new origin
     * @param localOrigin: new local origin
     * @return List of faces with updated distances

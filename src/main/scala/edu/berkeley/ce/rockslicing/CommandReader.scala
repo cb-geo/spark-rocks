@@ -23,7 +23,7 @@ object CommandReader {
     opt[Int]('n', "numSeedJoints") required() action { (x, c) =>
       c.copy(numSeedJoints = x)
     } validate { x =>
-      if (x > 0) success else failure("Number of seed joints must be positive")
+      if (x >= 0) success else failure("Number of seed joints must be greater than or equal to 0")
     } text "Integer that specifies the number of joints to process before initiating parallel processing"
 
     opt[Double]("minRadius") action { (x, c) =>

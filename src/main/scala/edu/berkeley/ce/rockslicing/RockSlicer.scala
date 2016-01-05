@@ -25,11 +25,13 @@ object RockSlicer {
       // Error message will already be printed out by InputProcessor
       System.exit(-1)
     }
-    val (globalOrigin, rockVolume, joints) = inputOpt.get
+    val (globalOrigin, boundingBox, rockVolume, joints) = inputOpt.get
     var blocks = Seq(Block(globalOrigin, rockVolume))
 
     // Generate a list of initial blocks before RDD-ifying it
-    val (seedJoints, remainingJoints) = generateSeedJoints(joints, arguments.numSeedJoints)
+    val (seedJoints, remainingJoints) =
+      LoadBalancer.generateSeedJoints(joints, blocks(0), arguments.numSeedJoints,
+                                      boundingBox, arguments.minRadius, arguments.maxAspectRatio)
     seedJoints foreach { joint =>
       blocks = blocks.flatMap(_.cut(joint, arguments.minRadius, arguments.maxAspectRatio))
     }
@@ -74,50 +76,51 @@ object RockSlicer {
     }
     sc.stop()
   }
-
-  // Produce joints that achieve some lead balancing when generating the initial Block RDD
-  private def generateSeedJoints(joints: Seq[Joint], numSeedJoints: Integer): (Seq[Joint], Seq[Joint]) = {
-    val (persistentJoints, nonPersistentJoints) = joints.partition(_.shape.isEmpty)
-    persistentJoints.length match {
-      // All of the seed joints will be persistent
-      case len if len >= numSeedJoints => (persistentJoints.take(numSeedJoints),
-          persistentJoints.drop(numSeedJoints) ++ nonPersistentJoints)
-      // All persistent joints are used as seed joints, along with some non-persistent joints
-      case len =>
-        val numNonPersistent = numSeedJoints - len
-        // Arrange joints so we prefer elements near middle of rock mass
-        val sortedNonPersistent = nonPersistentJoints.sortWith(_.centerX < _.centerX)
-        val indices = loadBalanceIndices(sortedNonPersistent.indices).take(numNonPersistent)
-        val seedNonPersistent = indices.collect(sortedNonPersistent)
-        val remainingNonPersistent = sortedNonPersistent.diff(seedNonPersistent)
-        (persistentJoints ++ seedNonPersistent, remainingNonPersistent)
-    }
-  }
-
-  private def loadBalanceIndices(indices: Seq[Int]): Seq[Int] = {
-    def loadBalanceIndicesImpl(queue: mutable.PriorityQueue[Seq[Int]]): Seq[Int] = {
-      if (queue.isEmpty) {
-        Nil
-      } else {
-        val s = queue.dequeue()
-        val (median, left, right) = removeMedian(s)
-        if (left.nonEmpty) {
-          queue.enqueue(left)
-        }
-        if (right.nonEmpty) {
-          queue.enqueue(right)
-        }
-        median +: loadBalanceIndicesImpl(queue)
-      }
-    }
-
-    def removeMedian[A](s: Seq[A]): (A, Seq[A], Seq[A]) = {
-      val medianIndex = s.length / 2
-      (s(medianIndex), s.take(medianIndex), s.drop(medianIndex + 1))
-    }
-
-    val queue = new mutable.PriorityQueue[Seq[Int]]()(Ordering.by(_.length))
-    queue.enqueue(indices)
-    loadBalanceIndicesImpl(queue)
-  }
 }
+
+//   // Produce joints that achieve some lead balancing when generating the initial Block RDD
+//   private def generateSeedJoints(joints: Seq[Joint], numSeedJoints: Integer): (Seq[Joint], Seq[Joint]) = {
+//     val (persistentJoints, nonPersistentJoints) = joints.partition(_.shape.isEmpty)
+//     persistentJoints.length match {
+//       // All of the seed joints will be persistent
+//       case len if len >= numSeedJoints => (persistentJoints.take(numSeedJoints),
+//           persistentJoints.drop(numSeedJoints) ++ nonPersistentJoints)
+//       // All persistent joints are used as seed joints, along with some non-persistent joints
+//       case len =>
+//         val numNonPersistent = numSeedJoints - len
+//         // Arrange joints so we prefer elements near middle of rock mass
+//         val sortedNonPersistent = nonPersistentJoints.sortWith(_.centerX < _.centerX)
+//         val indices = loadBalanceIndices(sortedNonPersistent.indices).take(numNonPersistent)
+//         val seedNonPersistent = indices.collect(sortedNonPersistent)
+//         val remainingNonPersistent = sortedNonPersistent.diff(seedNonPersistent)
+//         (persistentJoints ++ seedNonPersistent, remainingNonPersistent)
+//     }
+//   }
+
+//   private def loadBalanceIndices(indices: Seq[Int]): Seq[Int] = {
+//     def loadBalanceIndicesImpl(queue: mutable.PriorityQueue[Seq[Int]]): Seq[Int] = {
+//       if (queue.isEmpty) {
+//         Nil
+//       } else {
+//         val s = queue.dequeue()
+//         val (median, left, right) = removeMedian(s)
+//         if (left.nonEmpty) {
+//           queue.enqueue(left)
+//         }
+//         if (right.nonEmpty) {
+//           queue.enqueue(right)
+//         }
+//         median +: loadBalanceIndicesImpl(queue)
+//       }
+//     }
+
+//     def removeMedian[A](s: Seq[A]): (A, Seq[A], Seq[A]) = {
+//       val medianIndex = s.length / 2
+//       (s(medianIndex), s.take(medianIndex), s.drop(medianIndex + 1))
+//     }
+
+//     val queue = new mutable.PriorityQueue[Seq[Int]]()(Ordering.by(_.length))
+//     queue.enqueue(indices)
+//     loadBalanceIndicesImpl(queue)
+//   }
+// }

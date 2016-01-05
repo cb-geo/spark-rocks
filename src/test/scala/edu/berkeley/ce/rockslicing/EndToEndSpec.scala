@@ -11,7 +11,7 @@ class EndToEndSpec extends FunSuite {
   test("Simple end-to-end test using unit cube and simple planes") {
     // Read input file to generate list of joints and initial rock block
     val inputSource = Source.fromURL(getClass.getResource(s"/$INPUT_FILE_NAME"))
-    val (globalOrigin, rockVolume, jointList) = InputProcessor.readInput(inputSource).get
+    val (globalOrigin, boundingBox, rockVolume, jointList) = InputProcessor.readInput(inputSource).get
     inputSource.close()
 
     // Create an initial block
