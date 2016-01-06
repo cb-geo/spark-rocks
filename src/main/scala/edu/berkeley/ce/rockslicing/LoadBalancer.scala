@@ -2,6 +2,7 @@ package edu.berkeley.ce.rockslicing
 
 import breeze.linalg
 import breeze.linalg.{DenseVector, DenseMatrix}
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Queue
 import util.control.Breaks.{break, breakable}
 
@@ -59,45 +60,44 @@ object LoadBalancer {
 
     val volumePerPart = rockVolume.volume/(numSeedJoints + 1)
     var remainingBlock = rockVolume
-    var seedJoints = Seq[Joint]()
-    var remainingJoints = new Queue[Joint]
+    val seedJoints = new ArrayBuffer[Joint]()
+    val remainingJoints = new Queue[Joint]
     // First add persistent then non-persistent - this ensures that persistent joints are first checked
     // as seed joints before trying non-persistent
     remainingJoints ++= sortedPersistent
     remainingJoints ++= sortedNonPersistent
    
-    breakable {
-      while ((remainingBlock.volume > 1.1*volumePerPart) && (seedJoints.length != numSeedJoints)) {
-        // Check if all joints have already been checked. If so, unable to find optimal load balancing
-        // for selected number of seed joints
-        if (remainingJoints.isEmpty) {
-          throw new IllegalStateException("ERROR: LoadBalancer unable to find optimal seed joints to"+
-                                             " maintain balanced load among processes.")
-        }
+    while ((remainingBlock.volume > 1.1*volumePerPart) && (seedJoints.length != numSeedJoints)) {
+      // Check if all joints have already been checked. If so, unable to find optimal load balancing
+      // for selected number of seed joints
+      if (remainingJoints.isEmpty) {
+        throw new IllegalStateException("ERROR: LoadBalancer unable to find optimal seed joints to"+
+                                        " maintain balanced load among processes.")
+      }
 
-        breakable {
-          while (!remainingJoints.isEmpty) {
-            val joint = remainingJoints.dequeue
-            val blocks = remainingBlock.cut(joint, minRadius, maxAspectRatio)
-            // Remove redundant faces
-            val nonRedundantBlocks = blocks.map { case block @ Block(center, _) =>
-              Block(center, block.nonRedundantFaces)
-            }
+      breakable {
+        while (!remainingJoints.isEmpty) {
+          val joint = remainingJoints.dequeue
+          val blocks = remainingBlock.cut(joint, minRadius, maxAspectRatio)
+          // Remove redundant faces
+          val nonRedundantBlocks = blocks.map { case block @ Block(center, _) =>
+            Block(center, block.nonRedundantFaces)
+          }
 
-            val volumeBlocks = nonRedundantBlocks.sortWith(_.volume < _.volume)
-            // Check if smallest block's volume falls within 0.9 to 1.1 of the ideal volume per part
-            // Also, check that the largest block's volume does not fall below 0.9 of the ideal vol.
-            if ((volumeBlocks(0).volume < 1.1*volumePerPart) &&
-               (volumeBlocks(0).volume > 0.9*volumePerPart) &&
-               (volumeBlocks(1).volume > 0.9*volumePerPart)) {
-              seedJoints = seedJoints :+ joint
+          val volumeBlocks = nonRedundantBlocks.sortWith(_.volume < _.volume)
+          // Check if smallest block's volume falls within 0.9 to 1.1 of the ideal volume per part
+          // Also, check that the largest block's volume does not fall below 0.9 of the ideal vol.
+          if ((volumeBlocks(0).volume < 1.1*volumePerPart) &&
+            (volumeBlocks(0).volume > 0.9*volumePerPart) &&
+            (volumeBlocks(1).volume > 0.9*volumePerPart)) {
+              seedJoints += joint
               remainingBlock = volumeBlocks(1)
               break()
-            }
           }
         }
       }
     }
+   
 
     // Check that number of seed joints matches those requested by user
     if (seedJoints.length != numSeedJoints) {
