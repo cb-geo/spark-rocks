@@ -44,21 +44,21 @@ object LoadBalancer {
     val diagonalVector = breeze.linalg.normalize(DenseVector[Double](boundingBox._4 - boundingBox._1,
                                                                      boundingBox._5 - boundingBox._2,
                                                                      boundingBox._6 - boundingBox._3))
-    // Sort such that normals of joint planes go from more to less parallel to diagonal of bounding box
-    val normSortedPersistent =
-      persistentJoints.sortWith(jointDotProduct(_, diagonalVector) > jointDotProduct(_, diagonalVector))
     // Sort according to distance of joint plane from origin. Assumes input joint origins are the same
     // as global origin
-    val sortedPersistent = normSortedPersistent.sortWith(_.d < _.d)
+    val distSortedPersistent = persistentJoints.sortWith(_.d < _.d)
+    // Sort such that normals of joint planes go from more to less parallel to diagonal of bounding box
+    val sortedPersistent =
+      distSortedPersistent.sortWith(jointDotProduct(_, diagonalVector) > jointDotProduct(_, diagonalVector))
 
     // Sort non-persistent joints similarly to how persistent joints were sorted above
-    val normSortedNonPersistent =
-      nonPersistentJoints.sortWith(jointDotProduct(_, diagonalVector) > jointDotProduct(_, diagonalVector))
-    val sortedNonPersistent = normSortedNonPersistent.sortWith(_.d < _.d)
+    val distSortedNonPersistent = nonPersistentJoints.sortWith(_.d < _.d)
+    val sortedNonPersistent = 
+      distSortedNonPersistent.sortWith(jointDotProduct(_, diagonalVector) > jointDotProduct(_, diagonalVector))
     val allJoints = sortedPersistent ++ sortedNonPersistent
 
     val volumePerPart = rockVolume.volume/(numSeedJoints + 1)
-    var remainingBlock = Seq(rockVolume)
+    var remainingBlock = rockVolume
     var seedJoints = Seq[Joint]()
     var remainingJoints = new Queue[Joint]
     // First add persistent then non-persistent - this ensures that persistent joints are first checked
@@ -66,30 +66,38 @@ object LoadBalancer {
     remainingJoints ++= sortedPersistent
     remainingJoints ++= sortedNonPersistent
    
-    while ((remainingBlock.exists{ block => block.volume > 1.1*volumePerPart}) &&
-           (remainingBlock.length == 1) && seedJoints.length != numSeedJoints) {
-      breakable {
-        while (!remainingJoints.isEmpty) {
-          val joint = remainingJoints.dequeue
-          val blocks = remainingBlock.flatMap(_.cut(joint, minRadius, maxAspectRatio))
-          // Remove redundant faces
-          val nonRedundantBlocks = blocks.map { case block @ Block(center, _) =>
-            Block(center, block.nonRedundantFaces)
-          }
-          val volumes = nonRedundantBlocks map (block => block.volume)
-          println("These are the volumes:")
-          volumes foreach( volume => println(volume))
-          if (volumes.exists{ volume => volume < 1.1*volumePerPart}) {
-            seedJoints = seedJoints :+ joint
-            remainingBlock = nonRedundantBlocks.filter(block => block.volume > 1.1*volumePerPart)
-            println("I'm in here!")
-            break()
+    breakable {
+      while ((remainingBlock.volume > 1.1*volumePerPart) && (seedJoints.length != numSeedJoints)) {
+        // Check if all joints have already been checked. If so, unable to find optimal load balancing
+        // for selected number of seed joints
+        if (remainingJoints.isEmpty) {
+          throw new IllegalStateException("ERROR: LoadBalancer unable to find optimal seed joints to"+
+                                             " maintain balanced load among processes.")
+        }
+
+        breakable {
+          while (!remainingJoints.isEmpty) {
+            val joint = remainingJoints.dequeue
+            val blocks = remainingBlock.cut(joint, minRadius, maxAspectRatio)
+            // Remove redundant faces
+            val nonRedundantBlocks = blocks.map { case block @ Block(center, _) =>
+              Block(center, block.nonRedundantFaces)
+            }
+
+            val volumeBlocks = nonRedundantBlocks.sortWith(_.volume < _.volume)
+            // Check if smallest block's volume falls within 0.9 to 1.1 of the ideal volume per part
+            // Also, check that the largest block's volume does not fall below 0.9 of the ideal vol.
+            if ((volumeBlocks(0).volume < 1.1*volumePerPart) &&
+               (volumeBlocks(0).volume > 0.9*volumePerPart) &&
+               (volumeBlocks(1).volume > 0.9*volumePerPart)) {
+              seedJoints = seedJoints :+ joint
+              remainingBlock = volumeBlocks(1)
+              break()
+            }
           }
         }
       }
     }
-    println("These are the seed joints")
-    println(seedJoints)
 
     // Check that number of seed joints matches those requested by user
     if (seedJoints.length != numSeedJoints) {
@@ -102,13 +110,13 @@ object LoadBalancer {
   }   
 
   /**
-    * Calculates the dot product of a joint's normal with another unit vector
+    * Calculates the absolute value of the dot product of a joint's normal with another unit vector
     * @param joint Joint whose normal is to be used in dot product
     * @param vector Vector to use in dot product
     * @return Dot product of joint's normal and input vector
     */
-  def jointDotProduct(joint: Joint, vector: DenseVector[Double]): Double = {
+  private def jointDotProduct(joint: Joint, vector: DenseVector[Double]): Double = {
     val normal = DenseVector[Double](joint.a, joint.b, joint.c)
-    normal dot vector
+    math.abs(normal dot vector)
   }
 }
