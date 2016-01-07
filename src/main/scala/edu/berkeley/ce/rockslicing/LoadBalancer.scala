@@ -75,6 +75,11 @@ object LoadBalancer {
                                         " maintain balanced load among processes.")
       }
 
+      // If searching for last seed joints, save volume of remaining block
+      if (seedJoints.length == numSeedJoints - 1) {
+        val remainingVolume = remainingBlock.volume
+      }
+
       breakable {
         while (!remainingJoints.isEmpty) {
           val joint = remainingJoints.dequeue
@@ -93,10 +98,6 @@ object LoadBalancer {
               seedJoints += joint
               remainingBlock = volumeBlocks(1)
               break()
-          }
-          // If searching for last seed joints, save data on best joint option
-          if (seedJoints.length == numSeedJoints - 1) {
-            // CONTINUE HERE
           }
         }
       }
