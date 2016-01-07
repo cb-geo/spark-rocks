@@ -6,9 +6,7 @@ import scala.io.Source
 
 class InputProcessingSpec extends FunSuite {
   test("Input file without global origin specified should produce error") {
-    val inputStr = "0.0 0.0 0.0 2.0 2.0 2.0\n" + 
-      "\n" +
-      "-1.0 0.0 0.0 0.0 0.0 0.0\n" +
+    val inputStr = "-1.0 0.0 0.0 0.0 0.0 0.0\n" +
       "1.0 0.0 0.0 2.0 0.0 0.0\n" +
       "0.0 -1.0 0.0 0.0 0.0 0.0\n" +
       "0.0 1.0 0.0 2.0 0.0 0.0\n" +
@@ -21,8 +19,6 @@ class InputProcessingSpec extends FunSuite {
 
   test("Input file with improper global origin should produce error") {
     val inputStr = "0.0 0.0\n" +
-      "0.0 0.0 0.0 2.0 2.0 2.0\n" +
-      "\n" +
       "1.0 0.0 0.0 2.0 0.0 0.0\n" +
       "0.0 -1.0 0.0 0.0 0.0 0.0\n" +
       "0.0 1.0 0.0 2.0 0.0 0.0\n" +
@@ -35,64 +31,6 @@ class InputProcessingSpec extends FunSuite {
 
   test("Input file with invalid double in definition of global origin should produce error") {
     val inputStr = "0.0 foo 0.0\n" +
-      "0.0 0.0 0.0 2.0 2.0 2.0\n" +
-      "\n" +
-      "1.0 0.0 0.0 2.0 0.0 0.0\n" +
-      "0.0 -1.0 0.0 0.0 0.0 0.0\n" +
-      "0.0 1.0 0.0 2.0 0.0 0.0\n" +
-      "0.0 0.0 -1.0 0.0 0.0 0.0\n" +
-      "0.0 0.0 1.0 2.0 0.0 0.0\n" +
-      "1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0\n"
-    val inputSrc = Source.fromString(inputStr)
-    assert(InputProcessor.readInput(inputSrc).isEmpty)
-  }
-
-  test("Input file without bounding box specified should produce error") {
-    val inputStr = "0.0 0.0 0.0\n" +
-      "\n" +
-      "0.0 0.0 0.0 2.0 2.0 2.0\n" +
-      "-1.0 0.0 0.0 0.0 0.0 0.0\n" +
-      "1.0 0.0 0.0 2.0 0.0 0.0\n" +
-      "0.0 -1.0 0.0 0.0 0.0 0.0\n" +
-      "0.0 1.0 0.0 2.0 0.0 0.0\n" +
-      "0.0 0.0 -1.0 0.0 0.0 0.0\n" +
-      "0.0 0.0 1.0 2.0 0.0 0.0\n" +
-      "1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0\n"
-    val inputSrc = Source.fromString(inputStr)
-    assert(InputProcessor.readInput(inputSrc).isEmpty)
-  }
-
-  test("Input file with improper bounding box should produce error") {
-    val inputStr = "0.0 0.0 0.0\n" +
-      "0.0 0.0 0.0 2.0 2.0\n" +
-      "\n" +
-      "1.0 0.0 0.0 2.0 0.0 0.0\n" +
-      "0.0 -1.0 0.0 0.0 0.0 0.0\n" +
-      "0.0 1.0 0.0 2.0 0.0 0.0\n" +
-      "0.0 0.0 -1.0 0.0 0.0 0.0\n" +
-      "0.0 0.0 1.0 2.0 0.0 0.0\n" +
-      "1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0\n"
-    val inputSrc = Source.fromString(inputStr)
-    assert(InputProcessor.readInput(inputSrc).isEmpty)
-  }
-
-  test("Input file with invalid double in definition of bounding box should produce error") {
-    val inputStr = "0.0 0.0 0.0\n" +
-      "0.0 0.0 0.0 foo 2.0 2.0\n" +
-      "\n" +
-      "1.0 0.0 0.0 2.0 0.0 0.0\n" +
-      "0.0 -1.0 0.0 0.0 0.0 0.0\n" +
-      "0.0 1.0 0.0 2.0 0.0 0.0\n" +
-      "0.0 0.0 -1.0 0.0 0.0 0.0\n" +
-      "0.0 0.0 1.0 2.0 0.0 0.0\n" +
-      "1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0\n"
-    val inputSrc = Source.fromString(inputStr)
-    assert(InputProcessor.readInput(inputSrc).isEmpty)
-  }
-
-  test("Input file without empty line after bounding box should produce error") {
-    val inputStr = "0.0 0.0 0.0\n" +
-      "0.0 0.0 0.0 2.0 2.0 2.0\n" +
       "1.0 0.0 0.0 2.0 0.0 0.0\n" +
       "0.0 -1.0 0.0 0.0 0.0 0.0\n" +
       "0.0 1.0 0.0 2.0 0.0 0.0\n" +
@@ -201,8 +139,6 @@ class InputProcessingSpec extends FunSuite {
 
   test("Properly formatted input file should lead to expected rock volume and joints") {
     val inputStr = "4.0 8.0 15.0\n" +
-      "0.0 0.0 0.0 2.0 2.0 2.0\n" +
-      "\n" +
       "-1.0 0.0 0.0 0.0 0.0 0.0\n" +
       "1.0 0.0 0.0 2.0 0.0 0.0\n" +
       "0.0 -1.0 0.0 0.0 0.0 0.0\n" +
@@ -213,7 +149,7 @@ class InputProcessingSpec extends FunSuite {
       "1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0\n" +
       "0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 -1.0 0.0 0.5 -1.0 0.0 0.0 0.0 1.0 0.0 0.0 0.5"
     val inputSrc = Source.fromString(inputStr)
-    val (globalOrigin, boundingBox, rockVolume, joints) = InputProcessor.readInput(inputSrc).get
+    val (globalOrigin, rockVolume, joints) = InputProcessor.readInput(inputSrc).get
 
     val expectedOrigin = (4.0, 8.0, 15.0)
 

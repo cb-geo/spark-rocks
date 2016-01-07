@@ -24,30 +24,6 @@ object InputProcessor {
     val globalOrigin = globalOriginTokens map(_.get)
     val globalOriginTuple = (globalOrigin(0), globalOrigin(1), globalOrigin(2))
 
-    // val allOtherLines = lines.tail
-    // val boundingBoxLine = allOtherLines.head._1
-    // val boundingBoxTokens = boundingBoxLine.split(" ") map { x => Try(x.toDouble) }
-    // val errIndexBoundingBox = boundingBoxTokens.indexWhere(_.isFailure)
-    // if (errIndexBoundingBox != -1) {
-    //   println(s"Error, Line 2, Token $errIndexBoundingBox: "+
-    //           "Invalid double found in definition of bounding box")
-    //   return None
-    // } else if (boundingBoxTokens.length != 6) {
-    //   println("Error, Line 2: Input file must have definition of bounding box as 6 double values")
-    //   return None
-    // }
-    // val boundingBox = boundingBoxTokens map(_.get)
-    // val boundingBoxTuple = (boundingBox(0), boundingBox(1), boundingBox(2),
-    //                         boundingBox(3), boundingBox(4), boundingBox(5))
-
-    // val dataLines = allOtherLines.tail
-    // val transitionLine = dataLines.head._1
-    // if (!transitionLine.isEmpty) {
-    //   println("Error: Input file must contain an empty line to mark transistion from global origin"+
-    //           " and bounding box definitions to joints")
-    //   return None
-    // }
-
     val remainingLines = lines.tail
     val transitionIndex = remainingLines.indexWhere(_._1 == "%")
     if (transitionIndex == -1) {
