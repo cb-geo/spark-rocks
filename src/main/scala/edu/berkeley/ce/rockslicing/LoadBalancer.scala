@@ -1,4 +1,4 @@
-gpackage edu.berkeley.ce.rockslicing
+package edu.berkeley.ce.rockslicing
 
 import breeze.linalg
 import breeze.linalg.{DenseVector, DenseMatrix}
@@ -26,7 +26,7 @@ object LoadBalancer {
     * @param maxAspectRatio The maximum ratio of a child block's bounding sphere to the radius
     *                       of the largest sphere that can be inscribed in the block. If either
     *                       child falls above this minimum, no cut is performed.
-    * @param force Force the load balancer to provide seed joints regardless of load imbalance
+    * @param forceBalancer Force the load balancer to provide seed joints regardless of load imbalance
     * @return Two joint sets. The first set are the joints that should be processed before 
     *         initiating parallel context. The second set are the joints that should be processed
     *         by each process individually
@@ -34,7 +34,7 @@ object LoadBalancer {
   def generateSeedJoints(joints: Seq[Joint], rockVolume: Block, numSeedJoints: Integer,
                          boundingBox: (Double, Double, Double, Double, Double, Double),
                          minRadius: Double, maxAspectRatio: Double,
-                         force: Option[Boolean]=null):
+                         forceBalancer: Boolean):
                         (Seq[Joint], Seq[Joint]) = {
 
     if (joints.length < numSeedJoints) {
@@ -65,21 +65,46 @@ object LoadBalancer {
     val seedJoints = new ArrayBuffer[Joint]()
     // First add persistent then non-persistent - this ensures that persistent joints are first checked
     // as seed joints before trying non-persistent
-    val remainingJoints = new Queue[Joint](sortedPersistent ++ sortedNonPersistent)
+    val remainingJoints = new Queue[Joint]()
+    remainingJoints ++= sortedPersistent ++ sortedNonPersistent
 
     // Variables for tracking best options for last seed joint search
     var minBlock = rockVolume
     var maxBlock = rockVolume
-    val bestJoint = new Joint
+    val bestJoint = new ArrayBuffer[Joint]()
     var oneLessJoint = false
-   
-    while ((remainingBlock.volume > 1.1*volumePerPart) && (seedJoints.length != numSeedJoints)) {
+
+    while ((remainingBlock.volume > 1.2*volumePerPart) && (seedJoints.length != numSeedJoints)) {
       // Check if all joints have already been checked. If so, unable to find optimal load balancing
       // for selected number of seed joints
-      // if (remainingJoints.isEmpty) {
-      //   throw new IllegalStateException("ERROR: LoadBalancer unable to find optimal seed joints to"+
-      //                                   " maintain balanced load among processes.")
-      // }
+      if (remainingJoints.isEmpty) {
+        forceBalancer match {
+          case false =>
+            if (oneLessJoint) {
+              println("Seed Joints Length: "+seedJoints.length)
+              throw new IllegalStateException("ERROR: LoadBalancer.generateSeedJoints unable to find optimal "+
+                                              "seed joints. Rerun with \"--f\" flag and one less core to "+
+                                              "force seed joint generation. Maximum load imbalance will be "+
+                                              (math.abs(remainingBlock.volume - volumePerPart)/volumePerPart +
+                                              0.1)*100+"%")
+            } else {
+              println("Seed Joints Length: "+seedJoints.length)
+              throw new IllegalStateException("ERROR: LoadBalancer.generateSeedJoints unable to find optimal "+
+                                              "seed joints. Rerun with \"--f\" flag to force seed joint "+
+                                              "generation. Maximum load imbalance will be "+
+                (Seq(math.abs(minBlock.volume - volumePerPart)/volumePerPart,
+                  math.abs(maxBlock.volume - volumePerPart)/volumePerPart).max +
+                  0.1)*100+"%")
+            }
+          case true =>
+            if (oneLessJoint) {
+              return (seedJoints, allJoints.diff(seedJoints))
+            } else {
+              seedJoints += bestJoint(bestJoint.length - 1)
+              return (seedJoints, allJoints.diff(seedJoints))
+            }
+        }
+      }
 
       breakable {
         while (!remainingJoints.isEmpty) {
@@ -91,70 +116,49 @@ object LoadBalancer {
           }
 
           val volumeBlocks = nonRedundantBlocks.sortWith(_.volume < _.volume)
-          val remainingVolume = volumeBlocks.foldLeft(0)(_.volume + _.volume)
-          // Check if smallest block's volume falls within 0.9 to 1.1 of the ideal volume per part
-          // Also, check that the largest block's volume does not fall below 0.9 of the ideal vol.
-          if ((volumeBlocks(0).volume < 1.1*volumePerPart) &&
-            (volumeBlocks(0).volume > 0.9*volumePerPart) &&
-            (volumeBlocks(1).volume > 0.9*volumePerPart)) {
+          // Check if smallest block's volume falls within 0.8 to 1.2 of the ideal volume per part
+          // Also, check that the largest block's volume does not fall below 0.8 of the ideal vol.
+          if ((volumeBlocks(0).volume < 1.2*volumePerPart) &&
+            (volumeBlocks(0).volume > 0.8*volumePerPart) &&
+            (volumeBlocks(1).volume > 0.8*volumePerPart)) {
               seedJoints += joint
               remainingBlock = volumeBlocks(1)
               break()
           }
 
-          if (seedJoints.length == numSeedJoints - 1) {
-            // Ratio of current blocks' volume differences from ideal volume per part
-            val cutBlocksRatio = (volumeBlocks(1).volume - volumeBlocks(0).volume)/volumePerPart
-            val currentMinRatio = math.abs(volumeBlocks(0).volume - volumePerPart)/volumePerPart
-            val currentMaxRatio = math.abs(volumeBlocks(1).volume - volumePerPart)/volumePerPart
-            // Ratio of stored min and max blocks' volume differences from ideal volume per part
-            val minBlockRatio = math.abs(minBlock.volume - volumePerPart)/volumePerPart
-            val maxBlockRatio = math.abs(maxBlock.volume - volumePerPart)/volumePerPart
-            // Remaining block volume deviation from ideal volume per part
-            val remVolRatio = math.abs(remainingVolume - volumePerPart)/volumePerPart
+          // if (seedJoints.length == numSeedJoints - 1) {
+            val remainingVolume = (volumeBlocks map (_.volume)).reduceLeft(_ + _)
+            if (volumeBlocks.length == 2) {
+              // Ratio of current blocks' volume differences from ideal volume per part
+              val cutBlocksRatio = (volumeBlocks(1).volume - volumeBlocks(0).volume)/volumePerPart
+              val currentMinRatio = math.abs(volumeBlocks(0).volume - volumePerPart)/volumePerPart
+              val currentMaxRatio = math.abs(volumeBlocks(1).volume - volumePerPart)/volumePerPart
+              // Ratio of stored min and max blocks' volume differences from ideal volume per part
+              val minBlockRatio = math.abs(minBlock.volume - volumePerPart)/volumePerPart
+              val maxBlockRatio = math.abs(maxBlock.volume - volumePerPart)/volumePerPart
+              
+              // Check if new min and max blocks are better than stored ones
+              if ((currentMinRatio < minBlockRatio) && (currentMaxRatio < maxBlockRatio)) {
+                minBlock = volumeBlocks(0)
+                maxBlock = volumeBlocks(1)
+                println("ADDING JOINT!")
+                bestJoint += joint
+              }
 
-            // Check if new min and max blocks are better than stored ones
-            if ((currentMinRatio < minBlockRatio) && (currentMaxRatio < maxBlockRatio)) {
-              minBlock = volumeBlocks(0)
-              maxBlock = volumeBlocks(1)
-              bestJoint = joint
+              // Remaining block volume deviation from ideal volume per part
+              val remVolRatio = math.abs(remainingVolume - volumePerPart)/volumePerPart
+              // Check if remaining volume deviation is better than min and max blocks
+              if ((remVolRatio < currentMinRatio) || (remVolRatio < currentMaxRatio)) {
+                oneLessJoint = true
+              } else {
+                oneLessJoint = false
+              }
             }
-            // Check if remaining volume deviation is better than min and max blocks
-            if ((remVolRatio < currentMinRatio) || (remVolRatio < currentMaxRatio)) {
-              oneLessJoint = true
-            } else {
-              oneLessJoint = false
-            }
-          }
+          // }
         }
       }
     }
-   
-    // CONTINUE HERE: STILL NEED TO MAKE RETURN WORK FOR CASE WHEN EVERYTHING GOES FINE!!!
-    force match {
-      case null => 
-        if (oneLessJoint) {
-          println("ERROR: LoadBalancer.generateSeedJoints unable to find optimal seed joints. "+
-                  "Rerun with \"-f\" flag and one less core to force seed joint generation. "+
-                  "Maximum load imbalance will be "+
-                  math.abs(remainingVolume - volumePerPart)/volumePerPart*100+"%")
-          System.exit(-1)
-        } else {
-          println("ERROR: LoadBalancer.generateSeedJoints unable to find optimal seed joints. "+
-                  "Rerun with \"-f\" flag to force seed joint generation. "+
-                  "Maximum load imbalance will be "+
-                  Seq(math.abs(minBlock.volume - volumePerPart)/volumePerPart,
-                      math.abs(maxBlock.volume - volumePerPart)/volumePerPart).max*100+"%")
-          System.exit(-1)
-        }        
-      case yes => 
-        if (oneLessJoint) {
-          (seedJoints, allJoints.diff(seedJoints))
-        } else {
-          seedJoints += bestJoint
-          (seedJoints, allJoints.diff(seedJoints))
-        }
-    }
+    (seedJoints, allJoints.diff(seedJoints))
   }   
 
   /**

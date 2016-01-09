@@ -40,7 +40,8 @@ object RockSlicer {
     // Generate a list of initial blocks before RDD-ifying it
     val (seedJoints, remainingJoints) =
       LoadBalancer.generateSeedJoints(joints, blocks(0), arguments.numSeedJoints,
-                                      boundingBox, arguments.minRadius, arguments.maxAspectRatio)
+                                      boundingBox, arguments.minRadius, arguments.maxAspectRatio,
+                                      arguments.forceBalancer)
     seedJoints foreach { joint =>
       blocks = blocks.flatMap(_.cut(joint, arguments.minRadius, arguments.maxAspectRatio))
     }

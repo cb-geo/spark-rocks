@@ -10,7 +10,8 @@ object CommandReader {
     minRadius: Double = 0.0,
     maxAspectRatio: Double = Double.PositiveInfinity,
     toVTK: Boolean = false,
-    toInequalities: Boolean = false
+    toInequalities: Boolean = false,
+    forceBalancer: Boolean = false
   )
 
   private val parser = new scopt.OptionParser[Config]("SparkRocks") {
@@ -45,6 +46,10 @@ object CommandReader {
     opt[Unit]("toIE") action { (_, c) =>
       c.copy(toInequalities = true)
     } text "Generate JSON output that uses inequalities to represent rock blocks along with the blocks' centroids"
+
+    opt[Unit]("f") action { (_, c) =>
+      c.copy(forceBalancer = true)
+    } text "Force the load balancer to provide seed joints regardless of load imbalance"
 
     help("help") text "Prints this usage text"
 
