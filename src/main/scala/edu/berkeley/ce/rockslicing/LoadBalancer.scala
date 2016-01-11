@@ -28,11 +28,25 @@ object LoadBalancer {
     val diagonalVector = breeze.linalg.normalize(DenseVector[Double](boundingBox._4 - boundingBox._1,
                                                                      boundingBox._5 - boundingBox._2,
                                                                      boundingBox._6 - boundingBox._3))
+    val x_diff = boundingBox._4 - boundingBox._1
+    val y_diff = boundingBox._5 - boundingBox._2
+    val z_diff = boundingBox._6 - boundingBox._3
+    val diagonalLength = math.sqrt(x_diff*x_diff + y_diff*y_diff + z_diff*z_diff)
+    println("This is the diagonal length: "+diagonalLength)
+    println("This is the diangonal vector: "+diagonalVector)
+    val centerVec = DenseVector[Double](boundingBox._1, boundingBox._2, boundingBox._3)
+    println("This is the center: "+centerVec)
+    val increment = centerVec + 0.05*diagonalLength*diagonalVector
+    println("This is the incremented value: "+increment)
+    println("This is the bounding box: "+boundingBox)
+    val inc2 = increment + 0.05*diagonalLength*diagonalVector
+    println("This is the second increment: "+inc2)
 
     val volumePerPart = rockVolume.volume/(numSeedJoints + 1)
     val seedJoints =
       findProcessorJoints(Seq[Joint](), diagonalVector, (rockVolume.centerX, rockVolume.centerY, rockVolume.centerZ),
-                          (boundingBox._1, boundingBox._2, boundingBox._3), rockVolume, volumePerPart)
+                          (boundingBox._1, boundingBox._2, boundingBox._3), rockVolume, volumePerPart,
+                          diagonalLength, (boundingBox._4, boundingBox._5, boundingBox._6))
 
     if (seedJoints.length != numSeedJoints) {
       throw new IllegalStateException("ERROR: LoadBalancer.generateSeedJoints unable to find optimal "+
@@ -44,35 +58,66 @@ object LoadBalancer {
   private def findProcessorJoints(joints: Seq[Joint], normal: DenseVector[Double],
                                  origin: (Double, Double, Double),
                                  center: (Double, Double, Double), initialVolume: Block,
-                                 desiredVolume: Double): Seq[Joint] = {
+                                 desiredVolume: Double, diagonalLength: Double,
+                                 cornerBound: (Double, Double, Double)): Seq[Joint] = {
     val joint = Joint((normal(0), normal(1), normal(2)), origin, center, phi = 0.0, cohesion = 0.0,
                       shape = Nil, artificialJoint = Some(true))
     val blocks = initialVolume.cut(joint)
 
+    val nonRedundantBlocks = blocks.map { case block @ Block(center, _) =>
+      Block(center, block.nonRedundantFaces)
+    }
+
+
     // If first block has satisfactory volume
-    if ((blocks.head.volume < 1.05*desiredVolume) && 
-        (blocks.head.volume > 0.95*desiredVolume) &&
-        (blocks.length == 2)) {
-      if (blocks.tail.head.volume <= 1.05*desiredVolume) {
+    if ((nonRedundantBlocks.head.volume < 1.1*desiredVolume) && 
+        (nonRedundantBlocks.head.volume > 0.9*desiredVolume) &&
+        (nonRedundantBlocks.length == 2)) {
+      if (nonRedundantBlocks.tail.head.volume <= 1.05*desiredVolume) {
         // If both blocks have satifactory volumes, prepend joint to joints
         joint +: joints
       } else {
         // If last block isn't small enough
-        val remainingBlock = blocks.tail.head
-        findProcessorJoints(joints, normal, origin, center, remainingBlock, desiredVolume)
+        val remainingBlock = nonRedundantBlocks.tail.head
+        findProcessorJoints(joints, normal, origin, center, remainingBlock,
+                            desiredVolume, diagonalLength, cornerBound)
       }
-    } else if (blocks.head.volume > 1.05*desiredVolume) {
+    } else if ((nonRedundantBlocks.head.volume > 1.05*desiredVolume) &&
+               (nonRedundantBlocks.length == 2)) {
       // If cut volume of first block is too big
+      println("TOO BIG!!")
       val centerVec = DenseVector[Double](center._1, center._2, center._3)
-      val newCenterVec = centerVec - (blocks.head.volume/desiredVolume - 1.0)*normal
+      // val newCenterVec = centerVec - (nonRedundantBlocks.head.volume/desiredVolume - 1.0)*normal
+      val newCenterVec = centerVec - (nonRedundantBlocks.head.volume/desiredVolume - 1.0)*normal
       val newCenter = (newCenterVec(0), newCenterVec(1), newCenterVec(2))
-      findProcessorJoints(joints, normal, origin, newCenter, initialVolume, desiredVolume)
-    } else {
+      findProcessorJoints(joints, normal, origin, newCenter, initialVolume,
+                          desiredVolume, diagonalLength, cornerBound)
+    } else if (nonRedundantBlocks.length == 2) {
       // If cut volume is first block is too small
+      println("TOO SMALL!!")
       val centerVec = DenseVector[Double](center._1, center._2, center._3)
-      val newCenterVec = centerVec + (desiredVolume/blocks.head.volume - 1.0)*normal
+      val newCenterVec = centerVec + (desiredVolume/nonRedundantBlocks.head.volume - 1.0)*normal
       val newCenter = (newCenterVec(0), newCenterVec(1), newCenterVec(2))
-      findProcessorJoints(joints, normal, origin, newCenter, initialVolume, desiredVolume)
+      findProcessorJoints(joints, normal, origin, newCenter, initialVolume,
+                          desiredVolume, diagonalLength, cornerBound)
+    } else if ((center._1 < cornerBound._1) &&
+               (center._2 < cornerBound._2) &&
+               (center._3 < cornerBound._3)) {
+      // Joint is outside block
+      println("Lower left")
+      val centerVec = DenseVector[Double](center._1, center._2, center._3)
+      val newCenterVec = centerVec + 0.05*diagonalLength*normal
+      val newCenter = (newCenterVec(0), newCenterVec(1), newCenterVec(2))
+      findProcessorJoints(joints, normal, origin, newCenter, initialVolume,
+                          desiredVolume, diagonalLength, cornerBound)
+    } else {
+      println("Upper right")
+      val centerVec = DenseVector[Double](center._1, center._2, center._3)
+      val newCenterVec = centerVec - 0.05*diagonalLength*normal
+      val newCenter = (newCenterVec(0), newCenterVec(1), newCenterVec(2))
+      println(newCenter)
+      findProcessorJoints(joints, normal, origin, newCenter, initialVolume,
+                          desiredVolume, diagonalLength, cornerBound)
     }
   }
 }

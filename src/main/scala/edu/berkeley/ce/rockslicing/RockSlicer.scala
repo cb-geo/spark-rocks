@@ -38,15 +38,18 @@ object RockSlicer {
     val boundingBox = (x_min, y_min, z_min, x_max, y_max, z_max)
 
     // Generate a list of initial blocks before RDD-ifying it
-    val (seedJoints, remainingJoints) =
-      LoadBalancer.generateSeedJoints(joints, blocks(0), arguments.numSeedJoints,
-                                      boundingBox, arguments.minRadius, arguments.maxAspectRatio,
-                                      arguments.forceBalancer)
+    // val (seedJoints, remainingJoints) =
+    //   LoadBalancer.generateSeedJoints(joints, blocks(0), arguments.numSeedJoints,
+    //                                   boundingBox, arguments.minRadius, arguments.maxAspectRatio,
+    //                                   arguments.forceBalancer)
+    val seedJoints = LoadBalancer.generateSeedJoints(blocks.head, arguments.numSeedJoints, boundingBox,
+                                                     arguments.forceBalancer)
+
     seedJoints foreach { joint =>
       blocks = blocks.flatMap(_.cut(joint, arguments.minRadius, arguments.maxAspectRatio))
     }
     val blockRdd = sc.parallelize(blocks)
-    val broadcastJoints = sc.broadcast(remainingJoints)
+    val broadcastJoints = sc.broadcast(joints)
 
     // Iterate through the discontinuities, cutting blocks where appropriate
     var cutBlocks = blockRdd
