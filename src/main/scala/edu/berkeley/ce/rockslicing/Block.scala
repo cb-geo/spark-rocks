@@ -12,10 +12,18 @@ import breeze.linalg.{DenseVector, DenseMatrix}
   * Accessed as 'd'.
   * @param phi The friction angle (phi) of the face.
   * @param cohesion The cohesion of the face.
+  * @param artificialJoint Parameter that identifies joint as being artificial joint introduced as part
+  *                        of load balancing
   */
-case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double, cohesion: Double) {
+case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double, cohesion: Double,
+                artificialJoint: Option[Boolean]=None) {
   val (a,b,c) = normalVec
   val d = distance
+
+  val processorJoint = artificialJoint match {
+    case None => false
+    case Some(yes) => yes
+  }
 
   /**
     * Checks if each of the parameters of a face is approximately 0.0 and,
@@ -28,7 +36,7 @@ case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double
     val newD = if (math.abs(d) > NumericUtils.EPSILON) d else 0.0
     val newPhi = if (math.abs(phi) > NumericUtils.EPSILON) phi else 0.0
     val newCohesion = if (math.abs(cohesion) > NumericUtils.EPSILON) cohesion else 0.0
-    Face((newA,newB,newC), newD, newPhi, newCohesion)
+    Face((newA,newB,newC), newD, newPhi, newCohesion, Some(processorJoint))
   }
 }
 
@@ -232,17 +240,17 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
         // New origin is guaranteed to lie within joint, so initial d = 0 for all child blocks
         val childBlockA = if (translatedJoint.d < 0.0) {
           Block((newX,newY,newZ), Face((-translatedJoint.a, -translatedJoint.b, -translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
+            translatedJoint.phi, translatedJoint.cohesion, Some(translatedJoint.processorJoint))+:updatedFaces)
         } else {
           Block((newX,newY,newZ), Face((translatedJoint.a, translatedJoint.b, translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
+            translatedJoint.phi, translatedJoint.cohesion, Some(translatedJoint.processorJoint))+:updatedFaces)
         }
         val childBlockB = if (translatedJoint.d < 0.0) {
           Block((newX,newY,newZ), Face((translatedJoint.a,translatedJoint.b,translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
+            translatedJoint.phi, translatedJoint.cohesion, Some(translatedJoint.processorJoint))+:updatedFaces)
         } else {
           Block((newX,newY,newZ), Face((-translatedJoint.a,-translatedJoint.b,-translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
+            translatedJoint.phi, translatedJoint.cohesion, Some(translatedJoint.processorJoint))+:updatedFaces)
         }
 
         var childBlocks = Vector(childBlockA, childBlockB)
@@ -427,7 +435,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     * @return List of faces with updated distances
     */
   def updateFaces(localOrigin: (Double, Double,Double)): Seq[Face] = {
-    faces.map { case Face((a,b,c), d, phi, cohesion) =>
+    faces.map { case Face((a,b,c), d, phi, cohesion, processorJoint) =>
       val w = DenseVector.zeros[Double](3)
       if (math.abs(c) >= NumericUtils.EPSILON) {
         w(0) = localOrigin._1 - centerX
@@ -444,7 +452,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
       }
       val n = DenseVector[Double](a, b, c)
       val new_d = NumericUtils.roundToTolerance(-(n dot w) / linalg.norm(n))
-      Face((a, b, c), new_d, phi, cohesion)
+      Face((a, b, c), new_d, phi, cohesion, processorJoint)
     }
   }
 }

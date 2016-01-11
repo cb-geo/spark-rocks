@@ -204,12 +204,15 @@ object Joint {
   *        This avoids recalculation of a known dip angle.
   * @param dipDirectionParam An optional parameter that can be used to specify the dip direction for
   *        the joint. This avoids recalculation of a known dip direction.
+  * @param artificialJoint Parameter that identifies joint as being artificial joint introduced as part
+  *                        of load balancing
   */
 case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Double, Double),
                  center: (Double, Double, Double), phi: Double, cohesion: Double,
                  shape: Seq[((Double, Double, Double),Double)], dipAngleParam: Option[Double]=None,
                  dipDirectionParam: Option[Double]=None,
-                 boundingSphereParam: Option[((Double,Double,Double),Double)]=null) {
+                 boundingSphereParam: Option[((Double,Double,Double),Double)]=null,
+                 artificialJoint: Option[Boolean]=None) {
   val (a, b, c) = normalVec
   val (centerX, centerY, centerZ) = center
   val d = Joint.findDistance(normalVec, localOrigin, center)
@@ -230,6 +233,11 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
       case _ => Some(Joint.findBoundingSphere((a, b, c), d, centerX, centerY, centerZ, shape, dipDirection))
     }
     case bs => bs
+  }
+
+  val processorJoint = artificialJoint match {
+    case None => false
+    case Some(yes) => yes
   }
 
   /** Converts lines defining shape of joint from local to global coordinates
