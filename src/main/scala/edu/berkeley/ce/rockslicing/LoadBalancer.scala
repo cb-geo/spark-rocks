@@ -54,12 +54,12 @@ object LoadBalancer {
     * @return List of processor joints that will be used to seed initial RDD
     */
   private def findProcessorJoints(joints: Seq[Joint], normal: DenseVector[Double],
-                                 origin: (Double, Double, Double),
-                                 center: (Double, Double, Double), initialVolume: Block,
-                                 desiredVolume: Double,
-                                 boundingBox: (Double, Double, Double, Double, Double, Double),
-                                 seeds: Int):
-                                 Seq[Joint] = {
+                                  origin: (Double, Double, Double),
+                                  center: (Double, Double, Double), initialVolume: Block,
+                                  desiredVolume: Double,
+                                  boundingBox: (Double, Double, Double, Double, Double, Double),
+                                  seeds: Int):
+                                  Seq[Joint] = {
     // Calculate diagonal length
     val x_diff = boundingBox._4 - boundingBox._1
     val y_diff = boundingBox._5 - boundingBox._2
@@ -73,7 +73,6 @@ object LoadBalancer {
       Block(center, block.nonRedundantFaces)
     }
     val tolerance = 0.05
-    val cornerBound = (boundingBox._4, boundingBox._5, boundingBox._6)
 
     // If first block has satisfactory volume
     if ((nonRedundantBlocks.head.volume < (1.0 + tolerance)*desiredVolume) && 
@@ -89,77 +88,41 @@ object LoadBalancer {
         findProcessorJoints(joints, normal, origin, newCenter, remainingBlock,
                             desiredVolume, boundingBox, seeds)
       }
-    // If cut volume of first block is too big
-    } else if ((nonRedundantBlocks.head.volume > 1.05*desiredVolume) &&
-               (nonRedundantBlocks.length == 2)) {
-      println("TOO BIG!!")
-      val centerVec0 = DenseVector[Double](center._1, center._2, center._3)
-      val centerVec1 = centerVec0 - (1.0/(seeds + 5.0))*diagonalLength*normal
-      // First distance guess
-      val x_diff0 = cornerBound._1 - centerVec0(0)
-      val y_diff0 = cornerBound._2 - centerVec0(1)
-      val z_diff0 = cornerBound._3 - centerVec0(2)
-      val dist0 = diagonalLength - math.sqrt(x_diff0*x_diff0 + y_diff0*y_diff0 + z_diff0*z_diff0)
-      // Second distance guess
-      val x_diff1 = cornerBound._1 - centerVec1(0)
-      val y_diff1 = cornerBound._2 - centerVec1(1)
-      val z_diff1 = cornerBound._3 - centerVec1(2)
-      val dist1 = diagonalLength - math.sqrt(x_diff1*x_diff1 + y_diff1*y_diff1 + z_diff1*z_diff1)
-      val newCenter = secantSolver(dist0, dist1, initialVolume, tolerance, boundingBox,
-                                   origin, desiredVolume, 0)
-      findProcessorJoints(joints, normal, origin, newCenter, initialVolume,
-                          desiredVolume, boundingBox, seeds)
-    // If cut volume of first block is too small
-    } else if (nonRedundantBlocks.length == 2) {
-      println("TOO SMALL!!")
-      val centerVec0 = DenseVector[Double](center._1, center._2, center._3)
-      val centerVec1 = centerVec0 + (1.0/(seeds + 5.0))*diagonalLength*normal
-      // First distance guess
-      val x_diff0 = cornerBound._1 - centerVec0(0)
-      val y_diff0 = cornerBound._2 - centerVec0(1)
-      val z_diff0 = cornerBound._3 - centerVec0(2)
-      val dist0 = diagonalLength - math.sqrt(x_diff0*x_diff0 + y_diff0*y_diff0 + z_diff0*z_diff0)
-      // Second distance guess
-      val x_diff1 = cornerBound._1 - centerVec1(0)
-      val y_diff1 = cornerBound._2 - centerVec1(1)
-      val z_diff1 = cornerBound._3 - centerVec1(2)
-      val dist1 = diagonalLength - math.sqrt(x_diff1*x_diff1 + y_diff1*y_diff1 + z_diff1*z_diff1)
-      val newCenter = secantSolver(dist0, dist1, initialVolume, tolerance, boundingBox,
-                                   origin, desiredVolume, 0)
-      findProcessorJoints(joints, normal, origin, newCenter, initialVolume,
-                          desiredVolume, boundingBox, seeds)
-    // Joint is outside block - lower left corner
-    } else if ((center._1 < cornerBound._1) &&
-               (center._2 < cornerBound._2) &&
-               (center._3 < cornerBound._3)) {
-      println("Lower left")
-      val centerVec = DenseVector[Double](center._1, center._2, center._3)
-      val newCenterVec = centerVec + (1.0/(seeds + 5.0))*diagonalLength*normal
-      val newCenter = (newCenterVec(0), newCenterVec(1), newCenterVec(2))
-      // println("New center: "+newCenter)
-      // println("Diagonal length: "+diagonalLength)
-      // println("This is the initial centerVec: "+centerVec)
-      // println("This is the normal: "+normal)
-      findProcessorJoints(joints, normal, origin, newCenter, initialVolume,
-                          desiredVolume, boundingBox, seeds)
-    // Joint is outside block - upper right corner
+    // Block volumes not satisfactory, need to iterate to find processor joint
     } else {
-      println("Upper right")
-      val centerVec = DenseVector[Double](center._1, center._2, center._3)
-      val newCenterVec = centerVec - (1.0/(seeds + 5.0))*diagonalLength*normal
-      val newCenter = (newCenterVec(0), newCenterVec(1), newCenterVec(2))
-      println(newCenter)
+      val centerVec0 = DenseVector[Double](center._1, center._2, center._3)
+      val centerVec1 = DenseVector[Double](boundingBox._4, boundingBox._5, boundingBox._6)
+      // First distance guess
+      val x_diff0 = boundingBox._1 - centerVec0(0)
+      val y_diff0 = boundingBox._2 - centerVec0(1)
+      val z_diff0 = boundingBox._3 - centerVec0(2)
+      val dist0 = diagonalLength - math.sqrt(x_diff0*x_diff0 + y_diff0*y_diff0 + z_diff0*z_diff0)
+      // Second distance guess
+      val x_diff1 = boundingBox._1 - centerVec1(0)
+      val y_diff1 = boundingBox._2 - centerVec1(1)
+      val z_diff1 = boundingBox._3 - centerVec1(2)
+      val dist1 = diagonalLength - math.sqrt(x_diff1*x_diff1 + y_diff1*y_diff1 + z_diff1*z_diff1)
+      val newCenter = bisectionSecantSolver(dist0, dist1, initialVolume, tolerance, seeds, 
+                                            boundingBox, origin, desiredVolume, 0)
       findProcessorJoints(joints, normal, origin, newCenter, initialVolume,
                           desiredVolume, boundingBox, seeds)
     }
   }
 
-  private def secantSolver(initialDist0: Double, initialDist1: Double, block: Block, tolerance: Double,
-                           boundingBox: (Double, Double, Double, Double, Double, Double),
-                           origin: (Double, Double, Double), desiredVolume: Double, iterations: Int):
-                           (Double, Double, Double) = {
+  def bisectionSecantSolver(initialDist0: Double, initialDist1: Double, block: Block, 
+                                    tolerance: Double, numSeeds: Int,
+                                    boundingBox: (Double, Double, Double, Double, Double, Double),
+                                    origin: (Double, Double, Double), desiredVolume: Double,
+                                    iterations: Int):
+                                    (Double, Double, Double) = {
 
     val iterationLimit = 100
+    // Calculate diagonal length
+    val x_diff = boundingBox._4 - boundingBox._1
+    val y_diff = boundingBox._5 - boundingBox._2
+    val z_diff = boundingBox._6 - boundingBox._3
+    val diagonalLength = math.sqrt(x_diff*x_diff + y_diff*y_diff + z_diff*z_diff)
+
     // Normal vector for processor joints
     val normal = breeze.linalg.normalize(DenseVector[Double](boundingBox._4 - boundingBox._1,
                                                              boundingBox._5 - boundingBox._2,
@@ -170,6 +133,7 @@ object LoadBalancer {
     val center0 = (center0Vec(0), center0Vec(1), center0Vec(2))
     val center1Vec = lowerLeft + initialDist1*normal
     val center1 = (center1Vec(0), center1Vec(1), center1Vec(2))
+
     // Joint guesses and corresponding blocks
     val joint0 = Joint((normal(0), normal(1), normal(2)), origin, center0, phi = 0.0, cohesion = 0.0,
                        shape = Nil, artificialJoint = Some(true))
@@ -177,51 +141,135 @@ object LoadBalancer {
                        shape = Nil, artificialJoint = Some(true))
     val blocks_0 = block.cut(joint0)
     val blocks_1 = block.cut(joint1)
-
-    if ((blocks_0.length != 2) || (blocks_1.length != 2)) {
-      throw new IllegalArgumentException("ERROR: Bad initial guesses given as inputs to "+
-                                         "LoadBalancer.secantSolver")
-    }
-
-    // Remove redundant faces before calculating volumes
     val blocks0 = blocks_0.map { case block @ Block(center, _) =>
       Block(center, block.nonRedundantFaces)
     }
     val blocks1 = blocks_1.map { case block @ Block(center, _) =>
       Block(center, block.nonRedundantFaces)
     }
-    println("Well hello!!")
+
+    // Check if both guesses produce 2 blocks each
+    if (blocks0.length != 2) {
+      // Joint outside lower left corner of bounding box
+      if ((center0._1 < boundingBox._4) &&
+        (center0._2 < boundingBox._5) &&
+        (center0._3 < boundingBox._6)) {
+        println("Block0: Lower left")
+        val centerVec = DenseVector[Double](center0._1, center0._2, center0._3)
+        val newCenterVec = centerVec + (1.0/(numSeeds + 5.0))*diagonalLength*normal
+        val newCenter = (newCenterVec(0), newCenterVec(1), newCenterVec(2))
+        val x_change = newCenter._1 - boundingBox._1
+        val y_change = newCenter._2 - boundingBox._2
+        val z_change = newCenter._3 - boundingBox._3
+        val newDistance = math.sqrt(x_change*x_change + y_change*y_change + z_change*z_change)
+        bisectionSecantSolver(newDistance, initialDist1, block, tolerance, numSeeds, 
+                              boundingBox, origin, desiredVolume, iterations)
+      // Joint outside upper left corner of bounding box
+      } else {
+        println("Block0: Upper right")
+        val centerVec = DenseVector[Double](center0._1, center0._2, center0._3)
+        val newCenterVec = centerVec - (1.0/(numSeeds + 5.0))*diagonalLength*normal
+        val newCenter = (newCenterVec(0), newCenterVec(1), newCenterVec(2))
+        val x_change = newCenter._1 - boundingBox._1
+        val y_change = newCenter._2 - boundingBox._2
+        val z_change = newCenter._3 - boundingBox._3
+        val newDistance = math.sqrt(x_change*x_change + y_change*y_change + z_change*z_change)
+        bisectionSecantSolver(newDistance, initialDist1, block, tolerance, numSeeds,
+                              boundingBox, origin, desiredVolume, iterations)
+      }
+    }
+    if (blocks1.length != 2) {
+      // Joint outside lower left corner of bounding box
+      if ((center1._1 < boundingBox._4) &&
+        (center1._2 < boundingBox._5) &&
+        (center1._3 < boundingBox._6)) {
+        println("Block1: Lower left")
+        val centerVec = DenseVector[Double](center1._1, center1._2, center1._3)
+        val newCenterVec = centerVec + (1.0/(numSeeds + 5.0))*diagonalLength*normal
+        val newCenter = (newCenterVec(0), newCenterVec(1), newCenterVec(2))
+        val x_change = newCenter._1 - boundingBox._1
+        val y_change = newCenter._2 - boundingBox._2
+        val z_change = newCenter._3 - boundingBox._3
+        val newDistance = math.sqrt(x_change*x_change + y_change*y_change + z_change*z_change)
+        bisectionSecantSolver(initialDist0, newDistance, block, tolerance, numSeeds,
+                              boundingBox, origin, desiredVolume, iterations)
+      // Joint outside upper right corner of bounding box 
+      } else {
+        println("Block1: Upper right")
+        val centerVec = DenseVector[Double](center1._1, center1._2, center1._3)
+        val newCenterVec = centerVec - (1.0/(numSeeds + 5.0))*diagonalLength*normal
+        val newCenter = (newCenterVec(0), newCenterVec(1), newCenterVec(2))
+        val x_change = newCenter._1 - boundingBox._1
+        val y_change = newCenter._2 - boundingBox._2
+        val z_change = newCenter._3 - boundingBox._3
+        val newDistance = math.sqrt(x_change*x_change + y_change*y_change + z_change*z_change)
+        bisectionSecantSolver(initialDist0, newDistance, block, tolerance, numSeeds,
+                              boundingBox, origin, desiredVolume, iterations)
+      }
+    }
+
     // Update distance using secant method
+    val fp = blocks1.head.volume/desiredVolume - 1.0
     val f_prime = (blocks1.head.volume - blocks0.head.volume)/(initialDist1 - initialDist0)
-    println("Look at those volumes!")
-    val newDist = initialDist1 - blocks1.head.volume/f_prime
+    val newDist = initialDist1 - fp/f_prime
     val newCenterVec = lowerLeft + newDist*normal
     val newCenter = (newCenterVec(0), newCenterVec(1), newCenterVec(2))
-    println("Calc'd new center: "+newCenter)
-    println("Last volume calc: "+blocks1.head.volume)
-    println("This is the desired volume: "+desiredVolume)
     val newJoint = Joint((normal(0), normal(1), normal(2)), origin, newCenter, phi = 0.0, cohesion = 0.0,
                          shape = Nil, artificialJoint = Some(true))
-    println("Constructed new joint")
     val new_Blocks = block.cut(newJoint)
-
-    // Remove redundant faces before calculating volumes
     val newBlocks = new_Blocks.map { case block @ Block(center, _) =>
       Block(center, block.nonRedundantFaces)
     }
 
-    // Check if new joint gives appropriate volume otherwise, do another iteration
-    println("Lets calc some more volumes")
-    if ((math.abs(newBlocks.head.volume/desiredVolume - 1.0) < tolerance) ||
-        (iterations == iterationLimit)) {
-      if (iterations == iterationLimit) println("MAXIMUM NUMBER OF ITERATIONS REACHED, RETURNING"+
-                                                " LAST ITERATION RESULTS")
-      println("Secant found solution, exiting")
+    val f_secant = newBlocks.head.volume/desiredVolume - 1.0
+    println()
+    println("f_secant: "+f_secant)
+    println("secant dist: "+newDist)
+    println("initD0: "+initialDist0)
+    println("initD1: "+initialDist1)
+    if (math.abs(f_secant) < tolerance) {
+      println("This is the volume: "+newBlocks.head.volume)
       (newJoint.centerX, newJoint.centerY, newJoint.centerZ)
+    } else if ((newDist > Seq(initialDist0, initialDist1).max) || 
+               (newDist < Seq(initialDist0, initialDist1).min)) {
+      val updatedDist = (initialDist0 + initialDist1)/2.0
+      val updatedCenterVec = lowerLeft + updatedDist*normal
+      val updatedCenter = (updatedCenterVec(0), updatedCenterVec(1), updatedCenterVec(2))
+      val updatedJoint = Joint((normal(0), normal(1), normal(2)), origin, updatedCenter, phi = 0.0,
+                               cohesion = 0.0, shape = Nil, artificialJoint = Some(true))
+      val updated_Blocks = block.cut(updatedJoint)
+      val updatedBlocks = updated_Blocks.map { case block @ Block(center, _) =>
+        Block(center, block.nonRedundantFaces)
+      }
+      val b = Seq(initialDist0, initialDist1).max
+      val a = Seq(initialDist0, initialDist1).min
+      val f_p = updatedBlocks.head.volume/desiredVolume - 1.0
+      val f_b = if (initialDist1 > initialDist0) {
+          blocks1.head.volume/desiredVolume - 1.0
+        } else {
+          blocks0.head.volume/desiredVolume - 1.0
+        }
+
+      println("f_bisection: "+f_p)
+      println("bisection dist: "+updatedDist)
+      // Bi-section gives appropriate volumes
+      if (math.abs(updatedBlocks.head.volume/desiredVolume - 1.0) < tolerance) {
+        println("This is the volume: "+updatedBlocks.head.volume)
+        (updatedJoint.centerX, updatedJoint.centerY, updatedJoint.centerZ)
+      // Do another iteration with interval updated using bi-section - lower bound
+      } else if (f_p * f_b < 0.0) {
+        bisectionSecantSolver(updatedDist, b, block, tolerance, numSeeds,
+                              boundingBox, origin, desiredVolume, iterations + 1)
+      // Do another iteration with interval updated using bi-section - upper bound
+      } else {
+        bisectionSecantSolver(a, updatedDist, block, tolerance, numSeeds,
+                              boundingBox, origin, desiredVolume, iterations + 1)
+      }
+    // Do another secant iteration
     } else {
-      println("Let's try one more iteration")
-      secantSolver(initialDist1, newDist, block, tolerance, boundingBox, origin,
-                   desiredVolume, iterations + 1)
+      bisectionSecantSolver(initialDist1, newDist, block, tolerance, numSeeds,
+                            boundingBox, origin, desiredVolume, iterations + 1)
     }
   }
 }
+
