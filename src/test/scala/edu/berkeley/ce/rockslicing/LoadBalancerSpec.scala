@@ -26,12 +26,12 @@ class LoadBalancerSpec extends FunSuite {
   val twothirdsCube = Block((0.0, 0.0, 0.0), boundingFaces2)
 
   test("Testing Bi-Section/Secant Solver") {
-    val initialDist0 = 0.1
-    val initialDist1 = 1.7
+    val initialDist0 = 0.01
+    val initialDist1 = 2.0
     val boundingBox = (0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-    val center = LoadBalancer.bisectionSecantSolver(initialDist0, initialDist1, unitCube, 0.01, 1,
+    val center = LoadBalancer.bisectionSolver(initialDist0, initialDist1, unitCube, 0.05, 1,
                                                     boundingBox, (unitCube.centerX, unitCube.centerY, unitCube.centerZ),
-                                                    unitCube.volume/2, 100)
+                                                    unitCube.volume/10, 0)
     println("This is the center: "+center)
     assert(center == (0.5, 0.5, 0.5))
   }
