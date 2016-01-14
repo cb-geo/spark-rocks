@@ -283,5 +283,5 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
     */
   def updateJoint(blockOrigin: (Double, Double,Double)): Joint =
     Joint((a, b, c), blockOrigin, (centerX, centerY, centerZ), phi, cohesion, shape, Some(dipAngle),
-          Some(dipDirection), boundingSphere)
+          Some(dipDirection), boundingSphere, Some(processorJoint))
 }

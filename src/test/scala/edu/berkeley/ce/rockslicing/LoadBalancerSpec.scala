@@ -25,28 +25,30 @@ class LoadBalancerSpec extends FunSuite {
   )
   val twothirdsCube = Block((0.0, 0.0, 0.0), boundingFaces2)
 
-  test("Testing Bi-Section/Secant Solver") {
-    val initialDist0 = 0.01
+  private def tupleDifference(c1: (Double, Double, Double), c2: (Double, Double, Double)): Double =
+    c1 match {
+      case (a, b, c) => c2 match {
+        case (x, y, z) => math.abs(x - a) + math.abs(y - b) + math.abs(z - c)
+      }
+    }
+
+
+  test("Testing Bisection Solver") {
+    val initialDist0 = -1.0
     val initialDist1 = 2.0
     val boundingBox = (0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
     val center = LoadBalancer.bisectionSolver(initialDist0, initialDist1, unitCube, 0.05, 1,
                                                     boundingBox, (unitCube.centerX, unitCube.centerY, unitCube.centerZ),
-                                                    unitCube.volume/10, 0)
-    println("This is the center: "+center)
-    assert(center == (0.5, 0.5, 0.5))
+                                                    unitCube.volume/2, 0)
+    val expectedCenter = (0.5, 0.5, 0.5)
+    assert(tupleDifference(center, expectedCenter) <= 0.05)
   }
 
   test("One seed joint should be selected") {
-    val joint1 = Joint((1, 0, 0), localOrigin = (0, 0, 0), center = (0.333, 0, 0),
-                      phi = 30, cohesion = 0, shape = Nil)
-    val joint2 = Joint((1, 0, 0), localOrigin = (0, 0, 0), center = (0.666, 0, 0),
-                      phi = 30, cohesion = 0, shape = Nil)
-    val joint3 = Joint((1, 0, 0), localOrigin = (0, 0, 0), center = (0.48, 0, 0),
-                      phi = 30, cohesion = 0, shape = Nil)
     val boundingBox = (0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
     val seedJoints = 
-      LoadBalancer.generateSeedJoints(unitCube, 1, boundingBox, false)
-    assert(seedJoints.length == 1)
+      LoadBalancer.generateSeedJoints(unitCube, 10, boundingBox, false)
+    assert(seedJoints.length == 2)
   }
 
   // test("Two seed joints should be selected") {

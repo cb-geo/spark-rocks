@@ -68,24 +68,48 @@ object LoadBalancer {
 
     val joint = Joint((normal(0), normal(1), normal(2)), origin, center, phi = 0.0, cohesion = 0.0,
                       shape = Nil, artificialJoint = Some(true))
+    println("Initial Volume: "+initialVolume.volume)
+    println("Desired volume: "+desiredVolume)
     val blocks = initialVolume.cut(joint)
     val nonRedundantBlocks = blocks.map { case block @ Block(center, _) =>
       Block(center, block.nonRedundantFaces)
     }
-    val tolerance = 0.05
+    val tolerance = 0.1
+    // println("Number of faces in blocks:")
+    // blocks foreach {block => println(block.faces.length)}
+    // println("Number of faces in non-redundant blocks:")
+    // nonRedundantBlocks foreach {block => println(block.faces.length)}
 
     // If first block has satisfactory volume
     if ((nonRedundantBlocks.head.volume < (1.0 + tolerance)*desiredVolume) && 
         (nonRedundantBlocks.head.volume > (1.0 - tolerance)*desiredVolume) &&
         (nonRedundantBlocks.length == 2)) {
+      println("First block volume: "+nonRedundantBlocks.head.volume)
+      println("Second block volume: "+nonRedundantBlocks.tail.head.volume)
+      // println("Joint: ")
+      // println(joint)
+      // println("first block's faces: ")
+      // nonRedundantBlocks.head.faces foreach { face => println(face)}
+      // println("second block's faces: ")
+      // nonRedundantBlocks.tail.head.faces foreach { face => println(face)}
+      val block1Vertices = nonRedundantBlocks.head.findVertices
+      val block2Vertices = nonRedundantBlocks.tail.head.findVertices
+      // println("Block1 vertices")
+      // block1Vertices foreach { case (face, vertices) => println(vertices)}
+      // println("Block2 vertices")
+      // block2Vertices foreach { case (face, vertices) => println(vertices)}
+
+
       if (nonRedundantBlocks.tail.head.volume <= (1.0 + tolerance)*desiredVolume) {
         // If both blocks have satifactory volumes, prepend joint to joints
+        println("Joint about to be added, joints length: "+joints.length)
         joint +: joints
       } else {
         // If last block isn't small enough
+        println("FIRST BLOCK OKAY, SECOND TOO LARGE")
         val remainingBlock = nonRedundantBlocks.tail.head
         val newCenter = (joint.centerX + 0.1, joint.centerY + 0.1, joint.centerZ + 0.1)
-        findProcessorJoints(joints, normal, origin, newCenter, remainingBlock,
+        findProcessorJoints(joint +: joints, normal, origin, newCenter, remainingBlock,
                             desiredVolume, boundingBox, seeds)
       }
     // Block volumes not satisfactory, need to iterate to find processor joint
@@ -105,6 +129,7 @@ object LoadBalancer {
       val dist1 = diagonalLength - math.sqrt(x_diff1*x_diff1 + y_diff1*y_diff1 + z_diff1*z_diff1)
       val newCenter = bisectionSolver(dist0, dist1, initialVolume, tolerance, seeds, 
                                             boundingBox, origin, desiredVolume, 0)
+      println("This is the new center: "+newCenter)
       findProcessorJoints(joints, normal, origin, newCenter, initialVolume,
                           desiredVolume, boundingBox, seeds)
     }

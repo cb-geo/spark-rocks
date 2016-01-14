@@ -50,22 +50,29 @@ object Block {
     */
   def rotationMatrix(n_current: (Double, Double, Double), n_desired: (Double, Double, Double)):
                              DenseMatrix[Double] = {
-    val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
-    val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
-    if (math.abs(linalg.norm(linalg.cross(n_c,n_d))) > NumericUtils.EPSILON) {
-      val v = linalg.cross(n_c, n_d)
-      val s = linalg.norm(v)
-      val c = n_c dot n_d
+    val n_c = linalg.normalize(DenseVector[Double](n_current._1, n_current._2, n_current._3))
+    val n_d = linalg.normalize(DenseVector[Double](n_desired._1, n_desired._2, n_desired._3))
+    val rotationAxis = linalg.cross(n_c, n_d)
 
-      val A_skew = DenseMatrix.zeros[Double](3,3)
-      A_skew(0,1) = -v(2)
-      A_skew(0,2) = v(1)
-      A_skew(1,0) = v(2)
-      A_skew(1,2) = -v(0)
-      A_skew(2,0) = -v(1)
-      A_skew(2,1) = v(0)
+    // Use quaternions to derive rotation matrix
+    if (linalg.norm(rotationAxis) > NumericUtils.EPSILON) {
+      val normRotAxis = linalg.normalize(rotationAxis)
+      val sinAngle = linalg.norm(normRotAxis)
+      val cosAngle = n_c dot n_d
 
-      DenseMatrix.eye[Double](3) + A_skew + (A_skew * A_skew) * (1-c)/(s*s)
+      val R = DenseMatrix.zeros[Double](3,3)
+      R(0,0) = cosAngle + normRotAxis(0)*normRotAxis(0)*(1 - cosAngle)
+      R(0,1) = normRotAxis(0)*normRotAxis(1)*(1 - cosAngle) - normRotAxis(2)*sinAngle
+      R(0,2) = normRotAxis(0)*normRotAxis(2)*(1 - cosAngle) + normRotAxis(1)*sinAngle
+      R(1,0) = normRotAxis(1)*normRotAxis(0)*(1 - cosAngle) + normRotAxis(2)*sinAngle
+      R(1,1) = cosAngle + normRotAxis(1)*normRotAxis(1)*(1 - cosAngle)
+      R(1,2) = normRotAxis(1)*normRotAxis(2)*(1 - cosAngle) - normRotAxis(0)*sinAngle
+      R(2,0) = normRotAxis(2)*normRotAxis(0)*(1 - cosAngle) - normRotAxis(1)*sinAngle
+      R(2,1) = normRotAxis(2)*normRotAxis(1)*(1 - cosAngle) + normRotAxis(0)*sinAngle
+      R(2,2) = cosAngle + normRotAxis(2)*normRotAxis(2)*(1 - cosAngle)
+
+      // return rotation matrix
+      R
     } else {
       DenseMatrix.eye[Double](3)
     }
@@ -343,8 +350,9 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
           Delaunay.Vector2(rotatedVertex(0), rotatedVertex(1))
         }.distinct.toList
 
-        // If z-component of normal is negative, order needs to be reversed to maintain clockwise orientation
-        if (face.c < -NumericUtils.EPSILON) {
+        // If normal is -z-axis, order needs to be reversed to maintain clockwise orientation
+        // rotation matrix is identity matrix in this case
+        if (math.abs(face.c + 1.0) < NumericUtils.EPSILON) {
           Delaunay.Triangulation(rotatedVertices).map { vert =>
             (vert._3, vert._2, vert._1)
           }
