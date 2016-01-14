@@ -2,6 +2,7 @@ package edu.berkeley.ce.rockslicing
 
 import breeze.linalg
 import breeze.linalg.{DenseVector, DenseMatrix}
+import scala.annotation.tailrec
 
 /** 
   * Manages initial partitioning of rock volume to maintain load balance among partitions
@@ -53,6 +54,7 @@ object LoadBalancer {
     * @param boundingBox Bounding box of the initial rock volume
     * @return List of processor joints that will be used to seed initial RDD
     */
+  @tailrec
   private def findProcessorJoints(joints: Seq[Joint], normal: DenseVector[Double],
                                   origin: (Double, Double, Double),
                                   center: (Double, Double, Double), initialVolume: Block,
@@ -135,6 +137,7 @@ object LoadBalancer {
     }
   }
 
+  @tailrec
   def bisectionSolver(initialDist0: Double, initialDist1: Double, block: Block, 
                                     tolerance: Double, numSeeds: Int,
                                     boundingBox: (Double, Double, Double, Double, Double, Double),
