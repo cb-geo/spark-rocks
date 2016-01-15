@@ -27,23 +27,9 @@ object RockSlicer {
     }
     val (globalOrigin, rockVolume, joints) = inputOpt.get
     var blocks = Seq(Block(globalOrigin, rockVolume))
-    // Calculate bounding box
-    val vertices = blocks(0).findVertices.values.flatten
-    val x_max = (vertices.map{ case vertex => vertex._1}).max
-    val x_min = (vertices.map{ case vertex => vertex._1}).min
-    val y_max = (vertices.map{ case vertex => vertex._2}).max
-    val y_min = (vertices.map{ case vertex => vertex._2}).min
-    val z_max = (vertices.map{ case vertex => vertex._3}).max
-    val z_min = (vertices.map{ case vertex => vertex._3}).min
-    val boundingBox = (x_min, y_min, z_min, x_max, y_max, z_max)
 
     // Generate a list of initial blocks before RDD-ifying it
-    // val (seedJoints, remainingJoints) =
-    //   LoadBalancer.generateSeedJoints(joints, blocks(0), arguments.numSeedJoints,
-    //                                   boundingBox, arguments.minRadius, arguments.maxAspectRatio,
-    //                                   arguments.forceBalancer)
-    val seedJoints = LoadBalancer.generateSeedJoints(blocks.head, arguments.numSeedJoints, boundingBox,
-                                                     arguments.forceBalancer)
+    val seedJoints = LoadBalancer.generateSeedJoints(blocks.head, arguments.numSeedJoints)
 
     seedJoints foreach { joint =>
       blocks = blocks.flatMap(_.cut(joint, arguments.minRadius, arguments.maxAspectRatio))

@@ -25,6 +25,16 @@ class LoadBalancerSpec extends FunSuite {
   )
   val twothirdsCube = Block((0.0, 0.0, 0.0), boundingFaces2)
 
+  val boundingFaces3 = List(
+    Face((-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
+    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face((0.0, -1.0, 0.0), 1.0, phi=0, cohesion=0), 
+    Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face((0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0), 
+    Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0) 
+  )
+  val twoCube = Block((1.0, 1.0, 1.0), boundingFaces3)
+
   private def tupleDifference(c1: (Double, Double, Double), c2: (Double, Double, Double)): Double =
     c1 match {
       case (a, b, c) => c2 match {
@@ -32,123 +42,24 @@ class LoadBalancerSpec extends FunSuite {
       }
     }
 
-
-  // test("Testing Secant-Bisection Solver") {
-  //   val initialDist0 = -2.0
-  //   val initialDist1 = 3.0
-  //   val boundingBox = (0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-  //   val numParts = 2
-  //   val tolerance = 0.05
-  //   val center = LoadBalancer.secantBisectionSolver(initialDist0, initialDist1, unitCube, tolerance, boundingBox,
-  //                                                   (unitCube.centerX, unitCube.centerY, unitCube.centerZ),
-  //                                                   unitCube.volume/numParts, 0)
-  //   val expectedCenter = (0.5, 0.5, 0.5)
-  //   assert(tupleDifference(center, expectedCenter) <= 0.05)
-  // }
-
-  test("One seed joint should be selected") {
-    val boundingBox = (0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-    val numSeeds = 2
+  test("Twenty seed joints should be generated for unit cube") {
+    val numSeeds = 20
     val seedJoints = 
-      LoadBalancer.generateSeedJoints(unitCube, numSeeds, boundingBox, false)
+      LoadBalancer.generateSeedJoints(unitCube, numSeeds)
     assert(seedJoints.length == numSeeds)
   }
 
-  // test("Two seed joints should be selected") {
-  //   val joint1 = Joint((1, 0, 0), localOrigin = (0, 0, 0), center = (0.333, 0, 0),
-  //                     phi = 30, cohesion = 0, shape = Nil)
-  //   val joint2 = Joint((1, 0, 0), localOrigin = (0, 0, 0), center = (0.666, 0, 0),
-  //                     phi = 30, cohesion = 0, shape = Nil)
-  //   val boundingBox = (0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-  //   val (seedJoints, remainingJoints) = 
-  //     LoadBalancer.generateSeedJoints(Seq(joint1, joint2), unitCube, 2, boundingBox, 0.0,
-  //                                     Double.PositiveInfinity, false)
-  //   assert(seedJoints.length == 2)
-  // }
+  test("Three seed joints should be generated for two thirds cube") {
+    val numSeeds = 3
+    val seedJoints = 
+      LoadBalancer.generateSeedJoints(twothirdsCube, numSeeds)
+    assert(seedJoints.length == numSeeds)
+  }
 
-  // test("Two seed joints from same joint set should be selected") {
-  //   val joint1 = Joint((1/math.sqrt(3), 1/math.sqrt(3), 1/math.sqrt(3)),
-  //                      localOrigin = (0, 0, 0), center = (0.333, 0.333, 0.333),
-  //                      phi = 30, cohesion = 0, shape = Nil)
-  //   val joint2 = Joint((1/math.sqrt(3), 1/math.sqrt(3), 1/math.sqrt(3)),
-  //                      localOrigin = (0, 0, 0), center = (0.666, 0.666, 0.666),
-  //                      phi = 30, cohesion = 0, shape = Nil)
-  //   val joint3 = Joint((-1/math.sqrt(3), -1/math.sqrt(3), -1/math.sqrt(3)),
-  //                      localOrigin = (0, 0, 0), center = (0.2, 0.2, 0.2),
-  //                      phi = 30, cohesion = 0, shape = Nil)
-  //   val joint4 = Joint((1, 0, 0), localOrigin = (0, 0, 0), center = (0.333, 0, 0),
-  //                     phi = 30, cohesion = 0, shape = Nil)
-  //   val joint5 = Joint((1, 0, 0), localOrigin = (0, 0, 0), center = (0.666, 0, 0),
-  //                     phi = 30, cohesion = 0, shape = Nil)
-  //   val joints = Seq(joint5, joint4, joint3, joint2, joint1)
-  //   val boundingBox = (0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-  //   val (seedJoints, remainingJoints) = 
-  //     LoadBalancer.generateSeedJoints(joints, unitCube, 2, boundingBox, 0.0,
-  //                                     Double.PositiveInfinity, false)
-  //   assert(seedJoints == Seq(joint4, joint5))
-  // }
-
-  // test("One seed joint from first joint set should be selected") {
-  //   val joint1 = Joint((1/math.sqrt(3), 1/math.sqrt(3), 1/math.sqrt(3)),
-  //                      localOrigin = (0, 0, 0), center = (0.333, 0.333, 0.333),
-  //                      phi = 30, cohesion = 0, shape = Nil)
-  //   val joint2 = Joint((1/math.sqrt(3), 1/math.sqrt(3), 1/math.sqrt(3)),
-  //                      localOrigin = (0, 0, 0), center = (0.666, 0.666, 0.666),
-  //                      phi = 30, cohesion = 0, shape = Nil)
-  //   val joint3 = Joint((-1/math.sqrt(3), -1/math.sqrt(3), -1/math.sqrt(3)),
-  //                      localOrigin = (0, 0, 0), center = (0.5, 0.5, 0.5),
-  //                      phi = 30, cohesion = 0, shape = Nil)
-  //   val joint4 = Joint((1, 0, 0), localOrigin = (0, 0, 0), center = (0.333, 0, 0),
-  //                     phi = 30, cohesion = 0, shape = Nil)
-  //   val joint5 = Joint((1, 0, 0), localOrigin = (0, 0, 0), center = (0.666, 0, 0),
-  //                     phi = 30, cohesion = 0, shape = Nil)
-  //   val joints = Seq(joint5, joint4, joint3, joint2, joint1)
-  //   val boundingBox = (0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-  //   val (seedJoints, remainingJoints) = 
-  //     LoadBalancer.generateSeedJoints(joints, unitCube, 1, boundingBox, 0.0,
-  //                                     Double.PositiveInfinity, false)
-  //   assert(seedJoints == Seq(joint3))
-  // }
-
-  // test("One seed joint should be selected by forcing load balancer - \"best\" joint ") {
-  //   println("In forcing test")
-  //   val joint1 = Joint((1, 0, 0), localOrigin = (0, 0, 0), center = (0.333, 0, 0),
-  //                     phi = 30, cohesion = 0, shape = Nil)
-  //   val joint2 = Joint((1, 0, 0), localOrigin = (0, 0, 0), center = (0.666, 0, 0),
-  //                     phi = 30, cohesion = 0, shape = Nil)
-  //   val joint3 = Joint((1, 0, 0), localOrigin = (0, 0, 0), center = (0.45, 0, 0),
-  //                     phi = 30, cohesion = 0, shape = Nil)
-  //   val joint4 = Joint((1/math.sqrt(3), 1/math.sqrt(3), 1/math.sqrt(3)),
-  //                      localOrigin = (0, 0, 0), center = (0.333, 0.333, 0.333),
-  //                      phi = 30, cohesion = 0, shape = Nil)
-  //   val joint5 = Joint((1/math.sqrt(3), 1/math.sqrt(3), 1/math.sqrt(3)),
-  //                      localOrigin = (0, 0, 0), center = (0.666, 0.666, 0.666),
-  //                      phi = 30, cohesion = 0, shape = Nil)
-
-  //   val boundingBox = (0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-  //   val (seedJoints, remainingJoints) = 
-  //     LoadBalancer.generateSeedJoints(Seq(joint1, joint2, joint3, joint4, joint5), unitCube, 1,
-  //                                     boundingBox, 0.0, Double.PositiveInfinity, true)
-  //   assert(seedJoints == Seq(joint3))
-  // }
-
-  // test("One seed joint should be selected by forcing load balancer - one less joint") {
-  //   println("This is the test you're looking for")
-  //   val joint1 = Joint((1, 0, 0), localOrigin = (0, 0, 0), center = (0.333, 0, 0),
-  //                     phi = 30, cohesion = 0, shape = Nil)
-  //   val joint3 = Joint((1, 0, 0), localOrigin = (0, 0, 0), center = (0.65, 0, 0),
-  //                     phi = 30, cohesion = 0, shape = Nil)
-  //   val joint4 = Joint((1/math.sqrt(3), 1/math.sqrt(3), 1/math.sqrt(3)),
-  //                      localOrigin = (0, 0, 0), center = (0.333, 0.333, 0.333),
-  //                      phi = 30, cohesion = 0, shape = Nil)
-  //   val joint5 = Joint((1/math.sqrt(3), 1/math.sqrt(3), 1/math.sqrt(3)),
-  //                      localOrigin = (0, 0, 0), center = (0.666, 0.666, 0.666),
-  //                      phi = 30, cohesion = 0, shape = Nil)
-
-  //   val boundingBox = (0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-  //   val (seedJoints, remainingJoints) = 
-  //     LoadBalancer.generateSeedJoints(Seq(joint1, joint3, joint4, joint5), twothirdsCube, 2,
-  //                                     boundingBox, 0.0, Double.PositiveInfinity, true)
-  //   assert(seedJoints == Seq(joint3))
-  // }
+  test("Forty seed joints should be generated for two cube") {
+    val numSeeds = 40
+    val seedJoints = 
+      LoadBalancer.generateSeedJoints(twoCube, numSeeds)
+    assert(seedJoints.length == numSeeds)
+  }
 }
