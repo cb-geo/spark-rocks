@@ -33,22 +33,25 @@ class LoadBalancerSpec extends FunSuite {
     }
 
 
-  test("Testing Bisection Solver") {
-    val initialDist0 = -1.0
-    val initialDist1 = 2.0
-    val boundingBox = (0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-    val center = LoadBalancer.bisectionSolver(initialDist0, initialDist1, unitCube, 0.05, 1,
-                                                    boundingBox, (unitCube.centerX, unitCube.centerY, unitCube.centerZ),
-                                                    unitCube.volume/2, 0)
-    val expectedCenter = (0.5, 0.5, 0.5)
-    assert(tupleDifference(center, expectedCenter) <= 0.05)
-  }
+  // test("Testing Secant-Bisection Solver") {
+  //   val initialDist0 = -2.0
+  //   val initialDist1 = 3.0
+  //   val boundingBox = (0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+  //   val numParts = 2
+  //   val tolerance = 0.05
+  //   val center = LoadBalancer.secantBisectionSolver(initialDist0, initialDist1, unitCube, tolerance, boundingBox,
+  //                                                   (unitCube.centerX, unitCube.centerY, unitCube.centerZ),
+  //                                                   unitCube.volume/numParts, 0)
+  //   val expectedCenter = (0.5, 0.5, 0.5)
+  //   assert(tupleDifference(center, expectedCenter) <= 0.05)
+  // }
 
   test("One seed joint should be selected") {
     val boundingBox = (0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+    val numSeeds = 2
     val seedJoints = 
-      LoadBalancer.generateSeedJoints(unitCube, 10, boundingBox, false)
-    assert(seedJoints.length == 2)
+      LoadBalancer.generateSeedJoints(unitCube, numSeeds, boundingBox, false)
+    assert(seedJoints.length == numSeeds)
   }
 
   // test("Two seed joints should be selected") {
