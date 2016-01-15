@@ -33,7 +33,7 @@ class LoadBalancerSpec extends FunSuite {
     Face((0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0), 
     Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0) 
   )
-  val twoCube = Block((1.0, 1.0, 1.0), boundingFaces3)
+  val twoCube = Block((0.0, 0.0, 0.0), boundingFaces3)
 
   private def tupleDifference(c1: (Double, Double, Double), c2: (Double, Double, Double)): Double =
     c1 match {
@@ -56,8 +56,8 @@ class LoadBalancerSpec extends FunSuite {
     assert(seedJoints.length == numSeeds)
   }
 
-  test("Forty seed joints should be generated for two cube") {
-    val numSeeds = 40
+  test("Five seed joints should be generated for two cube") {
+    val numSeeds = 5
     val seedJoints = 
       LoadBalancer.generateSeedJoints(twoCube, numSeeds)
     assert(seedJoints.length == numSeeds)

@@ -62,7 +62,7 @@ object Delaunay {
     }
     */
     
-    val EPSILON = 0.0000001
+    val EPSILON = NumericUtils.EPSILON
 
     //  Return TRUE if a point q(x,y) is inside the circumcircle made up of the points p1(x,y), p2(x,y), p3(x,y)
     //  The circumcircle centre (x,y) is returned and the radius r
