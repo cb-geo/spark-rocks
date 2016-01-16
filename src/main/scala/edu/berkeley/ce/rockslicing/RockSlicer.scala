@@ -48,15 +48,53 @@ object RockSlicer {
       Block(center, block.nonRedundantFaces)
     }
 
-    // Calculate centroid of each block
-    val centroidBlocks = nonRedundantBlocks.map { block =>
+    // Find all blocks that contain processor joints
+    val processorBlocks = nonRedundantBlocks.filter { block => 
+      block.faces.exists { face => face.processorJoint}
+    }
+    // Find blocks that do not contain processor joints
+    val realBlocks = nonRedundantBlocks.diff(processorBlocks)
+
+    // Collect all blocks that contain processor joints from all nodes
+    val allProcessorBlocks = realBlocks.collect()
+    // Search blocks for matching processor joints
+    val reducedBlocks = allProcessorBlocks map { case block1 @ Block(center1, faces1) =>
+      allProcessorBlocks map { case block2 @ Block(center2, faces2) =>
+        val updatedFaces2 = block2.updateFaces(center1).filter {case updatedFace =>
+          updatedFace.processorJoint 
+        }
+        val processorFaces1 = faces1.filter { case f => f.processorJoint }
+        processorFaces1.map { case face1 =>
+          updatedFaces2.map { case face2 =>
+            if ((math.abs(face1.a + face2.a) < NumericUtils.EPSILON) &&
+                (math.abs(face1.b + face2.b) < NumericUtils.EPSILON) &&
+                (math.abs(face1.c + face2.c) < NumericUtils.EPSILON) &&
+                (math.abs(face1.d - face2.d) < NumericUtils.EPSILON)) {
+              val realFaces = (faces1 +: faces2).filter { case anotherFace => anotherFace.processorJoint}
+              Block(center1, realFaces)
+            }
+          }
+        }
+      }
+    }
+    // Update centroids of reconstructed processor blocks and remove duplicates
+    val reducedCentroidBlocks = reducedBlocks.map {blocks =>
+      val centroid = block.centroid
+      Block(centroid, block.updateFaces(centroid))
+    }
+    val reconstructedBlocks = reducedCentroidBlocks.distinct
+
+    // Calculate centroid of each real block
+    val centroidBlocks = realBlocks.map { block =>
       val centroid = block.centroid
       val updatedFaces = block.updateFaces(centroid)
       Block(centroid, updatedFaces)
     }
 
+    // Merge real blocks and reconstructed blocks
+    val allBlocks = centroidBlocks +: reconstructedBlocks
     // Clean up faces with values that should be zero, but have arbitrarily small floating point values
-    val squeakyClean = centroidBlocks.map { case Block(center, faces) =>
+    val squeakyClean = allBlocks.map { case Block(center, faces) =>
       Block(center, faces.map(_.applyTolerance))
     }
 
@@ -76,50 +114,3 @@ object RockSlicer {
     sc.stop()
   }
 }
-
-//   // Produce joints that achieve some lead balancing when generating the initial Block RDD
-//   private def generateSeedJoints(joints: Seq[Joint], numSeedJoints: Integer): (Seq[Joint], Seq[Joint]) = {
-//     val (persistentJoints, nonPersistentJoints) = joints.partition(_.shape.isEmpty)
-//     persistentJoints.length match {
-//       // All of the seed joints will be persistent
-//       case len if len >= numSeedJoints => (persistentJoints.take(numSeedJoints),
-//           persistentJoints.drop(numSeedJoints) ++ nonPersistentJoints)
-//       // All persistent joints are used as seed joints, along with some non-persistent joints
-//       case len =>
-//         val numNonPersistent = numSeedJoints - len
-//         // Arrange joints so we prefer elements near middle of rock mass
-//         val sortedNonPersistent = nonPersistentJoints.sortWith(_.centerX < _.centerX)
-//         val indices = loadBalanceIndices(sortedNonPersistent.indices).take(numNonPersistent)
-//         val seedNonPersistent = indices.collect(sortedNonPersistent)
-//         val remainingNonPersistent = sortedNonPersistent.diff(seedNonPersistent)
-//         (persistentJoints ++ seedNonPersistent, remainingNonPersistent)
-//     }
-//   }
-
-//   private def loadBalanceIndices(indices: Seq[Int]): Seq[Int] = {
-//     def loadBalanceIndicesImpl(queue: mutable.PriorityQueue[Seq[Int]]): Seq[Int] = {
-//       if (queue.isEmpty) {
-//         Nil
-//       } else {
-//         val s = queue.dequeue()
-//         val (median, left, right) = removeMedian(s)
-//         if (left.nonEmpty) {
-//           queue.enqueue(left)
-//         }
-//         if (right.nonEmpty) {
-//           queue.enqueue(right)
-//         }
-//         median +: loadBalanceIndicesImpl(queue)
-//       }
-//     }
-
-//     def removeMedian[A](s: Seq[A]): (A, Seq[A], Seq[A]) = {
-//       val medianIndex = s.length / 2
-//       (s(medianIndex), s.take(medianIndex), s.drop(medianIndex + 1))
-//     }
-
-//     val queue = new mutable.PriorityQueue[Seq[Int]]()(Ordering.by(_.length))
-//     queue.enqueue(indices)
-//     loadBalanceIndicesImpl(queue)
-//   }
-// }
