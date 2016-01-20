@@ -1,8 +1,9 @@
 package edu.berkeley.ce.rockslicing
 
+import java.io._
+
 import org.apache.spark.{SparkConf, SparkContext}
 
-import scala.collection.mutable
 import scala.io.Source
 
 object RockSlicer {
@@ -49,40 +50,44 @@ object RockSlicer {
     }
 
     // Find all blocks that contain processor joints
-    val processorBlocks = nonRedundantBlocks.filter { block => 
+    val processorBlocks = nonRedundantBlocks.filter { case block => 
       block.faces.exists { face => face.processorJoint}
     }
+
     // Find blocks that do not contain processor joints
-    val realBlocks = nonRedundantBlocks.diff(processorBlocks)
+    val realBlocks = nonRedundantBlocks.filter { block =>
+      val faceTests = block.faces map { case face =>
+        face.processorJoint
+      }
+      !faceTests.contains(true)
+    }
 
     // Collect all blocks that contain processor joints from all nodes
-    val allProcessorBlocks = realBlocks.collect()
+    val allProcessorBlocks = processorBlocks.collect()
+
     // Search blocks for matching processor joints
-    val reducedBlocks = allProcessorBlocks map { case block1 @ Block(center1, faces1) =>
-      allProcessorBlocks map { case block2 @ Block(center2, faces2) =>
-        val updatedFaces2 = block2.updateFaces(center1).filter {case updatedFace =>
-          updatedFace.processorJoint 
-        }
-        val processorFaces1 = faces1.filter { case f => f.processorJoint }
-        processorFaces1.map { case face1 =>
-          updatedFaces2.map { case face2 =>
-            if ((math.abs(face1.a + face2.a) < NumericUtils.EPSILON) &&
-                (math.abs(face1.b + face2.b) < NumericUtils.EPSILON) &&
-                (math.abs(face1.c + face2.c) < NumericUtils.EPSILON) &&
-                (math.abs(face1.d - face2.d) < NumericUtils.EPSILON)) {
-              val realFaces = (faces1 +: faces2).filter { case anotherFace => anotherFace.processorJoint}
-              Block(center1, realFaces)
-            }
-          }
+    val reducedBlocks = (allProcessorBlocks flatMap { block1 =>
+      allProcessorBlocks map { block2 =>
+        val center1 = (block1.centerX, block1.centerY, block1.centerZ)
+        val updatedBlock2 = Block(center1, block2.updateFaces(center1))
+        val sharedFaces = compareProcessorBlocks(block1, updatedBlock2)
+        if (sharedFaces.nonEmpty) {
+          val block1Faces = block1.faces.diff(sharedFaces)
+          val block2Faces = updatedBlock2.faces.diff(sharedFaces)
+          Block(center1, block1Faces ++ block2Faces)
         }
       }
-    }
+    }).collect{ case blockType: Block => blockType}
+
     // Update centroids of reconstructed processor blocks and remove duplicates
-    val reducedCentroidBlocks = reducedBlocks.map {blocks =>
+    val reducedBlocksRedundant = reducedBlocks.map {case block @ Block(center, _) =>
+      Block(center, block.nonRedundantFaces)
+    }
+    val reducedCentroidBlocks = reducedBlocksRedundant.map {block =>
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
     }
-    val reconstructedBlocks = reducedCentroidBlocks.distinct
+    val reconCentroidBlocksDistinct = reducedCentroidBlocks.distinct
 
     // Calculate centroid of each real block
     val centroidBlocks = realBlocks.map { block =>
@@ -91,10 +96,11 @@ object RockSlicer {
       Block(centroid, updatedFaces)
     }
 
-    // Merge real blocks and reconstructed blocks
-    val allBlocks = centroidBlocks +: reconstructedBlocks
     // Clean up faces with values that should be zero, but have arbitrarily small floating point values
-    val squeakyClean = allBlocks.map { case Block(center, faces) =>
+    val squeakyClean = centroidBlocks.map { case Block(center, faces) =>
+      Block(center, faces.map(_.applyTolerance))
+    }
+    val squeakyCleanRecon = reconCentroidBlocksDistinct.map { case Block(center, faces) =>
       Block(center, faces.map(_.applyTolerance))
     }
 
@@ -102,15 +108,58 @@ object RockSlicer {
     if (arguments.toInequalities) {
       // Convert the list of rock blocks to JSON and save this to a file
       val jsonBlocks = squeakyClean.map(Json.blockToMinimalJson)
+      val jsonReconBlocks = squeakyCleanRecon.map(Json.blockToMinimalJson)
       jsonBlocks.saveAsTextFile("blocks.json")
+      // Save reconstructed blocks
+      printToFile(new File("reconstructedBlocks.json")) { field =>
+        jsonReconBlocks.foreach(field.println)
+      }
     }
+
     if (arguments.toVTK) {
       // Convert the list of rock blocks to JSON with vertices, normals and connectivity in format easily converted
-      // to vtk my rockProcessor module
+      // to vtk by rockProcessor module
       val vtkBlocks = squeakyClean.map(BlockVTK(_))
+      val vtkBlocksRecon = squeakyCleanRecon.map(BlockVTK(_))
       val jsonVtkBlocks = vtkBlocks.map(JsonToVtk.blockVtkToMinimalJson)
+      val jsonVtkBlocksRecon = vtkBlocksRecon.map(JsonToVtk.blockVtkToMinimalJson)
       jsonVtkBlocks.saveAsTextFile("vtkBlocks.json")
+      // save reconstructed blocks
+      printToFile(new File("vtkReconstructedBlocks.json")) { field =>
+        jsonVtkBlocksRecon.foreach(field.println)
+      }
     }
     sc.stop()
+  }
+
+  /**
+    * Compares two input blocks and determines whether they share a processor face
+    * @param block1 First input block
+    * @param block2 Second input block
+    * @return List of processor faces that are shared by the two blocks. Will empty
+    *         if they share no faces
+    */
+  def compareProcessorBlocks(block1: Block, block2: Block): Seq[Face] = {
+    val processorFaces1 = block1.faces.filter { case face => face.processorJoint }
+    val processorFaces2 = block2.faces.filter { case face => face.processorJoint }
+    val faceMatches = 
+      processorFaces1 map { case face1 =>
+        processorFaces2 map { case face2 =>
+          if ((math.abs(face1.a + face2.a) < NumericUtils.EPSILON) &&
+              (math.abs(face1.b + face2.b) < NumericUtils.EPSILON) &&
+              (math.abs(face1.c + face2.c) < NumericUtils.EPSILON) &&
+              (math.abs(face1.d - face2.d) < NumericUtils.EPSILON)) {
+            Seq[Face](face1, face2)
+          } else Seq[Face]()
+        }
+      }
+    faceMatches.filter{ case faces => faces.nonEmpty }.flatten.flatten.distinct
+  }
+
+  // Function that writes JSON string to file for single node - taken from 
+  // http://stackoverflow.com/questions/4604237/how-to-write-to-a-file-in-scala
+  private def printToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) {
+    val p = new java.io.PrintWriter(f)
+    try { op(p) } finally { p.close() }
   }
 }
