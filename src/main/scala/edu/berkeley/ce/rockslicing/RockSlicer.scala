@@ -62,33 +62,6 @@ object RockSlicer {
       !faceTests.contains(true)
     }
 
-    // Collect all blocks that contain processor joints from all nodes
-    val allProcessorBlocks = processorBlocks.collect()
-
-    // Search blocks for matching processor joints
-    val reducedBlocks = (allProcessorBlocks flatMap { block1 =>
-      allProcessorBlocks map { block2 =>
-        val center1 = (block1.centerX, block1.centerY, block1.centerZ)
-        val updatedBlock2 = Block(center1, block2.updateFaces(center1))
-        val sharedFaces = compareProcessorBlocks(block1, updatedBlock2)
-        if (sharedFaces.nonEmpty) {
-          val block1Faces = block1.faces.diff(sharedFaces)
-          val block2Faces = updatedBlock2.faces.diff(sharedFaces)
-          Block(center1, block1Faces ++ block2Faces)
-        }
-      }
-    }).collect{ case blockType: Block => blockType}
-
-    // Update centroids of reconstructed processor blocks and remove duplicates
-    val reducedBlocksRedundant = reducedBlocks.map {case block @ Block(center, _) =>
-      Block(center, block.nonRedundantFaces)
-    }
-    val reducedCentroidBlocks = reducedBlocksRedundant.map {block =>
-      val centroid = block.centroid
-      Block(centroid, block.updateFaces(centroid))
-    }
-    val reconCentroidBlocksDistinct = reducedCentroidBlocks.distinct
-
     // Calculate centroid of each real block
     val centroidBlocks = realBlocks.map { block =>
       val centroid = block.centroid
@@ -96,38 +69,76 @@ object RockSlicer {
       Block(centroid, updatedFaces)
     }
 
-    // Clean up faces with values that should be zero, but have arbitrarily small floating point values
+    // Clean up faces of real blocks with values that should be zero, but have arbitrarily
+    // small floating point values
     val squeakyClean = centroidBlocks.map { case Block(center, faces) =>
       Block(center, faces.map(_.applyTolerance))
     }
-    val squeakyCleanRecon = reconCentroidBlocksDistinct.map { case Block(center, faces) =>
-      Block(center, faces.map(_.applyTolerance))
+
+    // Collect all blocks that contain processor joints from all nodes
+    val allProcessorBlocks = processorBlocks.collect()
+
+    // Search blocks for matching processor joints
+    if (allProcessorBlocks.length > 0) {
+      val reconstructedBlocks = (allProcessorBlocks flatMap { block1 =>
+        allProcessorBlocks map { block2 =>
+          val center1 = (block1.centerX, block1.centerY, block1.centerZ)
+          val updatedBlock2 = Block(center1, block2.updateFaces(center1))
+          val sharedFaces = compareProcessorBlocks(block1, updatedBlock2)
+          if (sharedFaces.nonEmpty) {
+            val block1Faces = block1.faces.diff(sharedFaces)
+            val block2Faces = updatedBlock2.faces.diff(sharedFaces)
+            Block(center1, block1Faces ++ block2Faces)
+          }
+        }
+      }).collect{ case blockType: Block => blockType}
+
+      // Update centroids of reconstructed processor blocks and remove duplicates
+      val reconstructedBlocksRedundant = reconstructedBlocks.map {case block @ Block(center, _) =>
+        Block(center, block.nonRedundantFaces)
+      }
+      val reducedCentroidBlocks = reconstructedBlocksRedundant.map {block =>
+        val centroid = block.centroid
+        Block(centroid, block.updateFaces(centroid))
+      }
+      val reconCentroidBlocksDistinct = reducedCentroidBlocks.distinct
+
+      // Clean up faces of reconstructed blocks with values that should be zero, but have
+      // arbitrarily small floating point values
+      val squeakyCleanRecon = reconCentroidBlocksDistinct.map { case Block(center, faces) =>
+        Block(center, faces.map(_.applyTolerance))
+      }
+
+      // Convert reconstructred blocks to requested output
+      if (arguments.toInequalities) {
+        val jsonReconBlocks = squeakyCleanRecon.map(Json.blockToMinimalJson)
+        printToFile(new File("reconstructedBlocks.json")) { field =>
+          jsonReconBlocks.foreach(field.println)
+        }
+      }
+
+      if (arguments.toVTK) {
+        val vtkBlocksRecon = squeakyCleanRecon.map(BlockVTK(_))
+        val jsonVtkBlocksRecon = vtkBlocksRecon.map(JsonToVtk.blockVtkToMinimalJson)
+        printToFile(new File("vtkReconstructedBlocks.json")) { field =>
+          jsonVtkBlocksRecon.foreach(field.println)
+        }
+      }
     }
 
     // Convert list of rock blocks to requested output
     if (arguments.toInequalities) {
       // Convert the list of rock blocks to JSON and save this to a file
       val jsonBlocks = squeakyClean.map(Json.blockToMinimalJson)
-      val jsonReconBlocks = squeakyCleanRecon.map(Json.blockToMinimalJson)
       jsonBlocks.saveAsTextFile("blocks.json")
-      // Save reconstructed blocks
-      printToFile(new File("reconstructedBlocks.json")) { field =>
-        jsonReconBlocks.foreach(field.println)
-      }
     }
 
     if (arguments.toVTK) {
       // Convert the list of rock blocks to JSON with vertices, normals and connectivity in format easily converted
       // to vtk by rockProcessor module
       val vtkBlocks = squeakyClean.map(BlockVTK(_))
-      val vtkBlocksRecon = squeakyCleanRecon.map(BlockVTK(_))
       val jsonVtkBlocks = vtkBlocks.map(JsonToVtk.blockVtkToMinimalJson)
-      val jsonVtkBlocksRecon = vtkBlocksRecon.map(JsonToVtk.blockVtkToMinimalJson)
       jsonVtkBlocks.saveAsTextFile("vtkBlocks.json")
-      // save reconstructed blocks
-      printToFile(new File("vtkReconstructedBlocks.json")) { field =>
-        jsonVtkBlocksRecon.foreach(field.println)
-      }
     }
     sc.stop()
   }
@@ -142,13 +153,17 @@ object RockSlicer {
   def compareProcessorBlocks(block1: Block, block2: Block): Seq[Face] = {
     val processorFaces1 = block1.faces.filter { case face => face.processorJoint }
     val processorFaces2 = block2.faces.filter { case face => face.processorJoint }
+    println("Proc. faces block1 ")
+    processorFaces1.foreach(println)
+    println("Proc. faces block2 ")
+    processorFaces2.foreach(println)
     val faceMatches = 
       processorFaces1 map { case face1 =>
         processorFaces2 map { case face2 =>
           if ((math.abs(face1.a + face2.a) < NumericUtils.EPSILON) &&
               (math.abs(face1.b + face2.b) < NumericUtils.EPSILON) &&
               (math.abs(face1.c + face2.c) < NumericUtils.EPSILON) &&
-              (math.abs(face1.d - face2.d) < NumericUtils.EPSILON)) {
+              (math.abs(face1.d + face2.d) < NumericUtils.EPSILON)) {
             Seq[Face](face1, face2)
           } else Seq[Face]()
         }
