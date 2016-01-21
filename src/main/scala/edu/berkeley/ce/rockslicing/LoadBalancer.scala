@@ -82,7 +82,7 @@ object LoadBalancer {
     val normal = linalg.normalize(DenseVector[Double](x_diff, y_diff, z_diff))
 
     val joint = Joint((normal(0), normal(1), normal(2)), origin, center, phi = 0.0, cohesion = 0.0,
-                      shape = Nil, artificialJoint = Some(true))
+                      shape = Nil, processorJoint = true)
     val blocks = initialVolume.cut(joint)
     val nonRedundantBlocks = blocks.map { case block @ Block(center, _) =>
       Block(center, block.nonRedundantFaces)
@@ -171,9 +171,9 @@ object LoadBalancer {
 
     // Joint guesses and corresponding blocks
     val joint0 = Joint((normal(0), normal(1), normal(2)), origin, center0, phi = 0.0, cohesion = 0.0,
-                       shape = Nil, artificialJoint = Some(true))
+                       shape = Nil, processorJoint = true)
     val joint1 = Joint((normal(0), normal(1), normal(2)), origin, center1, phi = 0.0, cohesion = 0.0,
-                       shape = Nil, artificialJoint = Some(true))
+                       shape = Nil, processorJoint = true)
     val blocks_0 = block.cut(joint0)
     val blocks_1 = block.cut(joint1)
     val blocks0 = blocks_0.map { case block @ Block(center, _) =>
@@ -213,7 +213,7 @@ object LoadBalancer {
     val newCenterVec = lowerLeft + newDist*normal
     val newCenter = (newCenterVec(0), newCenterVec(1), newCenterVec(2))
     val newJoint = Joint((normal(0), normal(1), normal(2)), origin, newCenter, phi = 0.0,
-                         cohesion = 0.0, shape = Nil, artificialJoint = Some(true))
+                         cohesion = 0.0, shape = Nil, processorJoint = true)
     val new_Blocks = block.cut(newJoint)
     val nonRedundantNew = new_Blocks.map { case block @ Block(center, _) =>
       Block(center, block.nonRedundantFaces)

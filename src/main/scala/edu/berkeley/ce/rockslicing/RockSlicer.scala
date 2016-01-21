@@ -30,11 +30,13 @@ object RockSlicer {
     var blocks = Seq(Block(globalOrigin, rockVolume))
 
     // Generate a list of initial blocks before RDD-ifying it
-    val seedJoints = LoadBalancer.generateSeedJoints(blocks.head, arguments.numSeedJoints)
-
-    seedJoints foreach { joint =>
-      blocks = blocks.flatMap(_.cut(joint, arguments.minRadius, arguments.maxAspectRatio))
+    if (arguments.numSeedJoints > 0) {
+      val seedJoints = LoadBalancer.generateSeedJoints(blocks.head, arguments.numSeedJoints)
+      seedJoints foreach { joint =>
+        blocks = blocks.flatMap(_.cut(joint))
+      }
     }
+
     val blockRdd = sc.parallelize(blocks)
     val broadcastJoints = sc.broadcast(joints)
 
@@ -56,28 +58,15 @@ object RockSlicer {
 
     // Find blocks that do not contain processor joints
     val realBlocks = nonRedundantBlocks.filter { block =>
-      val faceTests = block.faces map { case face =>
+      val faceFlags = block.faces map { case face =>
         face.processorJoint
       }
-      !faceTests.contains(true)
+      !faceFlags.contains(true)
     }
 
-    // Calculate centroid of each real block
-    val centroidBlocks = realBlocks.map { block =>
-      val centroid = block.centroid
-      val updatedFaces = block.updateFaces(centroid)
-      Block(centroid, updatedFaces)
-    }
-
-    // Clean up faces of real blocks with values that should be zero, but have arbitrarily
-    // small floating point values
-    val squeakyClean = centroidBlocks.map { case Block(center, faces) =>
-      Block(center, faces.map(_.applyTolerance))
-    }
-
+    // PROCESS PROCESSOR BLOCKS BEFORE CONTINUEING WITH REMAINING BLOCKS
     // Collect all blocks that contain processor joints from all nodes
     val allProcessorBlocks = processorBlocks.collect()
-
     // Search blocks for matching processor joints
     if (allProcessorBlocks.length > 0) {
       val reconstructedBlocks = (allProcessorBlocks flatMap { block1 =>
@@ -97,11 +86,16 @@ object RockSlicer {
       val reconstructedBlocksRedundant = reconstructedBlocks.map {case block @ Block(center, _) =>
         Block(center, block.nonRedundantFaces)
       }
-      val reducedCentroidBlocks = reconstructedBlocksRedundant.map {block =>
+      val reconCentroidBlocks = reconstructedBlocksRedundant.map {block =>
         val centroid = block.centroid
         Block(centroid, block.updateFaces(centroid))
       }
-      val reconCentroidBlocksDistinct = reducedCentroidBlocks.distinct
+      val reconCentroidBlocksDistinct =
+        reconCentroidBlocks.foldLeft(Seq[Block]()) { (unique, current) =>
+          if (!unique.exists(Block.compareBlocks(current, _)))
+            current +: unique
+          else unique
+        }
 
       // Clean up faces of reconstructed blocks with values that should be zero, but have
       // arbitrarily small floating point values
@@ -109,7 +103,7 @@ object RockSlicer {
         Block(center, faces.map(_.applyTolerance))
       }
 
-      // Convert reconstructred blocks to requested output
+      // Convert reconstructed blocks to requested output
       if (arguments.toInequalities) {
         val jsonReconBlocks = squeakyCleanRecon.map(Json.blockToMinimalJson)
         printToFile(new File("reconstructedBlocks.json")) { field =>
@@ -124,6 +118,20 @@ object RockSlicer {
           jsonVtkBlocksRecon.foreach(field.println)
         }
       }
+    }
+
+    // PROCESS REMAINING BLOCKS THAT DO NOT CONTAIN PROCESSOR BLOCKS
+    // Calculate centroid of each real block
+    val centroidBlocks = realBlocks.map { block =>
+      val centroid = block.centroid
+      val updatedFaces = block.updateFaces(centroid)
+      Block(centroid, updatedFaces)
+    }
+
+    // Clean up faces of real blocks with values that should be zero, but have arbitrarily
+    // small floating point values
+    val squeakyClean = centroidBlocks.map { case Block(center, faces) =>
+      Block(center, faces.map(_.applyTolerance))
     }
 
     // Convert list of rock blocks to requested output
@@ -153,10 +161,6 @@ object RockSlicer {
   def compareProcessorBlocks(block1: Block, block2: Block): Seq[Face] = {
     val processorFaces1 = block1.faces.filter { case face => face.processorJoint }
     val processorFaces2 = block2.faces.filter { case face => face.processorJoint }
-    println("Proc. faces block1 ")
-    processorFaces1.foreach(println)
-    println("Proc. faces block2 ")
-    processorFaces2.foreach(println)
     val faceMatches = 
       processorFaces1 map { case face1 =>
         processorFaces2 map { case face2 =>

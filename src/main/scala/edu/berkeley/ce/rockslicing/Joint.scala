@@ -3,7 +3,7 @@ package edu.berkeley.ce.rockslicing
 import breeze.linalg
 import breeze.linalg.{DenseMatrix, DenseVector}
 
-object Joint {
+object Joint extends java.io.Serializable {
   /**
     * Find the distance of the joint plane from the input local origin.
     * @param normalVec Normal vector to the joint plane
@@ -212,7 +212,7 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
                  shape: Seq[((Double, Double, Double),Double)], dipAngleParam: Option[Double]=None,
                  dipDirectionParam: Option[Double]=None,
                  boundingSphereParam: Option[((Double,Double,Double),Double)]=null,
-                 artificialJoint: Option[Boolean]=None) {
+                 processorJoint: Boolean=false) extends java.io.Serializable {
   val (a, b, c) = normalVec
   val (centerX, centerY, centerZ) = center
   val d = Joint.findDistance(normalVec, localOrigin, center)
@@ -233,11 +233,6 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
       case _ => Some(Joint.findBoundingSphere((a, b, c), d, centerX, centerY, centerZ, shape, dipDirection))
     }
     case bs => bs
-  }
-
-  val processorJoint = artificialJoint match {
-    case None => false
-    case Some(yes) => yes
   }
 
   /** Converts lines defining shape of joint from local to global coordinates
@@ -283,5 +278,5 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
     */
   def updateJoint(blockOrigin: (Double, Double,Double)): Joint =
     Joint((a, b, c), blockOrigin, (centerX, centerY, centerZ), phi, cohesion, shape, Some(dipAngle),
-          Some(dipDirection), boundingSphere, Some(processorJoint))
+          Some(dipDirection), boundingSphere, processorJoint)
 }

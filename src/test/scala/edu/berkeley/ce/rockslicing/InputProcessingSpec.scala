@@ -154,19 +154,19 @@ class InputProcessingSpec extends FunSuite {
     val expectedOrigin = (4.0, 8.0, 15.0)
 
     val expectedFaces = List[Face](
-      Face((-1.0, 0.0, 0.0), 0.0, 0.0, 0.0, Some(false)),
-      Face((1.0, 0.0, 0.0), 2.0, 0.0, 0.0, Some(false)),
-      Face((0.0, -1.0, 0.0), 0.0, 0.0, 0.0, Some(false)),
-      Face((0.0, 1.0, 0.0), 2.0, 0.0, 0.0, Some(false)),
-      Face((0.0, 0.0, -1.0), 0.0, 0.0, 0.0, Some(false)),
-      Face((0.0, 0.0, 1.0), 2.0, 0.0, 0.0, Some(false))
+      Face((-1.0, 0.0, 0.0), 0.0, 0.0, 0.0),
+      Face((1.0, 0.0, 0.0), 2.0, 0.0, 0.0),
+      Face((0.0, -1.0, 0.0), 0.0, 0.0, 0.0),
+      Face((0.0, 1.0, 0.0), 2.0, 0.0, 0.0),
+      Face((0.0, 0.0, -1.0), 0.0, 0.0, 0.0),
+      Face((0.0, 0.0, 1.0), 2.0, 0.0, 0.0)
     )
 
     val expectedJoints = List[Joint](
-      Joint((1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), 0.0, 0.0, Nil, artificialJoint = Some(false)),
+      Joint((1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), 0.0, 0.0, Nil, processorJoint = false),
       Joint((0.0, 0.0, 1.0), (0.0, 0.0, 0.0), (0.0, 0.0, 1.0), 0.0, 0.0, shape = List(
         ((0.0, 1.0, 0.0), 0.0), ((0.0, -1.0, 0.0), 0.5), ((-1.0, 0.0, 0.0), 0.0), ((1.0, 0.0, 0.0), 0.5)),
-        artificialJoint = Some(false))
+        processorJoint = false)
       )
     assert(globalOrigin == expectedOrigin && rockVolume == expectedFaces && joints == expectedJoints)
   }

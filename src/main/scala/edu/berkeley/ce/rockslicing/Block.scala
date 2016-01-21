@@ -3,6 +3,22 @@ package edu.berkeley.ce.rockslicing
 import breeze.linalg
 import breeze.linalg.{DenseVector, DenseMatrix}
 
+object Face {
+  /**
+    * Compare two faces for equality within specified tolerance
+    * @param face1 First input face
+    * @param face2 Second input face
+    * @return True if faces are equal, otherwise false
+    */
+  def compareFaces(face1: Face, face2: Face, tolerance: Double=NumericUtils.EPSILON):
+                   Boolean = {
+    (math.abs(face1.a - face2.a) < tolerance) &&
+    (math.abs(face1.b - face2.b) < tolerance) &&
+    (math.abs(face1.c - face2.c) < tolerance) &&
+    (math.abs(face1.d - face2.d) < tolerance)
+  }
+}
+
 /** A simple data structure to represent the face of a rock block.
   *
   * @constructor Create a new rock face.
@@ -12,18 +28,13 @@ import breeze.linalg.{DenseVector, DenseMatrix}
   * Accessed as 'd'.
   * @param phi The friction angle (phi) of the face.
   * @param cohesion The cohesion of the face.
-  * @param artificialJoint Parameter that identifies joint as being artificial joint introduced as part
+  * @param processorJoint Parameter that identifies joint as being artificial joint introduced as part
   *                        of load balancing
   */
 case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double, cohesion: Double,
-                artificialJoint: Option[Boolean]=None) {
+                processorJoint: Boolean=false) {
   val (a,b,c) = normalVec
   val d = distance
-
-  val processorJoint = artificialJoint match {
-    case None => false
-    case Some(yes) => yes
-  }
 
   /**
     * Checks if each of the parameters of a face is approximately 0.0 and,
@@ -36,11 +47,49 @@ case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double
     val newD = if (math.abs(d) > NumericUtils.EPSILON) d else 0.0
     val newPhi = if (math.abs(phi) > NumericUtils.EPSILON) phi else 0.0
     val newCohesion = if (math.abs(cohesion) > NumericUtils.EPSILON) cohesion else 0.0
-    Face((newA,newB,newC), newD, newPhi, newCohesion, Some(processorJoint))
+    Face((newA,newB,newC), newD, newPhi, newCohesion, processorJoint)
   }
 }
 
 object Block {
+  /**
+    * Compare two blocks for equality within specified tolerance
+    * @param block1 First input block
+    * @param block2 Second input block
+    * @return True if blocks are equal, otherwise false
+    */
+  def compareBlocks(block1: Block, block2: Block, tolerance: Double=NumericUtils.EPSILON):
+                    Boolean = {
+    val block1Centroid = (block1.centerX, block1.centerY, block1.centerZ)
+    val updatedBlock2 = Block(block1Centroid, block2.updateFaces(block1Centroid))
+    val sortedFaces1a = 
+      block1.faces.sortWith(_.a < _.a)
+    val sortedFaces1b = 
+      sortedFaces1a.sortWith(_.b < _.b)
+    val sortedFaces1c = 
+      sortedFaces1b.sortWith(_.c < _.c)
+    val sortedFaces1 = 
+      sortedFaces1c.sortWith(_.d < _.d)
+
+    val sortedFaces2a = 
+      updatedBlock2.faces.sortWith(_.a < _.a)
+    val sortedFaces2b = 
+      sortedFaces2a.sortWith(_.b < _.b)
+    val sortedFaces2c = 
+      sortedFaces2b.sortWith(_.c < _.c)
+    val sortedFaces2 = 
+      sortedFaces2c.sortWith(_.d < _.d)
+
+    val faces = sortedFaces1.zip(sortedFaces2)
+    val faceMatches = faces map { case (face1, face2) =>
+      Face.compareFaces(face1, face2)
+    }
+    (math.abs(block1.centerX - updatedBlock2.centerX) < tolerance) &&
+    (math.abs(block1.centerY - updatedBlock2.centerY) < tolerance) &&
+    (math.abs(block1.centerZ - updatedBlock2.centerZ) < tolerance) &&
+    (!faceMatches.contains(false))
+  }
+
   /**
     * Calculates the rotation matrix to rotate the input plane (specified by its normal)
     * to the desired orientation (specified by the desired normal)
@@ -240,17 +289,17 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
         // New origin is guaranteed to lie within joint, so initial d = 0 for all child blocks
         val childBlockA = if (translatedJoint.d < 0.0) {
           Block((newX,newY,newZ), Face((-translatedJoint.a, -translatedJoint.b, -translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion, Some(translatedJoint.processorJoint))+:updatedFaces)
+            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces)
         } else {
           Block((newX,newY,newZ), Face((translatedJoint.a, translatedJoint.b, translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion, Some(translatedJoint.processorJoint))+:updatedFaces)
+            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces)
         }
         val childBlockB = if (translatedJoint.d < 0.0) {
           Block((newX,newY,newZ), Face((translatedJoint.a,translatedJoint.b,translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion, Some(translatedJoint.processorJoint))+:updatedFaces)
+            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces)
         } else {
           Block((newX,newY,newZ), Face((-translatedJoint.a,-translatedJoint.b,-translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion, Some(translatedJoint.processorJoint))+:updatedFaces)
+            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces)
         }
 
         var childBlocks = Vector(childBlockA, childBlockB)

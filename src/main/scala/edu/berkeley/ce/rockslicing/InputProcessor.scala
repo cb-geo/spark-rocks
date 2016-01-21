@@ -63,11 +63,11 @@ object InputProcessor {
 
       // Eliminate any inward-pointing normals, and round extremely small distances to 0
       if (math.abs(d) >= NumericUtils.EPSILON) {
-        Face((aPrime, bPrime, cPrime), d, phi, cohesion, artificialJoint = Some(false))
+        Face((aPrime, bPrime, cPrime), d, phi, cohesion)
       } else if (d < -NumericUtils.EPSILON) {
-        Face((-aPrime, -bPrime, -cPrime), -d, phi, cohesion, artificialJoint = Some(false))
+        Face((-aPrime, -bPrime, -cPrime), -d, phi, cohesion)
       } else {
-        Face((aPrime, bPrime, cPrime), 0, phi, cohesion, artificialJoint = Some(false))
+        Face((aPrime, bPrime, cPrime), 0, phi, cohesion)
       }
     }
 
@@ -115,9 +115,7 @@ object InputProcessor {
         ((unitNormVec(0), unitNormVec(1), unitNormVec(2)), d)
       }
 
-      Joint((unitNormVec(0), unitNormVec(1), unitNormVec(2)), localOrigin, center, phi, cohesion, shape.toSeq,
-            dipAngleParam = None, dipDirectionParam = None, boundingSphereParam = null,
-            artificialJoint = Some(false))
+      Joint((unitNormVec(0), unitNormVec(1), unitNormVec(2)), localOrigin, center, phi, cohesion, shape.toSeq)
     }
 
     Some((globalOriginTuple, rockVolume, joints))
