@@ -60,48 +60,4 @@ class RockSlicerSpec extends FunSuite {
     // println(sharedFaces)
     assert(sharedFaces.length == 2)
   }
-
-  // test() {
-  //   val blockList = Seq[Block](leftCube, updatedRightCube, unitCube)
-
-  //   val processorBlocks = blockList.filter { case block => 
-  //     block.faces.exists { face => face.processorJoint}
-  //   }
-
-  //   val realBlocks = blockList.filter { block =>
-  //     val faceTests = block.faces map { case face =>
-  //       face.processorJoint
-  //     }
-  //     !faceTests.contains(true)
-  //   }
-
-  //   val reconstructedBlocks = (processorBlocks flatMap { block1 =>
-  //     processorBlocks map { block2 =>
-  //       val center1 = (block1.centerX, block1.centerY, block1.centerZ)
-  //       val updatedBlock2 = Block(center1, block2.updateFaces(center1))
-  //       val sharedFaces = RockSlicer.compareProcessorBlocks(block1, updatedBlock2)
-  //       if (sharedFaces.nonEmpty) {
-  //         val block1Faces = block1.faces.diff(sharedFaces)
-  //         val block2Faces = updatedBlock2.faces.diff(sharedFaces)
-  //         Block(center1, block1Faces ++ block2Faces)
-  //       }
-  //     }
-  //   }).collect{ case blockType: Block => blockType }
-      
-  //   val reconRedundant = reconstructedBlocks.map {case block @ Block(center, _) =>
-  //     Block(center, block.nonRedundantFaces)
-  //   }
-  //   val reconCentroid = reconRedundant.map {block =>
-  //     val centroid = block.centroid
-  //     Block(centroid, block.updateFaces(centroid))
-  //   }
-
-  //   val uniqueReconBlocks = 
-  //     reconCentroid.foldLeft(Seq[Block]()) { (unique, current) =>
-  //       if (!unique.exists(Block.compareBlocks(current, _)))
-  //         current +: unique
-  //       else unique
-  //     }
-  // }
-
 }

@@ -17,9 +17,11 @@ class EndToEndSpec extends FunSuite {
     // Create an initial block
     val blocks = Seq(Block(globalOrigin, rockVolume))
 
+    // val numSeedJoints = 1
     // Generate seed joint
     val seedJoints = Seq(Joint((1.0, 0.0, 0.0), globalOrigin, (0.5, 0.0, 0.0), phi = 30.0,
                          cohesion = 0.0, shape = Nil, processorJoint = true))
+    // val seedJoints = LoadBalancer.generateSeedJoints(blocks.head, numSeedJoints)
     val joints = seedJoints ++ jointList
 
     // Iterate through joints, cutting blocks where appropriate
@@ -81,12 +83,6 @@ class EndToEndSpec extends FunSuite {
       val updatedFaces = block.updateFaces(centroid)
       Block(centroid, updatedFaces)
     }
-
-    println("Real Blocks: ")
-    centroidBlocks.foreach(println)
-    println()
-    println("Proc. Blocks: ")
-    reconCentroidBlocksDistinct.foreach(println)
 
     // Merge real blocks and reconstructed blocks - this won't happen on Spark since collect will
     // be called and all reconstructed blocks will be on one node

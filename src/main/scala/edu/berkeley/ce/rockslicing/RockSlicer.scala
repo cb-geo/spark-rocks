@@ -82,12 +82,21 @@ object RockSlicer {
         }
       }).collect{ case blockType: Block => blockType}
 
+      // Intermediate cleanup to get rig of arbitrarily small floating point values and -0.0 values
+      val polishedRecon = reconstructedBlocks.map { case Block(center, faces) =>
+        Block(center, faces.map(_.applyTolerance))
+        }
+
       // Update centroids of reconstructed processor blocks and remove duplicates
-      val reconstructedBlocksRedundant = reconstructedBlocks.map {case block @ Block(center, _) =>
+      val reconstructedBlocksRedundant = polishedRecon.map {case block @ Block(center, _) =>
         Block(center, block.nonRedundantFaces)
       }
+
+      println("Updating Centroids and Faces!")
       val reconCentroidBlocks = reconstructedBlocksRedundant.map {block =>
+        println("Updating Block: "+block)
         val centroid = block.centroid
+        println("Block centroid: "+centroid)
         Block(centroid, block.updateFaces(centroid))
       }
       val reconCentroidBlocksDistinct =

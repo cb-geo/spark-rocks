@@ -115,7 +115,7 @@ object InputProcessor {
         ((unitNormVec(0), unitNormVec(1), unitNormVec(2)), d)
       }
 
-      Joint((unitNormVec(0), unitNormVec(1), unitNormVec(2)), localOrigin, center, phi, cohesion, shape.toSeq)
+      Joint((unitNormVec(0), unitNormVec(1), unitNormVec(2)), localOrigin, center, phi, cohesion, shape.toList)
     }
 
     Some((globalOriginTuple, rockVolume, joints))

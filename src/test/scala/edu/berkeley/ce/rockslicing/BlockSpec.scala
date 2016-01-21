@@ -54,21 +54,21 @@ class BlockSpec extends FunSuite {
   )
   val rectPrism = Block((0.0, 0.0, 0.0), boundingFaces6)
 
-  val jointBounds = Seq(
+  val jointBounds = List(
     ((1.0, 0.0, 0.0), 1.0),
     ((-1.0, 0.0, 0.0), 0.0),
     ((0.0, 1.0, 0.0), 1.0),
     ((0.0, -1.0, 0.0), 0.0)
   )
 
-  val jointBounds2 = Seq(
+  val jointBounds2 = List(
     ((1.0, 0.0, 0.0), 1.0),
     ((-1.0, 0.0, 0.0), 1.0),
     ((0.0, 1.0, 0.0), 1.0),
     ((0.0, -1.0, 0.0), 1.0)
   )
 
-  val jointBounds3 = Seq(
+  val jointBounds3 = List(
     ((1.0/sqrt(2.0), 1.0/sqrt(2.0), 0.0), 1.0),
     ((-1.0/sqrt(2.0), 1.0/sqrt(2.0), 0.0), 1.0),
     ((-1.0/sqrt(2.0), -1.0/sqrt(2.0), 0.0), 1.0),

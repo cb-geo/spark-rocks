@@ -3,7 +3,7 @@ package edu.berkeley.ce.rockslicing
 import breeze.linalg
 import breeze.linalg.{DenseMatrix, DenseVector}
 
-object Joint extends java.io.Serializable {
+object Joint {
   /**
     * Find the distance of the joint plane from the input local origin.
     * @param normalVec Normal vector to the joint plane
@@ -209,10 +209,10 @@ object Joint extends java.io.Serializable {
   */
 case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Double, Double),
                  center: (Double, Double, Double), phi: Double, cohesion: Double,
-                 shape: Seq[((Double, Double, Double),Double)], dipAngleParam: Option[Double]=None,
+                 shape: List[((Double, Double, Double),Double)], dipAngleParam: Option[Double]=None,
                  dipDirectionParam: Option[Double]=None,
                  boundingSphereParam: Option[((Double,Double,Double),Double)]=null,
-                 processorJoint: Boolean=false) extends java.io.Serializable {
+                 processorJoint: Boolean=false) {
   val (a, b, c) = normalVec
   val (centerX, centerY, centerZ) = center
   val d = Joint.findDistance(normalVec, localOrigin, center)
