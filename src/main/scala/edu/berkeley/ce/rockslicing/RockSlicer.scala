@@ -68,47 +68,13 @@ object RockSlicer {
     val allProcessorBlocks = processorBlocks.collect()
     // Search blocks for matching processor joints
     if (allProcessorBlocks.length > 0) {
-      val reconstructedBlocks = mergeBlocks(allProcessorBlocks, Seq[Block](),
-                                           globalOrigin)
-      // val reconstructedBlocks = (allProcessorBlocks flatMap { block1 =>
-      //   allProcessorBlocks map { block2 =>
-      //     if (!Block.compareBlocks(block1, block2)) {
-      //       val center1 = (block1.centerX, block1.centerY, block1.centerZ)
-      //       val updatedBlock2 = Block(center1, block2.updateFaces(center1))
-      //       val sharedProcFaces = compareProcessorBlocks(block1, updatedBlock2)
-      //       if (sharedProcFaces.nonEmpty) {
-      //         val block1Faces = block1.faces.diff(sharedProcFaces)
-      //         val block2Faces = updatedBlock2.faces.diff(sharedProcFaces)
-      //         val allFaces = block1Faces ++ block2Faces
-      //         // Check for any real shared faces between blocks - if these exist blocks should NOT
-      //         // be merged since there is an actual joint seperating blocks
-      //         val nonSharedFaces =
-      //           allFaces.foldLeft(Seq[Face]()) { (unique, current) =>
-      //             if (!unique.exists(compareSharedFaces(current, _)))
-      //               current +: unique
-      //             else unique
-      //           }
-      //         if (allFaces.diff(nonSharedFaces).isEmpty)
-      //           Block(center1, nonSharedFaces)
-      //       }
-      //     }
-      //   }
-      // }).collect{ case blockType: Block => blockType}
+      val reconstructedBlocks = mergeBlocks(allProcessorBlocks, Seq[Block](), globalOrigin)
 
       // Update centroids of reconstructed processor blocks and remove duplicates
-      // val reconstructedBlocksRedundant = reconstructedBlocks.map {case block @ Block(center, _) =>
-      //   Block(center, block.nonRedundantFaces)
-      // }
       val reconCentroidBlocks = reconstructedBlocks.map {block =>
         val centroid = block.centroid
         Block(centroid, block.updateFaces(centroid))
       }
-      // val reconCentroidBlocksDistinct =
-      //   reconCentroidBlocks.foldLeft(Seq[Block]()) { (unique, current) =>
-      //     if (!unique.exists(Block.compareBlocks(current, _)))
-      //       current +: unique
-      //     else unique
-      //   }
 
       // Clean up faces of reconstructed blocks with values that should be zero, but have
       // arbitrarily small floating point values
@@ -228,7 +194,7 @@ object RockSlicer {
 
     if (remainingBlocks.nonEmpty) {
       // Merged blocks still contain some processor joints
-      mergeBlocks(remainingBlocks ++ processorBlocks.tail, mergedBlocks, origin)
+      mergeBlocks(remainingBlocks ++ processorBlocks.tail, completedBlocks ++ mergedBlocks, origin)
     } else if (processorBlocks.tail.isEmpty) {
       // All blocks are free of processor joints - check for duplicates then return
       val mergedBlocksDuplicates = completedBlocks ++ mergedBlocks

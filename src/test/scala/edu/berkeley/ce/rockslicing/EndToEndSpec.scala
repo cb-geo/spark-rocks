@@ -18,7 +18,7 @@ class EndToEndSpec extends FunSuite {
     val blocks = Seq(Block(globalOrigin, rockVolume))
 
     // Generate seed joint
-    val numSeedJoints = 2
+    val numSeedJoints = 5
     val seedJoints = LoadBalancer.generateSeedJoints(blocks.head, numSeedJoints)
     val joints = seedJoints ++ jointList
 
@@ -34,36 +34,26 @@ class EndToEndSpec extends FunSuite {
     }
 
     // Find all blocks that contain processor joints
-    val processorBlocks = nonRedundantBlocks.filter { case block => 
+    val processorBlocks = nonRedundantBlocks.filter { block => 
       block.faces.exists { face => face.processorJoint}
     }
 
     // Find blocks that do not contain processor joints
     val realBlocks = nonRedundantBlocks.filter { block =>
-      val faceTests = block.faces map { case face =>
+      val faceTests = block.faces map { face =>
         face.processorJoint
       }
       !faceTests.contains(true)
     }
 
     // Search blocks for matching processor joints
-    val reconBlocks = RockSlicer.mergeBlocks(processorBlocks, Seq[Block](),
-                                             globalOrigin)
+    val reconBlocks = RockSlicer.mergeBlocks(processorBlocks, Seq[Block](), globalOrigin)
 
     // Update centroids of reconstructed processor blocks and remove duplicates
-    // val reconBlocksRedundant = reconBlocks.map {case block @ Block(center, _) =>
-    //   Block(center, block.nonRedundantFaces)
-    // }
     val reconCentroidBlocks = reconBlocks.map {block =>
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
     }
-    // val reconCentroidBlocksDistinct =
-    //     reconCentroidBlocks.foldLeft(Seq[Block]()) { (unique, current) =>
-    //       if (!unique.exists(Block.compareBlocks(current, _)))
-    //         current +: unique
-    //       else unique
-    //     }
 
     // Calculate the centroid of each real block
     val centroidBlocks = realBlocks.map { block =>
