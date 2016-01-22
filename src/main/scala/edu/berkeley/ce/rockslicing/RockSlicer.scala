@@ -1,9 +1,7 @@
 package edu.berkeley.ce.rockslicing
 
 import java.io._
-
 import org.apache.spark.{SparkConf, SparkContext}
-
 import scala.io.Source
 
 object RockSlicer {
@@ -71,32 +69,35 @@ object RockSlicer {
     if (allProcessorBlocks.length > 0) {
       val reconstructedBlocks = (allProcessorBlocks flatMap { block1 =>
         allProcessorBlocks map { block2 =>
-          val center1 = (block1.centerX, block1.centerY, block1.centerZ)
-          val updatedBlock2 = Block(center1, block2.updateFaces(center1))
-          val sharedFaces = compareProcessorBlocks(block1, updatedBlock2)
-          if (sharedFaces.nonEmpty) {
-            val block1Faces = block1.faces.diff(sharedFaces)
-            val block2Faces = updatedBlock2.faces.diff(sharedFaces)
-            Block(center1, block1Faces ++ block2Faces)
+          if (!Block.compareBlocks(block1, block2)) {
+            val center1 = (block1.centerX, block1.centerY, block1.centerZ)
+            val updatedBlock2 = Block(center1, block2.updateFaces(center1))
+            val sharedProcFaces = compareProcessorBlocks(block1, updatedBlock2)
+            if (sharedProcFaces.nonEmpty) {
+              val block1Faces = block1.faces.diff(sharedProcFaces)
+              val block2Faces = updatedBlock2.faces.diff(sharedProcFaces)
+              val allFaces = block1Faces ++ block2Faces
+              // Check for any real shared faces between blocks - if these exist blocks should NOT
+              // be merged since there is an actual joint seperating blocks
+              val nonSharedFaces =
+                allFaces.foldLeft(Seq[Face]()) { (unique, current) =>
+                  if (!unique.exists(compareSharedFaces(current, _)))
+                    current +: unique
+                  else unique
+                }
+              if (allFaces.diff(nonSharedFaces).isEmpty)
+                Block(center1, nonSharedFaces)
+            }
           }
         }
       }).collect{ case blockType: Block => blockType}
 
-      // Intermediate cleanup to get rig of arbitrarily small floating point values and -0.0 values
-      val polishedRecon = reconstructedBlocks.map { case Block(center, faces) =>
-        Block(center, faces.map(_.applyTolerance))
-        }
-
       // Update centroids of reconstructed processor blocks and remove duplicates
-      val reconstructedBlocksRedundant = polishedRecon.map {case block @ Block(center, _) =>
+      val reconstructedBlocksRedundant = reconstructedBlocks.map {case block @ Block(center, _) =>
         Block(center, block.nonRedundantFaces)
       }
-
-      println("Updating Centroids and Faces!")
       val reconCentroidBlocks = reconstructedBlocksRedundant.map {block =>
-        println("Updating Block: "+block)
         val centroid = block.centroid
-        println("Block centroid: "+centroid)
         Block(centroid, block.updateFaces(centroid))
       }
       val reconCentroidBlocksDistinct =
@@ -161,13 +162,26 @@ object RockSlicer {
   }
 
   /**
+    * 
+    */
+  def mergeBlocks(processorBlocks: Seq[Block], mergedBlocks: Seq[Block]): Seq[Block] = {
+    val reconstructedBlock = processorBlocks map { block =>
+      val currentBlock = processorBlocks.head
+      if (!Block.compareBlocks(currentBlock, block, ))
+        // CONTINUE HERE, BUT STILL NEED TO FIX COMPAREPROCESSORBLOCKS
+    }
+  }
+
+  /**
     * Compares two input blocks and determines whether they share a processor face
     * @param block1 First input block
     * @param block2 Second input block
     * @return List of processor faces that are shared by the two blocks. Will empty
     *         if they share no faces
     */
-  def compareProcessorBlocks(block1: Block, block2: Block): Seq[Face] = {
+  def compareProcessorBlocks(block1: Block, block2: Block,
+                             origin: (Double, Double, Double)): Seq[Face] = {
+    // STILL NEED TO ADD UPDATE TO BLOCKS FOR ORIGIN
     val processorFaces1 = block1.faces.filter { case face => face.processorJoint }
     val processorFaces2 = block2.faces.filter { case face => face.processorJoint }
     val faceMatches = 
@@ -182,6 +196,21 @@ object RockSlicer {
         }
       }
     faceMatches.filter{ case faces => faces.nonEmpty }.flatten.flatten.distinct
+  }
+
+  /**
+    * Compares two input faces and determines whether faces are shared. Shared
+    * faces will have equal and opposite distances from local origin as well as
+    * normal vectors in opposite directions
+    * @param face1 First input face
+    * @param face2 Second input face
+    * @return True if faces are shared, false otherwise
+    */
+  def compareSharedFaces(face1: Face, face2: Face): Boolean = {
+    (math.abs(face1.a + face2.a) < NumericUtils.EPSILON) &&
+    (math.abs(face1.b + face2.b) < NumericUtils.EPSILON) &&
+    (math.abs(face1.c + face2.c) < NumericUtils.EPSILON) &&
+    (math.abs(face1.d + face2.d) < NumericUtils.EPSILON)
   }
 
   // Function that writes JSON string to file for single node - taken from 

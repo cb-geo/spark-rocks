@@ -17,11 +17,11 @@ class EndToEndSpec extends FunSuite {
     // Create an initial block
     val blocks = Seq(Block(globalOrigin, rockVolume))
 
-    // val numSeedJoints = 1
+    val numSeedJoints = 2
     // Generate seed joint
-    val seedJoints = Seq(Joint((1.0, 0.0, 0.0), globalOrigin, (0.5, 0.0, 0.0), phi = 30.0,
-                         cohesion = 0.0, shape = Nil, processorJoint = true))
-    // val seedJoints = LoadBalancer.generateSeedJoints(blocks.head, numSeedJoints)
+    // val seedJoints = Seq(Joint((1.0, 0.0, 0.0), globalOrigin, (0.5, 0.0, 0.0), phi = 30.0,
+    //                      cohesion = 0.0, shape = Nil, processorJoint = true))
+    val seedJoints = LoadBalancer.generateSeedJoints(blocks.head, numSeedJoints)
     val joints = seedJoints ++ jointList
 
     // Iterate through joints, cutting blocks where appropriate
@@ -53,11 +53,21 @@ class EndToEndSpec extends FunSuite {
       processorBlocks map { block2 =>
         val center1 = (block1.centerX, block1.centerY, block1.centerZ)
         val updatedBlock2 = Block(center1, block2.updateFaces(center1))
-        val sharedFaces = RockSlicer.compareProcessorBlocks(block1, updatedBlock2)
-        if (sharedFaces.nonEmpty) {
-          val block1Faces = block1.faces.diff(sharedFaces)
-          val block2Faces = updatedBlock2.faces.diff(sharedFaces)
-          Block(center1, block1Faces ++ block2Faces)
+        val sharedProcFaces = RockSlicer.compareProcessorBlocks(block1, updatedBlock2)
+        if (sharedProcFaces.nonEmpty) {
+          val block1Faces = block1.faces.diff(sharedProcFaces)
+          val block2Faces = updatedBlock2.faces.diff(sharedProcFaces)
+          val allFaces = block1Faces ++ block2Faces
+          // Check for any real shared faces between blocks - if these exist blocks should NOT
+          // be merged since there is an actual joint seperating blocks
+          val nonSharedFaces =
+            allFaces.foldLeft(Seq[Face]()) { (unique, current) =>
+              if (!unique.exists(RockSlicer.compareSharedFaces(current, _)))
+                current +: unique
+              else unique
+            }
+          if (allFaces.diff(nonSharedFaces).isEmpty)
+            Block(center1, nonSharedFaces)
         }
       }
     }).collect{ case blockType: Block => blockType}
