@@ -17,10 +17,8 @@ class EndToEndSpec extends FunSuite {
     // Create an initial block
     val blocks = Seq(Block(globalOrigin, rockVolume))
 
-    val numSeedJoints = 2
     // Generate seed joint
-    // val seedJoints = Seq(Joint((1.0, 0.0, 0.0), globalOrigin, (0.5, 0.0, 0.0), phi = 30.0,
-    //                      cohesion = 0.0, shape = Nil, processorJoint = true))
+    val numSeedJoints = 2
     val seedJoints = LoadBalancer.generateSeedJoints(blocks.head, numSeedJoints)
     val joints = seedJoints ++ jointList
 
@@ -49,43 +47,23 @@ class EndToEndSpec extends FunSuite {
     }
 
     // Search blocks for matching processor joints
-    val reconBlocks = (processorBlocks flatMap { block1 =>
-      processorBlocks map { block2 =>
-        val center1 = (block1.centerX, block1.centerY, block1.centerZ)
-        val updatedBlock2 = Block(center1, block2.updateFaces(center1))
-        val sharedProcFaces = RockSlicer.compareProcessorBlocks(block1, updatedBlock2)
-        if (sharedProcFaces.nonEmpty) {
-          val block1Faces = block1.faces.diff(sharedProcFaces)
-          val block2Faces = updatedBlock2.faces.diff(sharedProcFaces)
-          val allFaces = block1Faces ++ block2Faces
-          // Check for any real shared faces between blocks - if these exist blocks should NOT
-          // be merged since there is an actual joint seperating blocks
-          val nonSharedFaces =
-            allFaces.foldLeft(Seq[Face]()) { (unique, current) =>
-              if (!unique.exists(RockSlicer.compareSharedFaces(current, _)))
-                current +: unique
-              else unique
-            }
-          if (allFaces.diff(nonSharedFaces).isEmpty)
-            Block(center1, nonSharedFaces)
-        }
-      }
-    }).collect{ case blockType: Block => blockType}
+    val reconBlocks = RockSlicer.mergeBlocks(processorBlocks, Seq[Block](),
+                                             globalOrigin)
 
     // Update centroids of reconstructed processor blocks and remove duplicates
-    val reconBlocksRedundant = reconBlocks.map {case block @ Block(center, _) =>
-      Block(center, block.nonRedundantFaces)
-    }
-    val reconCentroidBlocks = reconBlocksRedundant.map {block =>
+    // val reconBlocksRedundant = reconBlocks.map {case block @ Block(center, _) =>
+    //   Block(center, block.nonRedundantFaces)
+    // }
+    val reconCentroidBlocks = reconBlocks.map {block =>
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
     }
-    val reconCentroidBlocksDistinct =
-        reconCentroidBlocks.foldLeft(Seq[Block]()) { (unique, current) =>
-          if (!unique.exists(Block.compareBlocks(current, _)))
-            current +: unique
-          else unique
-        }
+    // val reconCentroidBlocksDistinct =
+    //     reconCentroidBlocks.foldLeft(Seq[Block]()) { (unique, current) =>
+    //       if (!unique.exists(Block.compareBlocks(current, _)))
+    //         current +: unique
+    //       else unique
+    //     }
 
     // Calculate the centroid of each real block
     val centroidBlocks = realBlocks.map { block =>
@@ -96,7 +74,7 @@ class EndToEndSpec extends FunSuite {
 
     // Merge real blocks and reconstructed blocks - this won't happen on Spark since collect will
     // be called and all reconstructed blocks will be on one node
-    val allBlocks = centroidBlocks ++ reconCentroidBlocksDistinct
+    val allBlocks = centroidBlocks ++ reconCentroidBlocks
 
     // Clean up double values arbitrarily close to 0.0
     val cleanedBlocks = allBlocks.map { case Block(center, faces) =>

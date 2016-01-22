@@ -3,6 +3,7 @@ package edu.berkeley.ce.rockslicing
 import java.io._
 import org.apache.spark.{SparkConf, SparkContext}
 import scala.io.Source
+import scala.annotation.tailrec
 
 object RockSlicer {
 
@@ -50,13 +51,13 @@ object RockSlicer {
     }
 
     // Find all blocks that contain processor joints
-    val processorBlocks = nonRedundantBlocks.filter { case block => 
+    val processorBlocks = nonRedundantBlocks.filter { block => 
       block.faces.exists { face => face.processorJoint}
     }
 
     // Find blocks that do not contain processor joints
     val realBlocks = nonRedundantBlocks.filter { block =>
-      val faceFlags = block.faces map { case face =>
+      val faceFlags = block.faces map { face =>
         face.processorJoint
       }
       !faceFlags.contains(true)
@@ -67,49 +68,51 @@ object RockSlicer {
     val allProcessorBlocks = processorBlocks.collect()
     // Search blocks for matching processor joints
     if (allProcessorBlocks.length > 0) {
-      val reconstructedBlocks = (allProcessorBlocks flatMap { block1 =>
-        allProcessorBlocks map { block2 =>
-          if (!Block.compareBlocks(block1, block2)) {
-            val center1 = (block1.centerX, block1.centerY, block1.centerZ)
-            val updatedBlock2 = Block(center1, block2.updateFaces(center1))
-            val sharedProcFaces = compareProcessorBlocks(block1, updatedBlock2)
-            if (sharedProcFaces.nonEmpty) {
-              val block1Faces = block1.faces.diff(sharedProcFaces)
-              val block2Faces = updatedBlock2.faces.diff(sharedProcFaces)
-              val allFaces = block1Faces ++ block2Faces
-              // Check for any real shared faces between blocks - if these exist blocks should NOT
-              // be merged since there is an actual joint seperating blocks
-              val nonSharedFaces =
-                allFaces.foldLeft(Seq[Face]()) { (unique, current) =>
-                  if (!unique.exists(compareSharedFaces(current, _)))
-                    current +: unique
-                  else unique
-                }
-              if (allFaces.diff(nonSharedFaces).isEmpty)
-                Block(center1, nonSharedFaces)
-            }
-          }
-        }
-      }).collect{ case blockType: Block => blockType}
+      val reconstructedBlocks = mergeBlocks(allProcessorBlocks, Seq[Block](),
+                                           globalOrigin)
+      // val reconstructedBlocks = (allProcessorBlocks flatMap { block1 =>
+      //   allProcessorBlocks map { block2 =>
+      //     if (!Block.compareBlocks(block1, block2)) {
+      //       val center1 = (block1.centerX, block1.centerY, block1.centerZ)
+      //       val updatedBlock2 = Block(center1, block2.updateFaces(center1))
+      //       val sharedProcFaces = compareProcessorBlocks(block1, updatedBlock2)
+      //       if (sharedProcFaces.nonEmpty) {
+      //         val block1Faces = block1.faces.diff(sharedProcFaces)
+      //         val block2Faces = updatedBlock2.faces.diff(sharedProcFaces)
+      //         val allFaces = block1Faces ++ block2Faces
+      //         // Check for any real shared faces between blocks - if these exist blocks should NOT
+      //         // be merged since there is an actual joint seperating blocks
+      //         val nonSharedFaces =
+      //           allFaces.foldLeft(Seq[Face]()) { (unique, current) =>
+      //             if (!unique.exists(compareSharedFaces(current, _)))
+      //               current +: unique
+      //             else unique
+      //           }
+      //         if (allFaces.diff(nonSharedFaces).isEmpty)
+      //           Block(center1, nonSharedFaces)
+      //       }
+      //     }
+      //   }
+      // }).collect{ case blockType: Block => blockType}
 
       // Update centroids of reconstructed processor blocks and remove duplicates
-      val reconstructedBlocksRedundant = reconstructedBlocks.map {case block @ Block(center, _) =>
-        Block(center, block.nonRedundantFaces)
-      }
-      val reconCentroidBlocks = reconstructedBlocksRedundant.map {block =>
+      // val reconstructedBlocksRedundant = reconstructedBlocks.map {case block @ Block(center, _) =>
+      //   Block(center, block.nonRedundantFaces)
+      // }
+      val reconCentroidBlocks = reconstructedBlocks.map {block =>
         val centroid = block.centroid
         Block(centroid, block.updateFaces(centroid))
       }
-      val reconCentroidBlocksDistinct =
-        reconCentroidBlocks.foldLeft(Seq[Block]()) { (unique, current) =>
-          if (!unique.exists(Block.compareBlocks(current, _)))
-            current +: unique
-          else unique
-        }
+      // val reconCentroidBlocksDistinct =
+      //   reconCentroidBlocks.foldLeft(Seq[Block]()) { (unique, current) =>
+      //     if (!unique.exists(Block.compareBlocks(current, _)))
+      //       current +: unique
+      //     else unique
+      //   }
 
       // Clean up faces of reconstructed blocks with values that should be zero, but have
       // arbitrarily small floating point values
-      val squeakyCleanRecon = reconCentroidBlocksDistinct.map { case Block(center, faces) =>
+      val squeakyCleanRecon = reconCentroidBlocks.map { case Block(center, faces) =>
         Block(center, faces.map(_.applyTolerance))
       }
 
@@ -152,8 +155,8 @@ object RockSlicer {
     }
 
     if (arguments.toVTK) {
-      // Convert the list of rock blocks to JSON with vertices, normals and connectivity in format easily converted
-      // to vtk by rockProcessor module
+      // Convert the list of rock blocks to JSON with vertices, normals and connectivity in
+      // format easily converted to vtk by rockProcessor module
       val vtkBlocks = squeakyClean.map(BlockVTK(_))
       val jsonVtkBlocks = vtkBlocks.map(JsonToVtk.blockVtkToMinimalJson)
       jsonVtkBlocks.saveAsTextFile("vtkBlocks.json")
@@ -162,13 +165,82 @@ object RockSlicer {
   }
 
   /**
-    * 
+    * Recursive function that merges sequence of blocks containing processor joints
+    * along matching processor joints, elliminating false blocks caused by division of 
+    * input rock volume into equal volumes by load balancer
+    * @param processorBlocks Sequence of blocks containing one or more processor joints each
+    * @param mergedBlocks Sequence of blocks that have had processor joints removed. Initial
+    *                     input is empty sequence
+    * @param origin Origin that all blocks and their faces will be referenced to for consistency
+    * @return Sequence of blocks with all processor joints removed by merging input blocks along
+    *         matching processor joints. Redundant faces and duplicate blocks are already removed
+    *         in this list, so it is not necessary to perform these computations on the returned
+    *         sequence.
     */
-  def mergeBlocks(processorBlocks: Seq[Block], mergedBlocks: Seq[Block]): Seq[Block] = {
-    val reconstructedBlock = processorBlocks map { block =>
-      val currentBlock = processorBlocks.head
-      if (!Block.compareBlocks(currentBlock, block, ))
-        // CONTINUE HERE, BUT STILL NEED TO FIX COMPAREPROCESSORBLOCKS
+  @tailrec
+  def mergeBlocks(processorBlocks: Seq[Block], mergedBlocks: Seq[Block],
+                  origin: (Double, Double, Double)): Seq[Block] = {
+    val reconstructedBlocks = (processorBlocks map { block =>
+      val currentBlock = Block(origin, processorBlocks.head.updateFaces(origin))
+      val updatedBlock = Block(origin, block.updateFaces(origin))
+      if (!Block.compareBlocks(currentBlock, updatedBlock)) {
+        val sharedProcFaces = compareProcessorBlocks(currentBlock, updatedBlock)
+        if (sharedProcFaces.nonEmpty) {
+          val currentFaces = currentBlock.faces.diff(sharedProcFaces)
+          val updatedFaces = updatedBlock.faces.diff(sharedProcFaces)
+          val allFaces = currentFaces ++ updatedFaces
+          // Check for any actual shared faces between blocks - if these exists blocks
+          // should not be merged since there is a real joint seperating the blocks
+          val nonSharedFaces =
+            allFaces.foldLeft(Seq[Face]()) { (unique, current) =>
+              if (!unique.exists(compareSharedFaces(current, _)))
+                current +: unique
+              else unique
+            }
+          if (allFaces.diff(nonSharedFaces).isEmpty) {
+            Block(origin, nonSharedFaces)
+          }
+        }
+      }
+    }).collect { case blockType: Block => blockType }
+
+    // Remove redundant faces and remove duplicates
+    val nonRedundantBlocks = reconstructedBlocks map { case block @ Block(center, _) =>
+      Block(center, block.nonRedundantFaces)
+    }
+    val joinedBlocks = 
+      nonRedundantBlocks.foldLeft(Seq[Block]()) { (unique, current) =>
+        if (!unique.exists(Block.compareBlocks(current, _)))
+          current +: unique
+        else unique
+      }
+
+    // Divide blocks into groups with and without processor joints remaining
+    val remainingBlocks = joinedBlocks filter { block =>
+      block.faces.exists { face => face.processorJoint }
+    }
+    val completedBlocks = joinedBlocks filter { block =>
+      val faceFlags = block.faces map { face =>
+        face.processorJoint
+      }
+      !faceFlags.contains(true)
+    }
+
+    if (remainingBlocks.nonEmpty) {
+      // Merged blocks still contain some processor joints
+      mergeBlocks(remainingBlocks ++ processorBlocks.tail, mergedBlocks, origin)
+    } else if (processorBlocks.tail.isEmpty) {
+      // All blocks are free of processor joints - check for duplicates then return
+      val mergedBlocksDuplicates = completedBlocks ++ mergedBlocks
+      mergedBlocksDuplicates.foldLeft(Seq[Block]()) { (unique, current) =>
+        if (!unique.exists(Block.compareBlocks(current, _)))
+          current +: unique
+        else
+          unique
+      }
+    } else {
+      // Proceed to next processor block
+      mergeBlocks(processorBlocks.tail, completedBlocks ++ mergedBlocks, origin)
     }
   }
 
@@ -176,12 +248,10 @@ object RockSlicer {
     * Compares two input blocks and determines whether they share a processor face
     * @param block1 First input block
     * @param block2 Second input block
-    * @return List of processor faces that are shared by the two blocks. Will empty
-    *         if they share no faces
+    * @return List of processor faces that are shared by the two blocks. Will be 
+    *         empty if they share no faces
     */
-  def compareProcessorBlocks(block1: Block, block2: Block,
-                             origin: (Double, Double, Double)): Seq[Face] = {
-    // STILL NEED TO ADD UPDATE TO BLOCKS FOR ORIGIN
+  def compareProcessorBlocks(block1: Block, block2: Block): Seq[Face] = {
     val processorFaces1 = block1.faces.filter { case face => face.processorJoint }
     val processorFaces2 = block2.faces.filter { case face => face.processorJoint }
     val faceMatches = 
