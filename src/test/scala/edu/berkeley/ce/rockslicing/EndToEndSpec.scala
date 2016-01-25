@@ -44,10 +44,8 @@ class EndToEndSpec extends FunSuite {
 
     // Find blocks that do not contain processor joints
     val realBlocks = nonRedundantBlocks.filter { block =>
-      val faceTests = block.faces map { face =>
-        face.processorJoint
-      }
-      !faceTests.contains(true)
+      val faceTests = block.faces.exists(_.processorJoint)
+      !faceTests
     }
 
     // Search blocks for matching processor joints

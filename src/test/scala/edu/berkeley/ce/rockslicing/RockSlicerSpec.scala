@@ -226,7 +226,7 @@ class RockSlicerSpec extends FunSuite {
     val processorBlocks = Seq(leftHalfUnitCube, rightHalfUnitCube)
     val mergedBlocks = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block], globalOrigin)
     assert(mergedBlocks.length == 1)
-    assert(Block.compareBlocks(mergedBlocks.head, unitCube))
+    assert(mergedBlocks.head.approximateEquals(unitCube))
   }
 
   test("Three blocks should be merged into unit cube") {
@@ -234,7 +234,7 @@ class RockSlicerSpec extends FunSuite {
     val processorBlocks = Seq(leftQuarterUnitCube, centerPartUnitCube, rightQuarterUnitCube)
     val mergedBlocks = RockSlicer.mergeBlocks(processorBlocks, Seq[Block](), globalOrigin)
     assert(mergedBlocks.length == 1)
-    assert(Block.compareBlocks(mergedBlocks.head, unitCube))
+    assert(mergedBlocks.head.approximateEquals(unitCube))
   }
 
   test("Four blocks should be merged into unit cube") {
@@ -243,7 +243,7 @@ class RockSlicerSpec extends FunSuite {
                               rightCenterQuarterUnitCube, rightQuarterUnitCube)
     val mergedBlocks = RockSlicer.mergeBlocks(processorBlocks, Seq[Block](), globalOrigin)
     assert(mergedBlocks.length == 1)
-    assert(Block.compareBlocks(mergedBlocks.head, unitCube))
+    assert(mergedBlocks.head.approximateEquals(unitCube))
   }
 
   test("Eight blocks should be merged into two blocks that comprise top and bottom halves "+
@@ -264,7 +264,7 @@ class RockSlicerSpec extends FunSuite {
       Block(centroid, block.updateFaces(centroid))
     }
     val blockCheck = mergedBlocksCentroid.zip(expectedBlocksCentroid) map { case (calc, expected) =>
-      Block.compareBlocks(calc, expected)
+      calc.approximateEquals(expected)
     }
 
     assert(mergedBlocksCentroid.length == 2)
@@ -307,12 +307,12 @@ class RockSlicerSpec extends FunSuite {
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
     }
-    val blockCheck = mergedBlocksCentroid.zip(expectedBlocksCentroid) map { case (calc, expected) =>
-      Block.compareBlocks(calc, expected)
+    val blockCheck = mergedBlocksCentroid.zip(expectedBlocksCentroid) forall { case (calc, expected) =>
+      calc.approximateEquals(expected)
     }
 
     assert(mergedBlocks.length == 3)
-    assert(!blockCheck.contains(false))
+    assert(blockCheck)
   }
 
   test("Oblique processor joints should be removed and actual blocks restored") {
@@ -351,11 +351,11 @@ class RockSlicerSpec extends FunSuite {
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
     }
-    val blockCheck = mergedBlocksCentroid.zip(expectedBlocksCentroid) map { case (calc, expected) =>
-      Block.compareBlocks(calc, expected)
+    val blockCheck = mergedBlocksCentroid.zip(expectedBlocksCentroid) forall { case (calc, expected) =>
+      calc.approximateEquals(expected)
     }
 
     assert(mergedBlocks.length == 3)
-    assert(!blockCheck.contains(false))
+    assert(blockCheck)
   }
 }

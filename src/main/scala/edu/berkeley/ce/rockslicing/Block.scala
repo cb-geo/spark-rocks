@@ -53,44 +53,6 @@ case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double
 
 object Block {
   /**
-    * Compare two blocks for equality within specified tolerance
-    * @param block1 First input block
-    * @param block2 Second input block
-    * @return True if blocks are equal, otherwise false
-    */
-  def compareBlocks(block1: Block, block2: Block, tolerance: Double=NumericUtils.EPSILON):
-                    Boolean = {
-    val block1Centroid = (block1.centerX, block1.centerY, block1.centerZ)
-    val updatedBlock2 = Block(block1Centroid, block2.updateFaces(block1Centroid))
-    val sortedFaces1a = 
-      block1.faces.sortWith(_.a < _.a)
-    val sortedFaces1b = 
-      sortedFaces1a.sortWith(_.b < _.b)
-    val sortedFaces1c = 
-      sortedFaces1b.sortWith(_.c < _.c)
-    val sortedFaces1 = 
-      sortedFaces1c.sortWith(_.d < _.d)
-
-    val sortedFaces2a = 
-      updatedBlock2.faces.sortWith(_.a < _.a)
-    val sortedFaces2b = 
-      sortedFaces2a.sortWith(_.b < _.b)
-    val sortedFaces2c = 
-      sortedFaces2b.sortWith(_.c < _.c)
-    val sortedFaces2 = 
-      sortedFaces2c.sortWith(_.d < _.d)
-
-    val faces = sortedFaces1.zip(sortedFaces2)
-    val faceMatches = faces forall { case (face1, face2) =>
-      Face.compareFaces(face1, face2)
-    }
-    (math.abs(block1.centerX - updatedBlock2.centerX) < tolerance) &&
-    (math.abs(block1.centerY - updatedBlock2.centerY) < tolerance) &&
-    (math.abs(block1.centerZ - updatedBlock2.centerZ) < tolerance) &&
-    (faceMatches)
-  }
-
-  /**
     * Calculates the rotation matrix to rotate the input plane (specified by its normal)
     * to the desired orientation (specified by the desired normal)
     * @param n_current: Current normal of plane
@@ -509,5 +471,42 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
       val new_d = NumericUtils.roundToTolerance(-(n dot w) / linalg.norm(n))
       Face((a, b, c), new_d, phi, cohesion, processorJoint)
     }
+  }
+
+  /**
+    * Compare this block and input block for approximate equality within specified tolerance
+    * @param inputBlock Input block
+    * @return True if blocks are equal, otherwise false
+    */
+  def approximateEquals(inputBlock: Block, tolerance: Double=NumericUtils.EPSILON):
+                    Boolean = {
+    val centroid = (centerX, centerY, centerZ)
+    val updatedInputBlock = Block(centroid, inputBlock.updateFaces(centroid))
+    val sortedFaces1a = 
+      faces.sortWith(_.a < _.a)
+    val sortedFaces1b = 
+      sortedFaces1a.sortWith(_.b < _.b)
+    val sortedFaces1c = 
+      sortedFaces1b.sortWith(_.c < _.c)
+    val sortedFaces1 = 
+      sortedFaces1c.sortWith(_.d < _.d)
+
+    val sortedFaces2a = 
+      updatedInputBlock.faces.sortWith(_.a < _.a)
+    val sortedFaces2b = 
+      sortedFaces2a.sortWith(_.b < _.b)
+    val sortedFaces2c = 
+      sortedFaces2b.sortWith(_.c < _.c)
+    val sortedFaces2 = 
+      sortedFaces2c.sortWith(_.d < _.d)
+
+    val zippedFaces = sortedFaces1.zip(sortedFaces2)
+    val faceMatches = zippedFaces forall { case (face1, face2) =>
+      Face.compareFaces(face1, face2)
+    }
+    (math.abs(centerX - updatedInputBlock.centerX) < tolerance) &&
+    (math.abs(centerY - updatedInputBlock.centerY) < tolerance) &&
+    (math.abs(centerZ - updatedInputBlock.centerZ) < tolerance) &&
+    (faceMatches)
   }
 }
