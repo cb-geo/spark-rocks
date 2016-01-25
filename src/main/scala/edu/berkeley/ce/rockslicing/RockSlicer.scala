@@ -195,10 +195,11 @@ object RockSlicer {
       // All blocks are free of processor joints - check for duplicates then return
       val mergedBlocksDuplicates = completedBlocks ++ mergedBlocks
       mergedBlocksDuplicates.foldLeft(Seq[Block]()) { (unique, current) =>
-        if (!unique.exists(current.approximateEquals(_)))
+        if (!unique.exists(current.approximateEquals(_))) {
           current +: unique
-        else
+        } else {
           unique
+        }
       }
     } else {
       // Proceed to next processor block
