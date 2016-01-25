@@ -81,13 +81,13 @@ object Block {
       sortedFaces2c.sortWith(_.d < _.d)
 
     val faces = sortedFaces1.zip(sortedFaces2)
-    val faceMatches = faces map { case (face1, face2) =>
+    val faceMatches = faces forall { case (face1, face2) =>
       Face.compareFaces(face1, face2)
     }
     (math.abs(block1.centerX - updatedBlock2.centerX) < tolerance) &&
     (math.abs(block1.centerY - updatedBlock2.centerY) < tolerance) &&
     (math.abs(block1.centerZ - updatedBlock2.centerZ) < tolerance) &&
-    (!faceMatches.contains(false))
+    (faceMatches)
   }
 
   /**
@@ -101,6 +101,7 @@ object Block {
                              DenseMatrix[Double] = {
     val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
     val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
+    // Check if vectors are parallel
     if (math.abs(linalg.norm(linalg.cross(n_c,n_d))) > NumericUtils.EPSILON) {
       val v = linalg.cross(n_c, n_d)
       val s = linalg.norm(v)
@@ -116,6 +117,7 @@ object Block {
 
       DenseMatrix.eye[Double](3) + A_skew + (A_skew * A_skew) * (1-c)/(s*s)
     } else {
+      // Vectors are parallel, so return identity
       DenseMatrix.eye[Double](3)
     }
   }
@@ -392,8 +394,9 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
           Delaunay.Vector2(rotatedVertex(0), rotatedVertex(1))
         }.distinct.toList
 
-        // If normal is -z-axis, order needs to be reversed to maintain clockwise orientation
-        // rotation matrix is identity matrix in this case
+        // If normal is -z-axis, order needs to be reversed to maintain clockwise orientation since
+        // rotation matrix is identity matrix in this case - vectors are parallel. Rotation matrix
+        // takes care of all other cases.
         if (math.abs(face.c + 1.0) < NumericUtils.EPSILON) {
           Delaunay.Triangulation(rotatedVertices).map { vert =>
             (vert._3, vert._2, vert._1)
@@ -406,6 +409,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
 
   /**
     * Calculates the centroid of the block.
+    * See http://wwwf.imperial.ac.uk/~rn/centroid.pdf for theoretical background.
     * @return The centroid of the block, (centerX, centerY, centerZ).
     */
   def centroid: (Double, Double, Double) = {
@@ -455,6 +459,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
 
   /**
     * Calculates the volume of the block
+    * See http://wwwf.imperial.ac.uk/~rn/centroid.pdf for theoretical background.
     * @return The volume of the block
     */
   def volume: Double = {
@@ -476,7 +481,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
       }
     }
 
-    volIncrements.fold(0.0) (_ + _)/6.0
+    volIncrements.sum/6.0
   }
 
   /**

@@ -8,45 +8,45 @@ import scala.annotation.tailrec
   * Manages initial partitioning of rock volume to maintain load balance among partitions
   */
 object LoadBalancer {
-
+  val VOLUME_TOLERANCE = 0.05
   /**
     * Produce processor joints that cut initial rock volume into approximately equal volumes.
     * These joints will be used to seed the initial Block RDD such that the volume or rock
-    * provided to each process is approximately equal.
+    * provided to each process is approximately equal. This function should only be called when
+    * using more than 1 processor.
     * @param rockVolume Initial block defining the entire rock volume of interest
-    * @param numSeedJoints Number of joints to process before initiating parallel block cutting.
-    *                      Should be one less than number of cores used.
+    * @param numProcessors Number of processors used in analysis.
     * @return Set of processor joints that will be used to seed the initial RDD
     */
-  def generateSeedJoints(rockVolume: Block, numSeedJoints: Integer):
+  def generateProcessorJoints(rockVolume: Block, numProcessors: Integer):
                          Seq[Joint] = {
     // Calculate bounding box
     val vertices = rockVolume.findVertices.values.flatten
-    val x_max = (vertices.map{ case vertex => vertex._1}).max
-    val x_min = (vertices.map{ case vertex => vertex._1}).min
-    val y_max = (vertices.map{ case vertex => vertex._2}).max
-    val y_min = (vertices.map{ case vertex => vertex._2}).min
-    val z_max = (vertices.map{ case vertex => vertex._3}).max
-    val z_min = (vertices.map{ case vertex => vertex._3}).min
+    val x_max = (vertices.map(_._1)).max
+    val x_min = (vertices.map(_._1)).min
+    val y_max = (vertices.map(_._2)).max
+    val y_min = (vertices.map(_._2)).min
+    val z_max = (vertices.map(_._3)).max
+    val z_min = (vertices.map(_._3)).min
     val boundingBox = (x_min, y_min, z_min, x_max, y_max, z_max)
 
     // Diagonal vector from lower left to upper right corner of bounding box
     val diagonalVector = breeze.linalg.normalize(DenseVector[Double](boundingBox._4 - boundingBox._1,
                                                                      boundingBox._5 - boundingBox._2,
                                                                      boundingBox._6 - boundingBox._3))
-    val volumePerPart = rockVolume.volume/(numSeedJoints + 1)
+    val volumePerPart = rockVolume.volume/numProcessors
     val centroid = rockVolume.centroid
     val centroidVolume = Block(centroid, rockVolume.updateFaces(centroid))
-    val seedJoints =
-      findProcessorJoints(Seq[Joint](), (centroidVolume.centerX, centroidVolume.centerY, centroidVolume.centerZ),
+    val processorJoints =
+      findProcessorJoints(Seq.empty[Joint], (centroidVolume.centerX, centroidVolume.centerY, centroidVolume.centerZ),
                           (boundingBox._1, boundingBox._2, boundingBox._3),
                           centroidVolume, volumePerPart)
 
-    if (seedJoints.length != numSeedJoints) {
-      throw new IllegalStateException("ERROR: LoadBalancer.generateSeedJoints unable to find optimal "+
-                                      "seed joints")
+    if ((processorJoints.length + 1) != numProcessors) {
+      throw new IllegalStateException("ERROR: LoadBalancer.generateProcessorJoints unable to find optimal "+
+                                      "processor joints")
     }
-    seedJoints
+    processorJoints
   }
 
   /**
@@ -66,12 +66,12 @@ object LoadBalancer {
                                   Seq[Joint] = {
     // Calculate bounding box
     val vertices = initialVolume.findVertices.values.flatten
-    val x_max = (vertices.map{ case vertex => vertex._1}).max
-    val x_min = (vertices.map{ case vertex => vertex._1}).min
-    val y_max = (vertices.map{ case vertex => vertex._2}).max
-    val y_min = (vertices.map{ case vertex => vertex._2}).min
-    val z_max = (vertices.map{ case vertex => vertex._3}).max
-    val z_min = (vertices.map{ case vertex => vertex._3}).min
+    val x_max = (vertices.map(_._1)).max
+    val x_min = (vertices.map(_._1)).min
+    val y_max = (vertices.map(_._2)).max
+    val y_min = (vertices.map(_._2)).min
+    val z_max = (vertices.map(_._3)).max
+    val z_min = (vertices.map(_._3)).min
     val boundingBox = (x_min, y_min, z_min, x_max, y_max, z_max)
 
     // Calculate diagonal length
@@ -89,13 +89,12 @@ object LoadBalancer {
     }
     val sortedBlocks = nonRedundantBlocks.sortWith{ (left, right) =>
       centroidCompare(left.centroid, right.centroid) }
-    val tolerance = 0.05
 
     // If first block has satisfactory volume
-    if ((sortedBlocks.head.volume < (1.0 + tolerance)*desiredVolume) && 
-        (sortedBlocks.head.volume > (1.0 - tolerance)*desiredVolume) &&
+    if ((sortedBlocks.head.volume < (1.0 + VOLUME_TOLERANCE)*desiredVolume) && 
+        (sortedBlocks.head.volume > (1.0 - VOLUME_TOLERANCE)*desiredVolume) &&
         (sortedBlocks.length == 2)) {
-      if (sortedBlocks.tail.head.volume <= (1.0 + tolerance)*desiredVolume) {
+      if (sortedBlocks.tail.head.volume <= (1.0 + VOLUME_TOLERANCE)*desiredVolume) {
         // If both blocks have satifactory volumes, prepend joint to joints
         joint +: joints
       } else {
@@ -112,13 +111,13 @@ object LoadBalancer {
       val centerVec0 = DenseVector[Double](center._1, center._2, center._3)
       val centerVec1 = DenseVector[Double](boundingBox._4, boundingBox._5, boundingBox._6)
       // First distance guess
-      val x_diff0 =centerVec0(0) - boundingBox._1
-      val y_diff0 =centerVec0(1) - boundingBox._2
-      val z_diff0 =centerVec0(2) - boundingBox._3
+      val x_diff0 = centerVec0(0) - boundingBox._1
+      val y_diff0 = centerVec0(1) - boundingBox._2
+      val z_diff0 = centerVec0(2) - boundingBox._3
       val dist0 = math.sqrt(x_diff0*x_diff0 + y_diff0*y_diff0 + z_diff0*z_diff0)
       // Second distance guess
       val dist1 = diagonalLength
-      val nextCenter = secantBisectionSolver(dist0, dist1, initialVolume, tolerance, 
+      val nextCenter = secantBisectionSolver(dist0, dist1, initialVolume, VOLUME_TOLERANCE, 
                                              boundingBox, origin, desiredVolume, 0)
       findProcessorJoints(joints, origin, nextCenter, initialVolume,
                           desiredVolume)
@@ -189,25 +188,26 @@ object LoadBalancer {
       centroidCompare(left.centroid, right.centroid) }
 
     // Secant step
-    val a = Seq(initialDist0, initialDist1).min
-    val b = Seq(initialDist0, initialDist1).max
-    val f_a = if (initialDist1 > initialDist0) {
-      sortedBlocks0.head.volume/desiredVolume - 1.0
+    val (a, b) = if (initialDist0 < initialDist1) {
+      (initialDist0, initialDist1)
     } else {
-      sortedBlocks1.head.volume/desiredVolume - 1.0
+      (initialDist1, initialDist0)
     }
-    val f_b = if (initialDist1 > initialDist0) {
-      sortedBlocks1.head.volume/desiredVolume - 1.0
+    val (f_a, f_b) = if (initialDist0 < initialDist1) {
+      (sortedBlocks0.head.volume/desiredVolume - 1.0, sortedBlocks1.head.volume/desiredVolume - 1.0)
     } else {
-      sortedBlocks0.head.volume/desiredVolume - 1.0
+      (sortedBlocks1.head.volume/desiredVolume - 1.0, sortedBlocks0.head.volume/desiredVolume - 1.0)
     }
     val f_prime = (f_b - f_a)/(initialDist1 - initialDist0)
     val secantDist = initialDist1 - f_b/f_prime
     // Bisection step
     val bisectionDist = (initialDist0 + initialDist1)/2.0
     // Select new step
-    val newDist = if ((secantDist < a) || (secantDist > b) || (secantDist.isNaN)) bisectionDist
-                  else secantDist
+    val newDist = if ((secantDist < a) || (secantDist > b) || (secantDist.isNaN)) {
+      bisectionDist
+    } else {
+      secantDist
+    }
 
     // Update based on new distance
     val newCenterVec = lowerLeft + newDist*normal
@@ -236,10 +236,11 @@ object LoadBalancer {
         val incrementedDist = 
           if ((x_incr < 0.0) &&
               (y_incr < 0.0) &&
-              (z_incr < 0.0))
+              (z_incr < 0.0)) {
             -math.sqrt(x_incr*x_incr + y_incr*y_incr + z_incr*z_incr)
-          else 
+          } else {
             math.sqrt(x_incr*x_incr + y_incr*y_incr + z_incr*z_incr)
+          }
         secantBisectionSolver(incrementedDist, initialDist1, block, tolerance,
                               boundingBox, origin, desiredVolume, 0)
       } else {
@@ -251,10 +252,11 @@ object LoadBalancer {
         val incrementedDist = 
           if ((x_incr < 0.0) &&
               (y_incr < 0.0) &&
-              (z_incr < 0.0))
+              (z_incr < 0.0)) {
             -math.sqrt(x_incr*x_incr + y_incr*y_incr + z_incr*z_incr)
-          else 
+          } else {
             math.sqrt(x_incr*x_incr + y_incr*y_incr + z_incr*z_incr)
+          }
         secantBisectionSolver(incrementedDist, initialDist1, block, tolerance,
                               boundingBox, origin, desiredVolume, 0)
       }
@@ -271,10 +273,11 @@ object LoadBalancer {
         val incrementedDist = 
           if ((x_incr < 0.0) &&
               (y_incr < 0.0) &&
-              (z_incr < 0.0))
+              (z_incr < 0.0)) {
             -math.sqrt(x_incr*x_incr + y_incr*y_incr + z_incr*z_incr)
-          else 
+          } else {
             math.sqrt(x_incr*x_incr + y_incr*y_incr + z_incr*z_incr)
+          }
         secantBisectionSolver(initialDist0, incrementedDist, block, tolerance,
                               boundingBox, origin, desiredVolume, 0)
       } else {
@@ -286,10 +289,12 @@ object LoadBalancer {
         val incrementedDist = 
           if ((x_incr < 0.0) &&
               (y_incr < 0.0) &&
-              (z_incr < 0.0))
+              (z_incr < 0.0)) {
             -math.sqrt(x_incr*x_incr + y_incr*y_incr + z_incr*z_incr)
-          else 
+          }
+          else {
             math.sqrt(x_incr*x_incr + y_incr*y_incr + z_incr*z_incr)
+          }
         secantBisectionSolver(initialDist0, incrementedDist, block, tolerance,
                               boundingBox, origin, desiredVolume, 0)
       }
@@ -311,7 +316,7 @@ object LoadBalancer {
   }
 
   /**
-    * Compares the relavite location of two input centroids
+    * Compares the relative location of two input centroids
     * @param centroid1 First centroid, input as a tuple
     * @param centroid2 Second centroid, input as a tuple
     * @return True if centroid1 is less positive than centroid2, false otherwise

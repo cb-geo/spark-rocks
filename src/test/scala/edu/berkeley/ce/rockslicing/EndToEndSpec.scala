@@ -17,10 +17,10 @@ class EndToEndSpec extends FunSuite {
     // Create an initial block
     val blocks = Seq(Block(globalOrigin, rockVolume))
 
-    // Generate seed joint
-    val numSeedJoints = 5
-    val seedJoints = LoadBalancer.generateSeedJoints(blocks.head, numSeedJoints)
-    val joints = seedJoints ++ jointList
+    // Generate processor joints
+    val numProcessors = 6
+    val processorJoints = LoadBalancer.generateProcessorJoints(blocks.head, numProcessors)
+    val joints = processorJoints ++ jointList
 
     // Iterate through joints, cutting blocks where appropriate
     var cutBlocks = blocks
@@ -32,6 +32,10 @@ class EndToEndSpec extends FunSuite {
     val nonRedundantBlocks = cutBlocks.map { case block @ Block(center, _) =>
       Block(center, block.nonRedundantFaces)
     }
+
+    // Note: The following two filter operations could be done using the partition method;
+    //       however, when executing on Spark this will be an RDD and partition will not work.
+    //       The two filter operations are left here to mimic what is done in the actual Spark code
 
     // Find all blocks that contain processor joints
     val processorBlocks = nonRedundantBlocks.filter { block => 

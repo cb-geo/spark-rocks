@@ -6,7 +6,7 @@ package edu.berkeley.ce.rockslicing
 object CommandReader {
   case class Config(
     inputFile: String = "",
-    numSeedJoints: Int = 25,
+    numProcessors: Int = 25,
     minRadius: Double = 0.0,
     maxAspectRatio: Double = Double.PositiveInfinity,
     toVTK: Boolean = false,
@@ -20,11 +20,12 @@ object CommandReader {
       c.copy(inputFile = x)
     } text "File that contains input information on the rock volume of interest and joint sets"
 
-    opt[Int]('n', "numSeedJoints") required() action { (x, c) =>
-      c.copy(numSeedJoints = x)
+    opt[Int]('n', "numProcessors") required() action { (x, c) =>
+      c.copy(numProcessors = x)
     } validate { x =>
-      if (x >= 0) success else failure("Number of seed joints must be greater than or equal to 0")
-    } text "Integer that specifies the number of joints to process before initiating parallel processing"
+      if (x >= 1) success else failure("Number of processors must be greater than or equal to 1")
+    } text "Integer that specifies the number of processors that will be used in the analysis."+
+           " Used to maintain balanced load across nodes"
 
     opt[Double]("minRadius") action { (x, c) =>
       c.copy(minRadius = x)

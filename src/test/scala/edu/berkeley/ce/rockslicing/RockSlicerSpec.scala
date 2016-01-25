@@ -224,7 +224,7 @@ class RockSlicerSpec extends FunSuite {
   test("Two blocks should be merged into unit cube") {
     val globalOrigin = (0.0, 0.0, 0.0)
     val processorBlocks = Seq(leftHalfUnitCube, rightHalfUnitCube)
-    val mergedBlocks = RockSlicer.mergeBlocks(processorBlocks, Seq[Block](), globalOrigin)
+    val mergedBlocks = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block], globalOrigin)
     assert(mergedBlocks.length == 1)
     assert(Block.compareBlocks(mergedBlocks.head, unitCube))
   }

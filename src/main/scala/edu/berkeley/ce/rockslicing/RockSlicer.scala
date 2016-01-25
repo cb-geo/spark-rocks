@@ -29,9 +29,9 @@ object RockSlicer {
     var blocks = Seq(Block(globalOrigin, rockVolume))
 
     // Generate a list of initial blocks before RDD-ifying it
-    if (arguments.numSeedJoints > 0) {
-      val seedJoints = LoadBalancer.generateSeedJoints(blocks.head, arguments.numSeedJoints)
-      seedJoints foreach { joint =>
+    if (arguments.numProcessors > 1) {
+      val processorJoints = LoadBalancer.generateProcessorJoints(blocks.head, arguments.numProcessors)
+      processorJoints foreach { joint =>
         blocks = blocks.flatMap(_.cut(joint))
       }
     }
@@ -68,7 +68,7 @@ object RockSlicer {
     val allProcessorBlocks = processorBlocks.collect()
     // Search blocks for matching processor joints
     if (allProcessorBlocks.length > 0) {
-      val reconstructedBlocks = mergeBlocks(allProcessorBlocks, Seq[Block](), globalOrigin)
+      val reconstructedBlocks = mergeBlocks(allProcessorBlocks, Seq.empty[Block], globalOrigin)
 
       // Update centroids of reconstructed processor blocks and remove duplicates
       val reconCentroidBlocks = reconstructedBlocks.map {block =>
@@ -158,7 +158,7 @@ object RockSlicer {
           // Check for any actual shared faces between blocks - if these exists blocks
           // should not be merged since there is a real joint seperating the blocks
           val nonSharedFaces =
-            allFaces.foldLeft(Seq[Face]()) { (unique, current) =>
+            allFaces.foldLeft(Seq.empty[Face]) { (unique, current) =>
               if (!unique.exists(compareSharedFaces(current, _)))
                 current +: unique
               else unique
@@ -175,21 +175,15 @@ object RockSlicer {
       Block(center, block.nonRedundantFaces)
     }
     val joinedBlocks = 
-      nonRedundantBlocks.foldLeft(Seq[Block]()) { (unique, current) =>
+      nonRedundantBlocks.foldLeft(Seq.empty[Block]) { (unique, current) =>
         if (!unique.exists(Block.compareBlocks(current, _)))
           current +: unique
         else unique
       }
 
     // Divide blocks into groups with and without processor joints remaining
-    val remainingBlocks = joinedBlocks filter { block =>
-      block.faces.exists { face => face.processorJoint }
-    }
-    val completedBlocks = joinedBlocks filter { block =>
-      val faceFlags = block.faces map { face =>
-        face.processorJoint
-      }
-      !faceFlags.contains(true)
+    val (remainingBlocks, completedBlocks) = joinedBlocks.partition { block =>
+      block.faces.exists(_.processorJoint)
     }
 
     if (remainingBlocks.nonEmpty) {
@@ -223,10 +217,7 @@ object RockSlicer {
     val faceMatches = 
       processorFaces1 map { case face1 =>
         processorFaces2 map { case face2 =>
-          if ((math.abs(face1.a + face2.a) < NumericUtils.EPSILON) &&
-              (math.abs(face1.b + face2.b) < NumericUtils.EPSILON) &&
-              (math.abs(face1.c + face2.c) < NumericUtils.EPSILON) &&
-              (math.abs(face1.d + face2.d) < NumericUtils.EPSILON)) {
+          if (compareSharedFaces(face1, face2)) {
             Seq[Face](face1, face2)
           } else Seq[Face]()
         }
