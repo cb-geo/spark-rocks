@@ -209,8 +209,8 @@ object RockSlicer {
     *         empty if they share no faces
     */
   def compareProcessorBlocks(block1: Block, block2: Block): Seq[Face] = {
-    val processorFaces1 = block1.faces.filter { face => face.processorJoint }
-    val processorFaces2 = block2.faces.filter { face => face.processorJoint }
+    val processorFaces1 = block1.faces.filter(_.processorJoint)
+    val processorFaces2 = block2.faces.filter(_.processorJoint)
     val faceMatches = 
       processorFaces1 map { case face1 =>
         processorFaces2 map { case face2 =>
