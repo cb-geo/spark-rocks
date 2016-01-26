@@ -42,10 +42,8 @@ object LoadBalancer {
                           (boundingBox._1, boundingBox._2, boundingBox._3),
                           centroidVolume, volumePerPart)
 
-    if ((processorJoints.length + 1) != numProcessors) {
-      throw new IllegalStateException("ERROR: LoadBalancer.generateProcessorJoints unable to find optimal "+
-                                      "processor joints")
-    }
+
+    assert(processorJoints.length + 1 == numProcessors)
     processorJoints
   }
 
@@ -221,6 +219,7 @@ object LoadBalancer {
     val newBlocks = nonRedundantNew.sortWith { (left, right) =>
       centroidCompare(left.centroid, right.centroid)
     }
+    // Value of function at calculated new distance
     val f_p = newBlocks.head.volume/desiredVolume - 1.0
 
     // Check if initial guesses are within block, otherwise update and retry
@@ -304,12 +303,13 @@ object LoadBalancer {
       if (iterations > iterationLimit) println("Unable to converge within iteration limit, "+
                                                "returning result of last iteration")
       (newJoint.centerX, newJoint.centerY, newJoint.centerZ)
-    } else if (f_p * f_b < 0.0) {
-      // Do another iteration with lower bound of interval updated
+    } else if (f_p * f_b < 0.0) { // If f_p and f_b have opposite signs, there is a root between
+                                  // the new distance and b, so do another iteration with lower
+                                  // bound of interval updated
       secantBisectionSolver(newDist, b, block, tolerance, boundingBox, origin,
                             desiredVolume, iterations + 1)
-    } else {
-      // Do another iteration with upper bound of interval updated
+    } else { // Root beteen a and new distancse, so do another iteration with upper bound of
+             // interval updated
       secantBisectionSolver(a, newDist, block, tolerance, boundingBox, origin,
                             desiredVolume, iterations + 1)
     }

@@ -3,22 +3,6 @@ package edu.berkeley.ce.rockslicing
 import breeze.linalg
 import breeze.linalg.{DenseVector, DenseMatrix}
 
-object Face {
-  /**
-    * Compare two faces for equality within specified tolerance
-    * @param face1 First input face
-    * @param face2 Second input face
-    * @return True if faces are equal, otherwise false
-    */
-  def compareFaces(face1: Face, face2: Face, tolerance: Double=NumericUtils.EPSILON):
-                   Boolean = {
-    (math.abs(face1.a - face2.a) < tolerance) &&
-    (math.abs(face1.b - face2.b) < tolerance) &&
-    (math.abs(face1.c - face2.c) < tolerance) &&
-    (math.abs(face1.d - face2.d) < tolerance)
-  }
-}
-
 /** A simple data structure to represent the face of a rock block.
   *
   * @constructor Create a new rock face.
@@ -48,6 +32,35 @@ case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double
     val newPhi = if (math.abs(phi) > NumericUtils.EPSILON) phi else 0.0
     val newCohesion = if (math.abs(cohesion) > NumericUtils.EPSILON) cohesion else 0.0
     Face((newA,newB,newC), newD, newPhi, newCohesion, processorJoint)
+  }
+
+  /**
+    * Compare this face and input face for approximate equality within specified tolerance
+    * @param inputFace Input face
+    * @param tolerance Tolerance for difference between face parameters. Defaults to
+    *                  NumericUtils.EPSILON
+    * @return True if faces are equal, otherwise false
+    */
+  def approximateEquals(inputFace: Face, tolerance: Double=NumericUtils.EPSILON):
+                   Boolean = {
+    (math.abs(a - inputFace.a) < tolerance) &&
+    (math.abs(b - inputFace.b) < tolerance) &&
+    (math.abs(c - inputFace.c) < tolerance) &&
+    (math.abs(d - inputFace.d) < tolerance)
+  }
+
+  /**
+    * Compares this face with input face and determines whether faces are shared. Shared
+    * faces will have equal and opposite distances from local origin as well as
+    * normal vectors in opposite directions
+    * @param inputFace Input face
+    * @return True if faces are shared, false otherwise
+    */
+  def isSharedWith(inputFace: Face): Boolean = {
+    (math.abs(a + inputFace.a) < NumericUtils.EPSILON) &&
+    (math.abs(b + inputFace.b) < NumericUtils.EPSILON) &&
+    (math.abs(c + inputFace.c) < NumericUtils.EPSILON) &&
+    (math.abs(d + inputFace.d) < NumericUtils.EPSILON)
   }
 }
 
@@ -502,7 +515,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
 
     val zippedFaces = sortedFaces1.zip(sortedFaces2)
     val faceMatches = zippedFaces forall { case (face1, face2) =>
-      Face.compareFaces(face1, face2)
+      face1.approximateEquals(face2)
     }
     (math.abs(centerX - updatedInputBlock.centerX) < tolerance) &&
     (math.abs(centerY - updatedInputBlock.centerY) < tolerance) &&

@@ -57,8 +57,7 @@ object RockSlicer {
 
     // Find blocks that do not contain processor joints
     val realBlocks = nonRedundantBlocks.filter { block =>
-      val faceFlags = block.faces.exists(_.processorJoint)
-      !faceFlags
+      !block.faces.exists(_.processorJoint)
     }
 
     // Process processor blocks before continueing with remaining blocks
@@ -97,7 +96,7 @@ object RockSlicer {
       }
     }
 
-    // PROCESS REMAINING BLOCKS THAT DO NOT CONTAIN PROCESSOR BLOCKS
+    // Process remaining blocks that do not contain processor blocks
     // Calculate centroid of each real block
     val centroidBlocks = realBlocks.map { block =>
       val centroid = block.centroid
@@ -144,31 +143,33 @@ object RockSlicer {
   @tailrec
   def mergeBlocks(processorBlocks: Seq[Block], mergedBlocks: Seq[Block],
                   origin: (Double, Double, Double)): Seq[Block] = {
-    val reconstructedBlocks = (processorBlocks map { block =>
+    val reconstructedBlocks = (processorBlocks.tail map { block =>
       val currentBlock = Block(origin, processorBlocks.head.updateFaces(origin))
       val updatedBlock = Block(origin, block.updateFaces(origin))
-      if (!currentBlock.approximateEquals(updatedBlock)) {
-        val sharedProcFaces = compareProcessorBlocks(currentBlock, updatedBlock)
-        if (sharedProcFaces.nonEmpty) {
-          val currentFaces = currentBlock.faces.diff(sharedProcFaces)
-          val updatedFaces = updatedBlock.faces.diff(sharedProcFaces)
-          val allFaces = currentFaces ++ updatedFaces
-          // Check for any actual shared faces between blocks - if these exists blocks
-          // should not be merged since there is a real joint seperating the blocks
-          val nonSharedFaces =
-            allFaces.foldLeft(Seq.empty[Face]) { (unique, current) =>
-              if (!unique.exists(compareSharedFaces(current, _))) {
-                current +: unique
-              } else {
-                unique
-              }
+      val sharedProcFaces = compareProcessorBlocks(currentBlock, updatedBlock)
+      if (sharedProcFaces.nonEmpty) {
+        val currentFaces = currentBlock.faces.diff(sharedProcFaces)
+        val updatedFaces = updatedBlock.faces.diff(sharedProcFaces)
+        val allFaces = currentFaces ++ updatedFaces
+        // Check for any actual shared faces between blocks - if these exists blocks
+        // should not be merged since there is a real joint seperating the blocks
+        val nonSharedFaces =
+          allFaces.foldLeft(Seq.empty[Face]) { (unique, current) =>
+            if (!unique.exists(current.isSharedWith(_))) {
+              current +: unique
+            } else {
+              unique
             }
-          if (allFaces.diff(nonSharedFaces).isEmpty) {
-            Block(origin, nonSharedFaces)
           }
+        if (allFaces.diff(nonSharedFaces).isEmpty) {
+          Some(Block(origin, nonSharedFaces))
+        } else {
+          None
         }
+      } else {
+        None
       }
-    }).collect { case blockType: Block => blockType }
+    }).flatten
 
     // Remove redundant faces and remove duplicates
     val nonRedundantBlocks = reconstructedBlocks map { case block @ Block(center, _) =>
@@ -220,7 +221,7 @@ object RockSlicer {
     val faceMatches = 
       processorFaces1 map { case face1 =>
         processorFaces2 map { case face2 =>
-          if (compareSharedFaces(face1, face2)) {
+          if (face1.isSharedWith(face2)) {
             Seq[Face](face1, face2)
           } else {
             Seq.empty[Face]
@@ -228,21 +229,6 @@ object RockSlicer {
         }
       }
     faceMatches.filter(_.nonEmpty).flatten.flatten.distinct
-  }
-
-  /**
-    * Compares two input faces and determines whether faces are shared. Shared
-    * faces will have equal and opposite distances from local origin as well as
-    * normal vectors in opposite directions
-    * @param face1 First input face
-    * @param face2 Second input face
-    * @return True if faces are shared, false otherwise
-    */
-  def compareSharedFaces(face1: Face, face2: Face): Boolean = {
-    (math.abs(face1.a + face2.a) < NumericUtils.EPSILON) &&
-    (math.abs(face1.b + face2.b) < NumericUtils.EPSILON) &&
-    (math.abs(face1.c + face2.c) < NumericUtils.EPSILON) &&
-    (math.abs(face1.d + face2.d) < NumericUtils.EPSILON)
   }
 
   // Function that writes JSON string to file for single node - taken from 
