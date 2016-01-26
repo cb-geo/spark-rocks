@@ -495,23 +495,8 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
                     Boolean = {
     val centroid = (centerX, centerY, centerZ)
     val updatedInputBlock = Block(centroid, inputBlock.updateFaces(centroid))
-    val sortedFaces1a = 
-      faces.sortWith(_.a < _.a)
-    val sortedFaces1b = 
-      sortedFaces1a.sortWith(_.b < _.b)
-    val sortedFaces1c = 
-      sortedFaces1b.sortWith(_.c < _.c)
-    val sortedFaces1 = 
-      sortedFaces1c.sortWith(_.d < _.d)
-
-    val sortedFaces2a = 
-      updatedInputBlock.faces.sortWith(_.a < _.a)
-    val sortedFaces2b = 
-      sortedFaces2a.sortWith(_.b < _.b)
-    val sortedFaces2c = 
-      sortedFaces2b.sortWith(_.c < _.c)
-    val sortedFaces2 = 
-      sortedFaces2c.sortWith(_.d < _.d)
+    val sortedFaces1 = faces.sortBy(face => (face.d, face.a, face.b, face.c))
+    val sortedFaces2 = updatedInputBlock.faces.sortBy(face => (face.d, face.a, face.b, face.c))
 
     val zippedFaces = sortedFaces1.zip(sortedFaces2)
     val faceMatches = zippedFaces forall { case (face1, face2) =>
