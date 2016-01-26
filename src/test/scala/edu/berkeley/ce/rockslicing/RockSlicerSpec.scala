@@ -346,7 +346,7 @@ class RockSlicerSpec extends FunSuite {
       Block(centroid, block.updateFaces(centroid))
     }
 
-    val expectedBlocks = Seq(rightQuarterUnitCube, centerPartUnitCube, leftQuarterUnitCube)
+    val expectedBlocks = Seq(centerPartUnitCube, rightQuarterUnitCube, leftQuarterUnitCube)
     val expectedBlocksCentroid = expectedBlocks map { block =>
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))

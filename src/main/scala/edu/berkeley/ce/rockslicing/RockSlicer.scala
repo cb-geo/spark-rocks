@@ -172,17 +172,10 @@ object RockSlicer {
     }).flatten
 
     // Remove redundant faces and remove duplicates
-    val nonRedundantBlocks = reconstructedBlocks map { case block @ Block(center, _) =>
+    val joinedBlocks = (reconstructedBlocks map { case block @ Block(center, _) =>
       Block(center, block.nonRedundantFaces)
-    }
-    val joinedBlocks = 
-      nonRedundantBlocks.foldLeft(Seq.empty[Block]) { (unique, current) =>
-        if (!unique.exists(current.approximateEquals(_))) {
-          current +: unique
-        } else {
-          unique
-        }
-      }
+    }).filter { block => block.faces.nonEmpty } // Filters blocks that actually aren't adjacent at all,
+                                                // but shared a processor joint
 
     // Divide blocks into groups with and without processor joints remaining
     val (remainingBlocks, completedBlocks) = joinedBlocks.partition { block =>
@@ -216,8 +209,8 @@ object RockSlicer {
     *         empty if they share no faces
     */
   def compareProcessorBlocks(block1: Block, block2: Block): Seq[Face] = {
-    val processorFaces1 = block1.faces.filter { case face => face.processorJoint }
-    val processorFaces2 = block2.faces.filter { case face => face.processorJoint }
+    val processorFaces1 = block1.faces.filter { face => face.processorJoint }
+    val processorFaces2 = block2.faces.filter { face => face.processorJoint }
     val faceMatches = 
       processorFaces1 map { case face1 =>
         processorFaces2 map { case face2 =>
