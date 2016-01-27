@@ -34,6 +34,16 @@ class BlockSpec extends FunSuite {
   )
   val twoCubeNonOrigin = Block((1.0, 1.0, 1.0), boundingFaces3)
 
+  val boundingFaces4 = List(
+    Face((-1.0, 0.0, 0.0), 0.5, phi=0, cohesion=0), // -x = 0
+    Face((1.0, 0.0, 0.0), 0.5, phi=0, cohesion=0),  // x = 1
+    Face((0.0, -1.0, 0.0), 0.5, phi=0, cohesion=0), // -y = 0
+    Face((0.0, 1.0, 0.0), 0.5, phi=0, cohesion=0),  // y = 1
+    Face((0.0, 0.0, -1.0), 0.5, phi=0, cohesion=0), // -z = 0
+    Face((0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)   // z = 1
+  )
+  val unitCubeNonOrigin = Block((0.5, 0.5, 0.5), boundingFaces4)
+
   val boundingFaces6 = List(
     Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0), // -x = 0
     Face((1.0, 0.0, 0.0), 0.5, phi=0, cohesion=0), // x = 0.5
@@ -44,21 +54,21 @@ class BlockSpec extends FunSuite {
   )
   val rectPrism = Block((0.0, 0.0, 0.0), boundingFaces6)
 
-  val jointBounds = Seq(
+  val jointBounds = List(
     ((1.0, 0.0, 0.0), 1.0),
     ((-1.0, 0.0, 0.0), 0.0),
     ((0.0, 1.0, 0.0), 1.0),
     ((0.0, -1.0, 0.0), 0.0)
   )
 
-  val jointBounds2 = Seq(
+  val jointBounds2 = List(
     ((1.0, 0.0, 0.0), 1.0),
     ((-1.0, 0.0, 0.0), 1.0),
     ((0.0, 1.0, 0.0), 1.0),
     ((0.0, -1.0, 0.0), 1.0)
   )
 
-  val jointBounds3 = Seq(
+  val jointBounds3 = List(
     ((1.0/sqrt(2.0), 1.0/sqrt(2.0), 0.0), 1.0),
     ((-1.0/sqrt(2.0), 1.0/sqrt(2.0), 0.0), 1.0),
     ((-1.0/sqrt(2.0), -1.0/sqrt(2.0), 0.0), 1.0),
@@ -597,5 +607,45 @@ class BlockSpec extends FunSuite {
     val children = twoCubeNonOrigin.cut(cutJoint, maxAspectRatio=2.9)
     assert(children.length == 1)
     assert(children.head == twoCubeNonOrigin)
+  }
+
+  test("Volume of unit cube should be 1.0") {
+    val volume = unitCube.volume
+    assert(volume == 1.0)
+  }
+
+  test("Volume of two cube should be 8.0") {
+    val volume = twoCube.volume
+    assert(volume == 8.0)
+  }
+
+  test("Volume of two cube with extra plane should should be 4.0") {
+    val redundantBoundingFaces = boundingFaces3 ++ List(
+      Face((-1.0/math.sqrt(3.0), -1.0/math.sqrt(3.0), -1.0/math.sqrt(3.0)), 0.0, phi=0, cohesion=0)
+    )
+    val redundantTwoCube = Block((0.0, 0.0, 0.0), redundantBoundingFaces)
+    val nonRedundantTwoCube = Block((0.0, 0.0, 0.0), redundantTwoCube.nonRedundantFaces)
+    val volume = nonRedundantTwoCube.volume
+    assert(volume == 4.0)
+  }
+
+  test("Volume of unit cube with extra plane should should be 0.5") {
+    val redundantBoundingFaces = boundingFaces4 ++ List(
+      Face((1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)), 0.0, phi=0, cohesion=0)
+    )
+    val redundantUnitCube = Block((0.5, 0.5, 0.5), redundantBoundingFaces)
+    val nonRedundantUnitCube = Block((0.5, 0.5, 0.5), redundantUnitCube.nonRedundantFaces)
+    val volume = nonRedundantUnitCube.volume
+    assert(volume == 0.5)
+  }
+
+  test("Volume of unit cube with extra plane with negative z-component should be 0.5") {
+    val redundantBoundingFaces = boundingFaces4 ++ List(
+      Face((-1.0/math.sqrt(3.0), -1.0/math.sqrt(3.0), -1.0/math.sqrt(3.0)), 0.0, phi=0, cohesion=0)
+    )
+    val redundantUnitCube = Block((0.5, 0.5, 0.5), redundantBoundingFaces)
+    val nonRedundantUnitCube = Block((0.5, 0.5, 0.5), redundantUnitCube.nonRedundantFaces)
+    val volume = nonRedundantUnitCube.volume
+    assert(volume == 0.5)
   }
 }

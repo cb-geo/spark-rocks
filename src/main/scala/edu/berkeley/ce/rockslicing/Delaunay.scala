@@ -62,13 +62,13 @@ object Delaunay {
     }
     */
     
-    val EPSILON = 0.0000001
+    // val EPSILON = NumericUtils.EPSILON
 
     //  Return TRUE if a point q(x,y) is inside the circumcircle made up of the points p1(x,y), p2(x,y), p3(x,y)
     //  The circumcircle centre (x,y) is returned and the radius r
     //  NOTE: A point on the edge is inside the circumcircle
     def CircumCircle( q:Vector2, p1:Vector2, p2:Vector2, p3:Vector2) : (/*inside :*/Boolean, /*center:*/Vector2, /*radius:*/Double) = {
-      if ( Math.abs(p1.y-p2.y) < EPSILON && Math.abs(p2.y-p3.y) < EPSILON ) {
+      if ( Math.abs(p1.y-p2.y) < NumericUtils.EPSILON && Math.abs(p2.y-p3.y) < NumericUtils.EPSILON ) {
         System.err.println("CircumCircle: Points are colinear");
         println("CircumCircle: Points are colinear *****************************")
         (false, new Vector2(0,0), 0)
@@ -78,7 +78,7 @@ object Delaunay {
         val mid2 = Vector2( (p2.x+p3.x)/2, (p2.y+p3.y)/2 )
         
         val c = 
-          if ( Math.abs(p2.y-p1.y) < EPSILON ) {
+          if ( Math.abs(p2.y-p1.y) < NumericUtils.EPSILON ) {
             //println("CircumCircle: p1&p2 have same y")
             val d2 = -(p3.x-p2.x) / (p3.y-p2.y)
             val xc =  mid1.x
@@ -86,7 +86,7 @@ object Delaunay {
             new Vector2(xc, yc)
           }
           else 
-            if ( Math.abs(p3.y-p2.y) < EPSILON ) {
+            if ( Math.abs(p3.y-p2.y) < NumericUtils.EPSILON ) {
               //println("CircumCircle: p2&p3 have same y")
               val d1 = -(p2.x-p1.x) / (p2.y-p1.y)
               val xc =  mid2.x

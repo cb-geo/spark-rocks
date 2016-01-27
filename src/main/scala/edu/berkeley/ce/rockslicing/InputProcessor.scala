@@ -7,7 +7,8 @@ import scala.util.Try
 
 object InputProcessor {
   // Processes input file: Add rock volume faces and joints to respective input list
-  def readInput(inputSource: Source): Option[((Double, Double, Double), Seq[Face], Seq[Joint])] = {
+  def readInput(inputSource: Source): Option[((Double, Double, Double),
+                                             Seq[Face], Seq[Joint])] = {
     val lines = inputSource.getLines().zipWithIndex.toVector
     val globalOriginLine = lines.head._1
 
@@ -22,7 +23,6 @@ object InputProcessor {
     }
     val globalOrigin = globalOriginTokens map(_.get)
     val globalOriginTuple = (globalOrigin(0), globalOrigin(1), globalOrigin(2))
-
 
     val remainingLines = lines.tail
     val transitionIndex = remainingLines.indexWhere(_._1 == "%")
@@ -115,7 +115,7 @@ object InputProcessor {
         ((unitNormVec(0), unitNormVec(1), unitNormVec(2)), d)
       }
 
-      Joint((unitNormVec(0), unitNormVec(1), unitNormVec(2)), localOrigin, center, phi, cohesion, shape.toSeq)
+      Joint((unitNormVec(0), unitNormVec(1), unitNormVec(2)), localOrigin, center, phi, cohesion, shape.toList)
     }
 
     Some((globalOriginTuple, rockVolume, joints))

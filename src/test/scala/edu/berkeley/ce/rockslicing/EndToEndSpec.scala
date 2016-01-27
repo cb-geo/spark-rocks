@@ -17,26 +17,59 @@ class EndToEndSpec extends FunSuite {
     // Create an initial block
     val blocks = Seq(Block(globalOrigin, rockVolume))
 
+    // Generate processor joints
+    val numProcessors = 6
+    val processorJoints = LoadBalancer.generateProcessorJoints(blocks.head, numProcessors)
+    val joints = processorJoints ++ jointList
+
     // Iterate through joints, cutting blocks where appropriate
     var cutBlocks = blocks
-    for (joint <- jointList) {
+    for (joint <- joints) {
       cutBlocks = cutBlocks.flatMap(_.cut(joint))
     }
 
     // Remove geometrically redundant joints
-    val nonRedundantBlocks = cutBlocks.map { case block@Block(center, _) =>
+    val nonRedundantBlocks = cutBlocks.map { case block @ Block(center, _) =>
       Block(center, block.nonRedundantFaces)
     }
 
-    // Calculate the centroid of each block
-    val centroidBlocks = nonRedundantBlocks.map { block =>
+    // Note: The following two filter operations could be done using the partition method;
+    //       however, when executing on Spark this will be an RDD and partition will not work.
+    //       The two filter operations are left here to mimic what is done in the actual Spark code
+
+    // Find all blocks that contain processor joints
+    val processorBlocks = nonRedundantBlocks.filter { block => 
+      block.faces.exists { face => face.processorJoint}
+    }
+
+    // Find blocks that do not contain processor joints
+    val realBlocks = nonRedundantBlocks.filter { block =>
+      val faceTests = block.faces.exists(_.processorJoint)
+      !faceTests
+    }
+
+    // Search blocks for matching processor joints
+    val reconBlocks = RockSlicer.mergeBlocks(processorBlocks, Seq[Block](), globalOrigin)
+
+    // Update centroids of reconstructed processor blocks and remove duplicates
+    val reconCentroidBlocks = reconBlocks.map {block =>
+      val centroid = block.centroid
+      Block(centroid, block.updateFaces(centroid))
+    }
+
+    // Calculate the centroid of each real block
+    val centroidBlocks = realBlocks.map { block =>
       val centroid = block.centroid
       val updatedFaces = block.updateFaces(centroid)
       Block(centroid, updatedFaces)
     }
 
+    // Merge real blocks and reconstructed blocks - this won't happen on Spark since collect will
+    // be called and all reconstructed blocks will be on one node
+    val allBlocks = centroidBlocks ++ reconCentroidBlocks
+
     // Clean up double values arbitrarily close to 0.0
-    val cleanedBlocks = centroidBlocks.map { case Block(center, faces) =>
+    val cleanedBlocks = allBlocks.map { case Block(center, faces) =>
       Block(center, faces.map(_.applyTolerance))
     }
 

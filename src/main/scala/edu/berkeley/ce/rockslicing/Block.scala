@@ -12,8 +12,11 @@ import breeze.linalg.{DenseVector, DenseMatrix}
   * Accessed as 'd'.
   * @param phi The friction angle (phi) of the face.
   * @param cohesion The cohesion of the face.
+  * @param processorJoint Parameter that identifies joint as being artificial joint introduced as part
+  *                        of load balancing
   */
-case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double, cohesion: Double) {
+case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double, cohesion: Double,
+                processorJoint: Boolean=false) {
   val (a,b,c) = normalVec
   val d = distance
 
@@ -28,7 +31,36 @@ case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double
     val newD = if (math.abs(d) > NumericUtils.EPSILON) d else 0.0
     val newPhi = if (math.abs(phi) > NumericUtils.EPSILON) phi else 0.0
     val newCohesion = if (math.abs(cohesion) > NumericUtils.EPSILON) cohesion else 0.0
-    Face((newA,newB,newC), newD, newPhi, newCohesion)
+    Face((newA,newB,newC), newD, newPhi, newCohesion, processorJoint)
+  }
+
+  /**
+    * Compare this face and input face for approximate equality within specified tolerance
+    * @param inputFace Input face
+    * @param tolerance Tolerance for difference between face parameters. Defaults to
+    *                  NumericUtils.EPSILON
+    * @return True if faces are equal, otherwise false
+    */
+  def approximateEquals(inputFace: Face, tolerance: Double=NumericUtils.EPSILON):
+                   Boolean = {
+    (math.abs(a - inputFace.a) < tolerance) &&
+    (math.abs(b - inputFace.b) < tolerance) &&
+    (math.abs(c - inputFace.c) < tolerance) &&
+    (math.abs(d - inputFace.d) < tolerance)
+  }
+
+  /**
+    * Compares this face with input face and determines whether faces are shared. Shared
+    * faces will have equal and opposite distances from local origin as well as
+    * normal vectors in opposite directions
+    * @param inputFace Input face
+    * @return True if faces are shared, false otherwise
+    */
+  def isSharedWith(inputFace: Face): Boolean = {
+    (math.abs(a + inputFace.a) < NumericUtils.EPSILON) &&
+    (math.abs(b + inputFace.b) < NumericUtils.EPSILON) &&
+    (math.abs(c + inputFace.c) < NumericUtils.EPSILON) &&
+    (math.abs(d + inputFace.d) < NumericUtils.EPSILON)
   }
 }
 
@@ -44,6 +76,7 @@ object Block {
                              DenseMatrix[Double] = {
     val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
     val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
+    // Check if vectors are parallel
     if (math.abs(linalg.norm(linalg.cross(n_c,n_d))) > NumericUtils.EPSILON) {
       val v = linalg.cross(n_c, n_d)
       val s = linalg.norm(v)
@@ -59,6 +92,7 @@ object Block {
 
       DenseMatrix.eye[Double](3) + A_skew + (A_skew * A_skew) * (1-c)/(s*s)
     } else {
+      // Vectors are parallel, so return identity
       DenseMatrix.eye[Double](3)
     }
   }
@@ -232,17 +266,17 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
         // New origin is guaranteed to lie within joint, so initial d = 0 for all child blocks
         val childBlockA = if (translatedJoint.d < 0.0) {
           Block((newX,newY,newZ), Face((-translatedJoint.a, -translatedJoint.b, -translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
+            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces)
         } else {
           Block((newX,newY,newZ), Face((translatedJoint.a, translatedJoint.b, translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
+            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces)
         }
         val childBlockB = if (translatedJoint.d < 0.0) {
           Block((newX,newY,newZ), Face((translatedJoint.a,translatedJoint.b,translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
+            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces)
         } else {
           Block((newX,newY,newZ), Face((-translatedJoint.a,-translatedJoint.b,-translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces)
+            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces)
         }
 
         var childBlocks = Vector(childBlockA, childBlockB)
@@ -335,8 +369,10 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
           Delaunay.Vector2(rotatedVertex(0), rotatedVertex(1))
         }.distinct.toList
 
-        // If z-component of normal is negative, order needs to be reversed to maintain clockwise orientation
-        if (face.c < -NumericUtils.EPSILON) {
+        // If normal is -z-axis, order needs to be reversed to maintain clockwise orientation since
+        // rotation matrix is identity matrix in this case - vectors are parallel. Rotation matrix
+        // takes care of all other cases.
+        if (math.abs(face.c + 1.0) < NumericUtils.EPSILON) {
           Delaunay.Triangulation(rotatedVertices).map { vert =>
             (vert._3, vert._2, vert._1)
           }
@@ -348,6 +384,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
 
   /**
     * Calculates the centroid of the block.
+    * See http://wwwf.imperial.ac.uk/~rn/centroid.pdf for theoretical background.
     * @return The centroid of the block, (centerX, centerY, centerZ).
     */
   def centroid: (Double, Double, Double) = {
@@ -396,12 +433,39 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
   }
 
   /**
+    * Calculates the volume of the block
+    * See http://wwwf.imperial.ac.uk/~rn/centroid.pdf for theoretical background.
+    * @return The volume of the block
+    */
+  def volume: Double = {
+    val vertices = findVertices
+    val mesh = meshFaces(vertices)
+
+    val volIncrements = faces.flatMap { face =>
+      mesh(face).map { m =>
+        // Access triangulation entries backwards so they are in counterclockwise order
+        val a_vals = vertices(face)(m._3)
+        val b_vals = vertices(face)(m._2)
+        val c_vals = vertices(face)(m._1)
+        val a = DenseVector[Double](a_vals._1, a_vals._2, a_vals._3)
+        val b = DenseVector[Double](b_vals._1, b_vals._2, b_vals._3)
+        val c = DenseVector[Double](c_vals._1, c_vals._2, c_vals._3)
+
+        val n = linalg.cross(b - a, c - a)
+        a dot n
+      }
+    }
+
+    volIncrements.sum/6.0
+  }
+
+  /**
     * Calculates the distances of the joints relative to a new origin
     * @param localOrigin: new local origin
     * @return List of faces with updated distances
     */
   def updateFaces(localOrigin: (Double, Double,Double)): Seq[Face] = {
-    faces.map { case Face((a,b,c), d, phi, cohesion) =>
+    faces.map { case Face((a,b,c), d, phi, cohesion, processorJoint) =>
       val w = DenseVector.zeros[Double](3)
       if (math.abs(c) >= NumericUtils.EPSILON) {
         w(0) = localOrigin._1 - centerX
@@ -418,7 +482,32 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
       }
       val n = DenseVector[Double](a, b, c)
       val new_d = NumericUtils.roundToTolerance(-(n dot w) / linalg.norm(n))
-      Face((a, b, c), new_d, phi, cohesion)
+      Face((a, b, c), new_d, phi, cohesion, processorJoint)
     }
+  }
+
+  /**
+    * Compare this block and input block for approximate equality within specified tolerance
+    * @param inputBlock Input block
+    * @return True if blocks are equal, otherwise false
+    */
+  def approximateEquals(inputBlock: Block, tolerance: Double=NumericUtils.EPSILON):
+                    Boolean = {
+    if (faces.length != inputBlock.faces.length) {
+      false
+    }
+    val centroid = (centerX, centerY, centerZ)
+    val updatedInputBlock = Block(centroid, inputBlock.updateFaces(centroid))
+    val sortedFaces1 = faces.sortBy(face => (face.d, face.a, face.b, face.c))
+    val sortedFaces2 = updatedInputBlock.faces.sortBy(face => (face.d, face.a, face.b, face.c))
+
+    val zippedFaces = sortedFaces1.zip(sortedFaces2)
+    val faceMatches = zippedFaces forall { case (face1, face2) =>
+      face1.approximateEquals(face2)
+    }
+    (math.abs(centerX - updatedInputBlock.centerX) < tolerance) &&
+    (math.abs(centerY - updatedInputBlock.centerY) < tolerance) &&
+    (math.abs(centerZ - updatedInputBlock.centerZ) < tolerance) &&
+    (faceMatches)
   }
 }

@@ -31,7 +31,7 @@ object BlockVTK {
         NumericUtils.roundToTolerance(pointB._3, 5)) > NumericUtils.EPSILON) {
       throw new IllegalArgumentException("ERROR: Input to BlockVTK.ccwCompare: "+
                                          "Input points are not in the same plane")
-    }    
+    }
 
     // Starts counter-clockwise comparison from 12 o'clock. Center serves as origin and 12 o'clock is along
     // vertical line running through this center.
