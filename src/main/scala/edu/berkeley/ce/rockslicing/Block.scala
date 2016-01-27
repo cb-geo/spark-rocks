@@ -493,6 +493,9 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     */
   def approximateEquals(inputBlock: Block, tolerance: Double=NumericUtils.EPSILON):
                     Boolean = {
+    if (faces.length != inputBlock.faces.length) {
+      false
+    }
     val centroid = (centerX, centerY, centerZ)
     val updatedInputBlock = Block(centroid, inputBlock.updateFaces(centroid))
     val sortedFaces1 = faces.sortBy(face => (face.d, face.a, face.b, face.c))
