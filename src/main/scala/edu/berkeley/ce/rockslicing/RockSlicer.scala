@@ -1,7 +1,8 @@
 package edu.berkeley.ce.rockslicing
 
 import java.io._
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.{SparkConf, SparkContext, HashPartitioner}
+import org.apache.spark.storage.StorageLevel
 import scala.io.Source
 import scala.annotation.tailrec
 
@@ -27,17 +28,30 @@ object RockSlicer {
     }
     val (globalOrigin, rockVolume, joints) = inputOpt.get
     var blocks = Seq(Block(globalOrigin, rockVolume))
+    val processorJoints = if (arguments.numProcessors > 1) {
+      LoadBalancer.generateProcessorJoints(blocks.head, arguments.numProcessors)
+    } else {
+      Seq.empty[Joint]
+    }
 
     // Generate a list of initial blocks before RDD-ifying it
     if (arguments.numProcessors > 1) {
-      val processorJoints = LoadBalancer.generateProcessorJoints(blocks.head, arguments.numProcessors)
       processorJoints foreach { joint =>
         blocks = blocks.flatMap(_.cut(joint))
       }
     }
 
-    val blockRdd = sc.parallelize(blocks)
+    val blockRdd = sc.parallelize(blocks).persist(StorageLevel.MEMORY_ONLY)
+    // val processorBlocksRDD = if (arguments.numProcessors > 1) {
+    //   sc.parallelize(processorJoints.map(joint => (joint, Seq.empty[Block])))
+    //     .partitionBy(new HashPartitioner(arguments.numProcessors))
+    //     .persist(StorageLevel.MEMORY_ONLY)
+    // } else {
+    //   (None, None)
+    // }
+
     val broadcastJoints = sc.broadcast(joints)
+    val broadcastProcJoints = sc.broadcast(processorJoints)
 
     // Iterate through the discontinuities, cutting blocks where appropriate
     var cutBlocks = blockRdd
@@ -65,6 +79,12 @@ object RockSlicer {
     val allProcessorBlocks = processorBlocks.collect()
     // Search blocks for matching processor joints
     if (allProcessorBlocks.length > 0) {
+      // val sortedProcessorBlocks =
+      //   generateProcJointKeyValues(broadcastProcJoints.value, processorBlocks.toLocalIterator.toSeq)
+      // val sortedProcBlocksRDD = sc.parallelize(sortedProcessorBlocks)
+      // // Shuffle processor blocks so all blocks containing same processor joints are local to each node
+      // processorBlocksRDD.join(sortedProcessorBlocks)
+
       val reconstructedBlocks = mergeBlocks(allProcessorBlocks, Seq.empty[Block], globalOrigin)
 
       // Update centroids of reconstructed processor blocks and remove duplicates
@@ -133,8 +153,10 @@ object RockSlicer {
     * input rock volume into equal volumes by load balancer
     * @param processorBlocks Sequence of blocks containing one or more processor joints each
     * @param mergedBlocks Sequence of blocks that have had processor joints removed. Initial
-    *                     input is empty sequence
+    *                     input is an empty sequence
     * @param origin Origin that all blocks and their faces will be referenced to for consistency
+    * @param nonMergedBlocks Sequence of blocks that can not be matched with other blocks. Initial
+                             input is an empty sequence
     * @return Sequence of blocks with all processor joints removed by merging input blocks along
     *         matching processor joints. Redundant faces and duplicate blocks are already removed
     *         in this list, so it is not necessary to perform these computations on the returned
@@ -142,8 +164,9 @@ object RockSlicer {
     */
   @tailrec
   def mergeBlocks(processorBlocks: Seq[Block], mergedBlocks: Seq[Block],
-                  origin: (Double, Double, Double)): Seq[Block] = {
-    val reconstructedBlocks = (processorBlocks.tail map { block =>
+                  origin: (Double, Double, Double), nonMergedBlocks: Seq[Block]):
+                 Seq[Block] = {
+    val blockMatches = processorBlocks.tail map { block =>
       val currentBlock = Block(origin, processorBlocks.head.updateFaces(origin))
       val updatedBlock = Block(origin, block.updateFaces(origin))
       val sharedProcFaces = compareProcessorBlocks(currentBlock, updatedBlock)
@@ -162,15 +185,18 @@ object RockSlicer {
             }
           }
         if (allFaces.diff(nonSharedFaces).isEmpty) {
-          Some(Block(origin, nonSharedFaces))
+          (Some(Block(origin, nonSharedFaces)), None)
         } else {
-          None
+          (None, Some(currentBlock))
         }
       } else {
-        None
+        (None, Some(currentBlock))
       }
-    }).flatten
+    }
 
+    // (pairedBlocks, orphanBlocks)
+    val pairedBlocks = blockMatches.map{ case (paired, orphan) => paired }.flatten
+    val reconstructedBlocks = pairedBlocks.flatten
     // Remove redundant faces and remove duplicates
     val joinedBlocks = (reconstructedBlocks map { case block @ Block(center, _) =>
       Block(center, block.nonRedundantFaces)
@@ -184,20 +210,23 @@ object RockSlicer {
 
     if (remainingBlocks.nonEmpty) {
       // Merged blocks still contain some processor joints
-      mergeBlocks(remainingBlocks ++ processorBlocks.tail, completedBlocks ++ mergedBlocks, origin)
+      mergeBlocks(remainingBlocks ++ processorBlocks.tail, completedBlocks ++ mergedBlocks,
+                  origin, orphanBlocks.flatten ++ nonMergedBlocks)
     } else if (processorBlocks.tail.isEmpty) {
       // All blocks are free of processor joints - check for duplicates then return
       val mergedBlocksDuplicates = completedBlocks ++ mergedBlocks
-      mergedBlocksDuplicates.foldLeft(Seq.empty[Block]) { (unique, current) =>
+      val mergedBlocksUnique = mergedBlocksDuplicates.foldLeft(Seq.empty[Block]) { (unique, current) =>
         if (!unique.exists(current.approximateEquals(_))) {
           current +: unique
         } else {
           unique
         }
       }
+      (mergedBlocksUnique, orphanBlocks.flatten ++ nonMergedBlocks)
     } else {
       // Proceed to next processor block
-      mergeBlocks(processorBlocks.tail, completedBlocks ++ mergedBlocks, origin)
+      mergeBlocks(processorBlocks.tail, completedBlocks ++ mergedBlocks, origin,
+                  orphanBlocks.flatten ++ nonMergedBlocks)
     }
   }
 
@@ -222,6 +251,18 @@ object RockSlicer {
         }
       }
     faceMatches.filter(_.nonEmpty).flatten.flatten.distinct
+  }
+
+  /**
+    * Generates key-value pairs of processor joints and blocks that contain that processor joint
+    * @param procJoints Seq of processor joints
+    * @param procBlocks Seq of blocks containing processor joints
+    */
+  def generateProcJointKeyValues(procJoints: Seq[Joint], procBlocks: Seq[Block]): 
+                                 Seq[(Joint, Seq[Block])] = {
+    procJoints map { joint =>
+      (joint, procBlocks.filter(block => joint.inBlock(block)))
+    }
   }
 
   // Function that writes JSON string to file for single node - taken from 

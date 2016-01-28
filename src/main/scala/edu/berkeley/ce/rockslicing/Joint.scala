@@ -279,4 +279,26 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
   def updateJoint(blockOrigin: (Double, Double,Double)): Joint =
     Joint((a, b, c), blockOrigin, (centerX, centerY, centerZ), phi, cohesion, shape, Some(dipAngle),
           Some(dipDirection), boundingSphere, processorJoint)
+
+  /**
+    * Compare this joint and input block's faces and determines if joint is one of
+    * input block's faces.
+    * @param block Input block
+    * @return True if joint is one of blocks faces, false otherwise
+    */
+  def inBlock(block: Block): Boolean = {
+    val distance = Joint.findDistance((a, b, c), (block.centerX, block.centerY, block.centerZ),
+                                      (centerX, centerY, centerZ))
+
+    block.faces.exists{ face =>
+      ((math.abs(face.a - a) < NumericUtils.EPSILON) &&
+       (math.abs(face.b - b) < NumericUtils.EPSILON) &&
+       (math.abs(face.c - c) < NumericUtils.EPSILON) &&
+       (math.abs(face.d - distance) < NumericUtils.EPSILON)) ||
+      ((math.abs(face.a + a) < NumericUtils.EPSILON) &&
+       (math.abs(face.b + b) < NumericUtils.EPSILON) &&
+       (math.abs(face.c + c) < NumericUtils.EPSILON) &&
+       (math.abs(face.d + distance) < NumericUtils.EPSILON))
+    }
+  }
 }
