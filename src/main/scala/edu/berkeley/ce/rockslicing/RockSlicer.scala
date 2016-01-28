@@ -85,7 +85,7 @@ object RockSlicer {
       // // Shuffle processor blocks so all blocks containing same processor joints are local to each node
       // processorBlocksRDD.join(sortedProcessorBlocks)
 
-      val reconstructedBlocks = mergeBlocks(allProcessorBlocks, Seq.empty[Block], globalOrigin)
+      val (reconstructedBlocks, orphanBlocks) = mergeBlocks(allProcessorBlocks, Seq.empty[Block], globalOrigin, Seq.empty[Block])
 
       // Update centroids of reconstructed processor blocks and remove duplicates
       val reconCentroidBlocks = reconstructedBlocks.map {block =>
@@ -165,7 +165,7 @@ object RockSlicer {
   @tailrec
   def mergeBlocks(processorBlocks: Seq[Block], mergedBlocks: Seq[Block],
                   origin: (Double, Double, Double), nonMergedBlocks: Seq[Block]):
-                 Seq[Block] = {
+                 (Seq[Block], Seq[Block]) = {
     val blockMatches = processorBlocks.tail map { block =>
       val currentBlock = Block(origin, processorBlocks.head.updateFaces(origin))
       val updatedBlock = Block(origin, block.updateFaces(origin))
@@ -194,11 +194,10 @@ object RockSlicer {
       }
     }
 
-    // (pairedBlocks, orphanBlocks)
-    val pairedBlocks = blockMatches.map{ case (paired, orphan) => paired }.flatten
-    val reconstructedBlocks = pairedBlocks.flatten
+    val pairedBlocks = blockMatches.map{ case (paired, _) => paired }.flatten
+    val orphanBlocks = blockMatches.map{ case (_, orphan) => orphan }.flatten
     // Remove redundant faces and remove duplicates
-    val joinedBlocks = (reconstructedBlocks map { case block @ Block(center, _) =>
+    val joinedBlocks = (pairedBlocks map { case block @ Block(center, _) =>
       Block(center, block.nonRedundantFaces)
     }).filter { block => block.faces.nonEmpty } // Filters blocks that actually aren't adjacent at all,
                                                 // but shared a processor joint
@@ -211,7 +210,7 @@ object RockSlicer {
     if (remainingBlocks.nonEmpty) {
       // Merged blocks still contain some processor joints
       mergeBlocks(remainingBlocks ++ processorBlocks.tail, completedBlocks ++ mergedBlocks,
-                  origin, orphanBlocks.flatten ++ nonMergedBlocks)
+                  origin, orphanBlocks ++ nonMergedBlocks)
     } else if (processorBlocks.tail.isEmpty) {
       // All blocks are free of processor joints - check for duplicates then return
       val mergedBlocksDuplicates = completedBlocks ++ mergedBlocks
@@ -222,11 +221,11 @@ object RockSlicer {
           unique
         }
       }
-      (mergedBlocksUnique, orphanBlocks.flatten ++ nonMergedBlocks)
+      (mergedBlocksUnique, orphanBlocks ++ nonMergedBlocks)
     } else {
       // Proceed to next processor block
       mergeBlocks(processorBlocks.tail, completedBlocks ++ mergedBlocks, origin,
-                  orphanBlocks.flatten ++ nonMergedBlocks)
+                  orphanBlocks ++ nonMergedBlocks)
     }
   }
 

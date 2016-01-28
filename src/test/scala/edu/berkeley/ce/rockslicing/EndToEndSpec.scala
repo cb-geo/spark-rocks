@@ -49,7 +49,8 @@ class EndToEndSpec extends FunSuite {
     }
 
     // Search blocks for matching processor joints
-    val reconBlocks = RockSlicer.mergeBlocks(processorBlocks, Seq[Block](), globalOrigin)
+    val (reconBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
+                                                             globalOrigin, Seq.empty[Block])
 
     // Update centroids of reconstructed processor blocks and remove duplicates
     val reconCentroidBlocks = reconBlocks.map {block =>
@@ -75,6 +76,7 @@ class EndToEndSpec extends FunSuite {
 
     val blockJson = Json.blockSeqToReadableJson(cleanedBlocks)
     val expectedJsonSource = Source.fromURL(getClass.getResource(s"/$OUTPUT_FILE_NAME"))
+    assert(orphanBlocks.isEmpty)
     try {
       val expectedJson = expectedJsonSource.mkString
       assert(blockJson.trim == expectedJson.trim)
