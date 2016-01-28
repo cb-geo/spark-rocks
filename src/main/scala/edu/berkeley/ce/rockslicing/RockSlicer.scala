@@ -45,8 +45,13 @@ object RockSlicer {
 
     // Iterate through the discontinuities, cutting blocks where appropriate
     var cutBlocks = blockRdd
+    var numIters = 0
     for (joint <- broadcastJoints.value) {
       cutBlocks = cutBlocks.flatMap(_.cut(joint, arguments.minRadius, arguments.maxAspectRatio))
+      numIters += 1
+      if (numIters % 20 == 0) {
+        cutBlocks.count()
+      }
     }
 
     // Remove geometrically redundant joints
@@ -54,6 +59,8 @@ object RockSlicer {
       Block(center, block.nonRedundantFaces)
     }
 
+    nonRedundantBlocks.count()
+    /*
     // Find all blocks that contain processor joints
     val processorBlocks = nonRedundantBlocks.filter { block => 
       block.faces.exists(_.processorJoint)
@@ -154,6 +161,7 @@ object RockSlicer {
       val jsonVtkBlocks = vtkBlocks.map(JsonToVtk.blockVtkToMinimalJson)
       jsonVtkBlocks.saveAsTextFile("vtkBlocks.json")
     }
+    */
     sc.stop()
   }
 
