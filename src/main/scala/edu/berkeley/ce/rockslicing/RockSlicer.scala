@@ -53,6 +53,8 @@ object RockSlicer {
       Block(center, block.nonRedundantFaces)
     }
 
+    nonRedundantBlocks.count()
+    /*
     // Find all blocks that contain processor joints
     val processorBlocks = nonRedundantBlocks.filter { block =>
       block.faces.exists(_.processorJoint)
@@ -153,6 +155,8 @@ object RockSlicer {
       val jsonVtkBlocks = vtkBlocks.map(JsonToVtk.blockVtkToMinimalJson)
       jsonVtkBlocks.saveAsTextFile("vtkBlocks.json")
     }
+
+    */
     sc.stop()
   }
 
