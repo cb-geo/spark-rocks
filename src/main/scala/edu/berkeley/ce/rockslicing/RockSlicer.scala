@@ -166,6 +166,8 @@ object RockSlicer {
   def mergeBlocks(processorBlocks: Seq[Block], mergedBlocks: Seq[Block],
                   origin: (Double, Double, Double), nonMergedBlocks: Seq[Block]):
                  (Seq[Block], Seq[Block]) = {
+    // BUSY ADDING FUNCTIONALITY TO DETERMINE WHICH BLOCKS NEVER FIND A MATE SO
+    // THEY CAN BE USED IN TREE REDUCE AND NOT LOST IN CALCS
     val blockMatches = processorBlocks.tail map { block =>
       val currentBlock = Block(origin, processorBlocks.head.updateFaces(origin))
       val updatedBlock = Block(origin, block.updateFaces(origin))
@@ -221,7 +223,14 @@ object RockSlicer {
           unique
         }
       }
-      (mergedBlocksUnique, orphanBlocks ++ nonMergedBlocks)
+      val uniqueOrphanBlocks = (orphanBlocks ++ nonMergedBlocks).foldLeft(Seq.empty[Block]) { (unique, current) =>
+        if (!unique.exists(current.approximateEquals(_))) {
+          current +: unique
+        } else {
+          unique
+        }
+      }
+      (mergedBlocksUnique, uniqueOrphanBlocks)
     } else {
       // Proceed to next processor block
       mergeBlocks(processorBlocks.tail, completedBlocks ++ mergedBlocks, origin,
@@ -263,6 +272,40 @@ object RockSlicer {
       (joint, procBlocks.filter(block => joint.inBlock(block)))
     }
   }
+
+  /**
+    * 
+    */
+  def findMates(processorBlocks: Seq[Block], origin: (Double, Double, Double)): Seq[Block] = {
+    processorBlocks.tail flatMap { block =>
+      val currentBlock = Block(origin, processorBlocks.head.updateFaces(origin))
+      val updatedBlock = Block(origin, block.updateFaces(origin))
+      val sharedProcFaces = compareProcessorBlocks(currentBlock, updatedBlock)
+      if (sharedProcFaces.nonEmpty) {
+        val currentFaces = currentBlock.faces.diff(sharedProcFaces)
+        val updatedFaces = updatedBlock.faces.diff(sharedProcFaces)
+        val allFaces = currentFaces ++ updatedFaces
+        // Check for any actual shared faces between blocks - if these exists blocks
+        // should not be merged since there is a real joint seperating the blocks
+        val nonSharedFaces =
+          allFaces.foldLeft(Seq.empty[Face]) { (unique, current) =>
+            if (!unique.exists(current.isSharedWith(_))) {
+              current +: unique
+            } else {
+              unique
+            }
+          }
+        if (allFaces.diff(nonSharedFaces).isEmpty) {
+          Some(Block(origin, nonSharedFaces))
+        } else {
+          None
+        }
+      } else {
+        None
+      }
+    }
+  }
+
 
   // Function that writes JSON string to file for single node - taken from 
   // http://stackoverflow.com/questions/4604237/how-to-write-to-a-file-in-scala
