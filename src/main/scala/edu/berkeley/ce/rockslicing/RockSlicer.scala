@@ -276,7 +276,7 @@ object RockSlicer {
   /**
     * 
     */
-  def findMates(processorBlocks: Seq[Block], origin: (Double, Double, Double)): Seq[Block] = {
+  def findMates(processorBlocks: Seq[Block], origin: (Double, Double, Double)): Seq[(Block, Seq[Block])] = {
     processorBlocks.tail flatMap { block =>
       val currentBlock = Block(origin, processorBlocks.head.updateFaces(origin))
       val updatedBlock = Block(origin, block.updateFaces(origin))
@@ -296,7 +296,7 @@ object RockSlicer {
             }
           }
         if (allFaces.diff(nonSharedFaces).isEmpty) {
-          Some(Block(origin, nonSharedFaces))
+          Some(Block(origin, nonSharedFaces), Seq[Block](currentBlock, updatedBlock))
         } else {
           None
         }
