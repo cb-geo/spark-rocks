@@ -1,7 +1,6 @@
 package edu.berkeley.ce.rockslicing
 
-import breeze.linalg
-import breeze.linalg.{DenseVector, DenseMatrix}
+import breeze.linalg.DenseVector
 
 object BlockVTK {
 
@@ -61,14 +60,14 @@ object BlockVTK {
       (pointB._1 - center._1) * (pointA._2 - center._2)
     // If resulting vector points in positive z-direction, pointA is before pointB
     if (det > NumericUtils.EPSILON) {
-      return true
+      true
     } else if (det < -NumericUtils.EPSILON) {
-      return false
+      false
     } else {
       // pointA and pointB are on the same line from the center, so check which one is closer to the center
       val d1 = (pointA._1 - center._1) * (pointA._1 - center._1) + (pointA._2 - center._2) * (pointA._2 - center._2)
       val d2 = (pointB._1 - center._1) * (pointB._1 - center._1) + (pointB._2 - center._2) * (pointB._2 - center._2)
-      return d1 > d2
+      d1 > d2
     }
   }
 

@@ -60,9 +60,8 @@ object RockSlicer {
     }
 
     nonRedundantBlocks.count()
-    /*
     // Find all blocks that contain processor joints
-    val processorBlocks = nonRedundantBlocks.filter { block => 
+    val processorBlocks = nonRedundantBlocks.filter { block =>
       block.faces.exists(_.processorJoint)
     }
 
@@ -161,7 +160,6 @@ object RockSlicer {
       val jsonVtkBlocks = vtkBlocks.map(JsonToVtk.blockVtkToMinimalJson)
       jsonVtkBlocks.saveAsTextFile("vtkBlocks.json")
     }
-    */
     sc.stop()
   }
 
@@ -179,8 +177,7 @@ object RockSlicer {
     */
   @tailrec
   def mergeBlocks(processorBlocks: Seq[Block], mergedBlocks: Seq[Block],
-                  orphanBlocks: Seq[Block]):
-                 (Seq[Block], Seq[Block]) = {
+                  orphanBlocks: Seq[Block]): (Seq[Block], Seq[Block]) = {
     val blockMatches = findMates(processorBlocks)
     val joinedBlocks = blockMatches.map{ case (paired, _) => paired }
     val matchIndices = blockMatches.flatMap { case (_, indices) => indices}.distinct
@@ -247,7 +244,7 @@ object RockSlicer {
     * Compares two input blocks and find shared processor faces
     * @param block1 First input block
     * @param block2 Second input block
-    * @return List of processor faces that are shared by the two blocks. Will be 
+    * @return List of processor faces that are shared by the two blocks. Will be
     *         empty if they share no faces
     */
   def findSharedProcessorFaces(block1: Block, block2: Block): Seq[Face] = {

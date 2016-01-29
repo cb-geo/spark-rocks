@@ -1,7 +1,8 @@
 package edu.berkeley.ce.rockslicing
 
 import breeze.linalg
-import breeze.linalg.{DenseVector, DenseMatrix}
+import breeze.linalg.DenseVector
+
 import scala.annotation.tailrec
 
 /** 
@@ -22,12 +23,12 @@ object LoadBalancer {
                          Seq[Joint] = {
     // Calculate bounding box
     val vertices = rockVolume.findVertices.values.flatten
-    val x_max = (vertices.map(_._1)).max
-    val x_min = (vertices.map(_._1)).min
-    val y_max = (vertices.map(_._2)).max
-    val y_min = (vertices.map(_._2)).min
-    val z_max = (vertices.map(_._3)).max
-    val z_min = (vertices.map(_._3)).min
+    val x_max = vertices.map(_._1).max
+    val x_min = vertices.map(_._1).min
+    val y_max = vertices.map(_._2).max
+    val y_min = vertices.map(_._2).min
+    val z_max = vertices.map(_._3).max
+    val z_min = vertices.map(_._3).min
     val boundingBox = (x_min, y_min, z_min, x_max, y_max, z_max)
 
     // Diagonal vector from lower left to upper right corner of bounding box
@@ -64,12 +65,12 @@ object LoadBalancer {
                                   Seq[Joint] = {
     // Calculate bounding box
     val vertices = initialVolume.findVertices.values.flatten
-    val x_max = (vertices.map(_._1)).max
-    val x_min = (vertices.map(_._1)).min
-    val y_max = (vertices.map(_._2)).max
-    val y_min = (vertices.map(_._2)).min
-    val z_max = (vertices.map(_._3)).max
-    val z_min = (vertices.map(_._3)).min
+    val x_max = vertices.map(_._1).max
+    val x_min = vertices.map(_._1).min
+    val y_max = vertices.map(_._2).max
+    val y_min = vertices.map(_._2).min
+    val z_max = vertices.map(_._3).max
+    val z_min = vertices.map(_._3).min
     val boundingBox = (x_min, y_min, z_min, x_max, y_max, z_max)
 
     // Calculate diagonal length
@@ -201,7 +202,7 @@ object LoadBalancer {
     // Bisection step
     val bisectionDist = (initialDist0 + initialDist1)/2.0
     // Select new step
-    val newDist = if ((secantDist < a) || (secantDist > b) || (secantDist.isNaN)) {
+    val newDist = if ((secantDist < a) || (secantDist > b) || secantDist.isNaN) {
       bisectionDist
     } else {
       secantDist
