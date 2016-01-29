@@ -23,9 +23,10 @@ class EndToEndSpec extends FunSuite {
     val joints = processorJoints ++ jointList
 
     // Iterate through joints, cutting blocks where appropriate
-    var cutBlocks = blocks
-    for (joint <- joints) {
-      cutBlocks = cutBlocks.flatMap(_.cut(joint))
+    val cutBlocks = blocks flatMap { block =>
+      joints.foldLeft(Seq(block)) { (currentBlocks, joint) =>
+        currentBlocks.flatMap(_.cut(joint))
+      }
     }
 
     // Remove geometrically redundant joints

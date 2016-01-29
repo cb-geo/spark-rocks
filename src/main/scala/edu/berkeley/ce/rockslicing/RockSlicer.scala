@@ -26,31 +26,25 @@ object RockSlicer {
       System.exit(-1)
     }
     val (globalOrigin, rockVolume, joints) = inputOpt.get
-    var blocks = Seq(Block(globalOrigin, rockVolume))
-    val processorJoints = if (arguments.numProcessors > 1) {
-      LoadBalancer.generateProcessorJoints(blocks.head, arguments.numProcessors)
-    } else {
-      Seq.empty[Joint]
-    }
+    val starterBlocks = Seq(Block(globalOrigin, rockVolume))
 
     // Generate a list of initial blocks before RDD-ifying it
-    if (arguments.numProcessors > 1) {
-      processorJoints foreach { joint =>
-        blocks = blocks.flatMap(_.cut(joint))
+    val seedBlocks = if (arguments.numProcessors > 1) {
+      val processorJoints = LoadBalancer.generateProcessorJoints(starterBlocks.head, arguments.numProcessors)
+      processorJoints.foldLeft(starterBlocks) { (currentBlocks, joint) =>
+        currentBlocks.flatMap(_.cut(joint))
       }
+    } else {
+      starterBlocks
     }
 
-    val blockRdd = sc.parallelize(blocks)
+    val seedBlockRdd = sc.parallelize(seedBlocks)
     val broadcastJoints = sc.broadcast(joints)
 
-    // Iterate through the discontinuities, cutting blocks where appropriate
-    var cutBlocks = blockRdd
-    var numIters = 0
-    for (joint <- broadcastJoints.value) {
-      cutBlocks = cutBlocks.flatMap(_.cut(joint, arguments.minRadius, arguments.maxAspectRatio))
-      numIters += 1
-      if (numIters % 20 == 0) {
-        cutBlocks.count()
+    // Iterate through the discontinuities for each seed block, cutting where appropriate
+    val cutBlocks = seedBlockRdd flatMap { seedBlock =>
+      broadcastJoints.value.foldLeft(Seq(seedBlock)) { (currentBlocks, joint) =>
+        currentBlocks.flatMap(_.cut(joint))
       }
     }
 
@@ -59,7 +53,6 @@ object RockSlicer {
       Block(center, block.nonRedundantFaces)
     }
 
-    nonRedundantBlocks.count()
     // Find all blocks that contain processor joints
     val processorBlocks = nonRedundantBlocks.filter { block =>
       block.faces.exists(_.processorJoint)
