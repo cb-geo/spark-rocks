@@ -1,8 +1,7 @@
 package edu.berkeley.ce.rockslicing
 
 import java.io._
-import org.apache.spark.{SparkConf, SparkContext, HashPartitioner}
-import org.apache.spark.storage.StorageLevel
+import org.apache.spark.{SparkConf, SparkContext}
 import scala.io.Source
 import scala.annotation.tailrec
 
@@ -41,7 +40,7 @@ object RockSlicer {
       }
     }
 
-    val blockRdd = sc.parallelize(blocks).persist(StorageLevel.MEMORY_ONLY)
+    val blockRdd = sc.parallelize(blocks)
     // val processorBlocksRDD = if (arguments.numProcessors > 1) {
     //   sc.parallelize(processorJoints.map(joint => (joint, Seq.empty[Block])))
     //     .partitionBy(new HashPartitioner(arguments.numProcessors))
@@ -76,19 +75,31 @@ object RockSlicer {
 
     // Process processor blocks before continueing with remaining blocks
     // Collect all blocks that contain processor joints from all nodes
-    val allProcessorBlocks = processorBlocks.collect()
+    // val allProcessorBlocks = processorBlocks.collect()
     // Search blocks for matching processor joints
-    if (allProcessorBlocks.length > 0) {
+    if (processorBlocks.count() > 0) {
       // val sortedProcessorBlocks =
       //   generateProcJointKeyValues(broadcastProcJoints.value, processorBlocks.toLocalIterator.toSeq)
       // val sortedProcBlocksRDD = sc.parallelize(sortedProcessorBlocks)
       // // Shuffle processor blocks so all blocks containing same processor joints are local to each node
       // processorBlocksRDD.join(sortedProcessorBlocks)
 
-      val (reconstructedBlocks, orphanBlocks) = mergeBlocks(allProcessorBlocks, Seq.empty[Block], globalOrigin, Seq.empty[Block])
+      // val treeReduceBlockPairsRDD = sc.parallelize((processorBlocks.toLocalIterator.toSeq, Seq.empty[Block]))
+
+      val treeReduceBlockPairsRDD = processorBlocks.map{ blocks => (blocks, Seq.empty[Block])}
+      val (allReconstructedBlocks, allOrphanBlocks) = treeReduceBlockPairsRDD.treeReduce{ case (part1, part2) =>
+        val (treeReconBlocks, treeMatedBlocks) = mergeBlocks(part1._1 ++ part2._1, Seq.empty[Block],
+                                                             globalOrigin, part1._2 ++ part2._2)
+
+        // val (treeReconBlocks, treeMatedBlocks) = mergeBlocks(procBlocks ++ orphans, Seq.empty[Block],
+        //                                                      globalOrigin, Seq.empty[Block])
+        val treeOrphanBlocks = (part._1 ++ part2._1 ++ part1._2 ++ part2._2).diff(treeMatedBlocks)
+        (treeReconBlocks, treeOrphanBlocks)
+      }
+      assert(allOrphanBlocks.isEmpty)
 
       // Update centroids of reconstructed processor blocks and remove duplicates
-      val reconCentroidBlocks = reconstructedBlocks.map {block =>
+      val reconCentroidBlocks = allReconstructedBlocks.map {block =>
         val centroid = block.centroid
         Block(centroid, block.updateFaces(centroid))
       }
@@ -164,40 +175,14 @@ object RockSlicer {
     */
   @tailrec
   def mergeBlocks(processorBlocks: Seq[Block], mergedBlocks: Seq[Block],
-                  origin: (Double, Double, Double), nonMergedBlocks: Seq[Block]):
+                  origin: (Double, Double, Double), matchedBlocks: Seq[Block]):
                  (Seq[Block], Seq[Block]) = {
     // BUSY ADDING FUNCTIONALITY TO DETERMINE WHICH BLOCKS NEVER FIND A MATE SO
     // THEY CAN BE USED IN TREE REDUCE AND NOT LOST IN CALCS
-    val blockMatches = processorBlocks.tail map { block =>
-      val currentBlock = Block(origin, processorBlocks.head.updateFaces(origin))
-      val updatedBlock = Block(origin, block.updateFaces(origin))
-      val sharedProcFaces = compareProcessorBlocks(currentBlock, updatedBlock)
-      if (sharedProcFaces.nonEmpty) {
-        val currentFaces = currentBlock.faces.diff(sharedProcFaces)
-        val updatedFaces = updatedBlock.faces.diff(sharedProcFaces)
-        val allFaces = currentFaces ++ updatedFaces
-        // Check for any actual shared faces between blocks - if these exists blocks
-        // should not be merged since there is a real joint seperating the blocks
-        val nonSharedFaces =
-          allFaces.foldLeft(Seq.empty[Face]) { (unique, current) =>
-            if (!unique.exists(current.isSharedWith(_))) {
-              current +: unique
-            } else {
-              unique
-            }
-          }
-        if (allFaces.diff(nonSharedFaces).isEmpty) {
-          (Some(Block(origin, nonSharedFaces)), None)
-        } else {
-          (None, Some(currentBlock))
-        }
-      } else {
-        (None, Some(currentBlock))
-      }
-    }
+    val blockMatches = findMates(processorBlocks, origin)
 
-    val pairedBlocks = blockMatches.map{ case (paired, _) => paired }.flatten
-    val orphanBlocks = blockMatches.map{ case (_, orphan) => orphan }.flatten
+    val pairedBlocks = blockMatches.map{ case (paired, _) => paired }
+    val originalBlocks = blockMatches.flatMap{ case (_, orphan) => orphan }
     // Remove redundant faces and remove duplicates
     val joinedBlocks = (pairedBlocks map { case block @ Block(center, _) =>
       Block(center, block.nonRedundantFaces)
@@ -212,7 +197,7 @@ object RockSlicer {
     if (remainingBlocks.nonEmpty) {
       // Merged blocks still contain some processor joints
       mergeBlocks(remainingBlocks ++ processorBlocks.tail, completedBlocks ++ mergedBlocks,
-                  origin, orphanBlocks ++ nonMergedBlocks)
+                  origin, originalBlocks ++ matchedBlocks)
     } else if (processorBlocks.tail.isEmpty) {
       // All blocks are free of processor joints - check for duplicates then return
       val mergedBlocksDuplicates = completedBlocks ++ mergedBlocks
@@ -223,7 +208,7 @@ object RockSlicer {
           unique
         }
       }
-      val uniqueOrphanBlocks = (orphanBlocks ++ nonMergedBlocks).foldLeft(Seq.empty[Block]) { (unique, current) =>
+      val uniqueOrphanBlocks = (originalBlocks ++ matchedBlocks).foldLeft(Seq.empty[Block]) { (unique, current) =>
         if (!unique.exists(current.approximateEquals(_))) {
           current +: unique
         } else {
@@ -234,7 +219,7 @@ object RockSlicer {
     } else {
       // Proceed to next processor block
       mergeBlocks(processorBlocks.tail, completedBlocks ++ mergedBlocks, origin,
-                  orphanBlocks ++ nonMergedBlocks)
+                  originalBlocks ++ matchedBlocks)
     }
   }
 
