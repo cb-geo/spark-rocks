@@ -81,6 +81,9 @@ object RockSlicer {
     // val allProcessorBlocks = processorBlocks.collect()
     // Search blocks for matching processor joints
     if (processorBlocks.count() > 0) {
+      // val (allReconstructedBlocks, allOrphanBlocks) = mergeBlocks(allProcessorBlocks, Seq.empty[Block], globalOrigin,
+      //                                                             Seq.empty[Block], Seq.empty[Block])
+      // assert(allOrphanBlocks.isEmpty)
       // val sortedProcessorBlocks =
       //   generateProcJointKeyValues(broadcastProcJoints.value, processorBlocks.toLocalIterator.toSeq)
       // val sortedProcBlocksRDD = sc.parallelize(sortedProcessorBlocks)
@@ -90,21 +93,30 @@ object RockSlicer {
       // val treeReduceBlockPairsRDD = sc.parallelize((processorBlocks.toLocalIterator.toSeq, Seq.empty[Block]))
 
       val treeReduceBlockPairsRDD = processorBlocksOrigin.map{ blocks => (Seq(blocks), Seq.empty[Block])}
-      val (allReconstructedBlocks, allOrphanBlocks) = treeReduceBlockPairsRDD.treeReduce{ case (part1, part2) =>
-        val (treeReconBlocks1, treeMatedBlocks1) = mergeBlocks(part1._1, Seq.empty[Block],
-                                                             globalOrigin, part1._2)
-        val (treeReconBlocks2, treeMatedBlocks2) = mergeBlocks(part2._1, Seq.empty[Block],
-                                                             globalOrigin, part2._2)
+      val (allOrphanBlocks, treeRealBlocks) = treeReduceBlockPairsRDD.treeReduce{ (part1, part2) =>
+        val (treeReconBlocks, treeOrphanBlocks) = mergeBlocks(part1._1 ++ part2._1, Seq.empty[Block], globalOrigin,
+                                                              Seq.empty[Block], Seq.empty[Block])
+        // val (treeReconBlocks1, treeOrphanBlocks1) = mergeBlocks(part1._1, Seq.empty[Block],
+        //                                                         globalOrigin, Seq.empty[Block], Seq.empty[Block])
+        // val (treeReconBlocks2, treeOrphanBlocks2) = mergeBlocks(part2._1, Seq.empty[Block],
+        //                                                         globalOrigin, Seq.empty[Block], Seq.empty[Block])
+        val treeProcessorBlocks = treeReconBlocks.filter { block =>
+          block.faces.exists(_.processorJoint)
+        }
 
-        println("These are the reconstructed blocks:")
-        (treeReconBlocks1 ++ treeReconBlocks2).foreach(println)
-        val treeOrphanBlocks1 = (part1._1).diff(treeMatedBlocks1)
-        val treeOrphanBlocks2 = (part2._1).diff(treeMatedBlocks2)
-        println("\nThese are the orphan blocks:")
-        (treeOrphanBlocks1 ++ treeOrphanBlocks2).foreach(println)
-        (treeReconBlocks1 ++ treeReconBlocks2, treeOrphanBlocks1 ++ treeOrphanBlocks2)
+        val treeRealBlocks = treeReconBlocks.filter { block =>
+          !block.faces.exists(_.processorJoint)
+        }
+
+        println("\nReconstructed Blocks: ")
+        treeReconBlocks.foreach(println)
+        println("\nOrphan Blocks: ")
+        treeOrphanBlocks.foreach(println)
+
+        (treeProcessorBlocks ++ treeOrphanBlocks, treeRealBlocks)
       }
-      // assert(allOrphanBlocks.isEmpty)
+      assert(allOrphanBlocks.isEmpty)
+
 
       // Update centroids of reconstructed processor blocks and remove duplicates
       val reconCentroidBlocks = allReconstructedBlocks.map {block =>
@@ -183,14 +195,18 @@ object RockSlicer {
     */
   @tailrec
   def mergeBlocks(processorBlocks: Seq[Block], mergedBlocks: Seq[Block],
-                  origin: (Double, Double, Double), matchedBlocks: Seq[Block]):
+                  origin: (Double, Double, Double), matchedBlocks: Seq[Block],
+                  orphanBlocks: Seq[Block]):
                  (Seq[Block], Seq[Block]) = {
-    // BUSY ADDING FUNCTIONALITY TO DETERMINE WHICH BLOCKS NEVER FIND A MATE SO
-    // THEY CAN BE USED IN TREE REDUCE AND NOT LOST IN CALCS
     val blockMatches = findMates(processorBlocks, origin)
-
     val pairedBlocks = blockMatches.map{ case (paired, _) => paired }
-    val originalBlocks = blockMatches.flatMap{ case (_, orphan) => orphan }
+    val originalPairedBlocks = blockMatches.flatMap{ case (_, original) => original }
+    val currentOrphanBlocks = originalPairedBlocks.filter { originalBlock =>
+      (processorBlocks ++ orphanBlocks).exists { block =>
+        !block.approximateEquals(originalBlock)
+      }
+    }
+
     // Remove redundant faces and remove duplicates
     val joinedBlocks = (pairedBlocks map { case block @ Block(center, _) =>
       Block(center, block.nonRedundantFaces)
@@ -205,8 +221,8 @@ object RockSlicer {
     if (remainingBlocks.nonEmpty) {
       // Merged blocks still contain some processor joints
       mergeBlocks(remainingBlocks ++ processorBlocks.tail, completedBlocks ++ mergedBlocks,
-                  origin, originalBlocks ++ matchedBlocks)
-    } else if (processorBlocks.tail.isEmpty) {
+                  origin, originalPairedBlocks ++ matchedBlocks, currentOrphanBlocks)
+    } else if ((processorBlocks.isEmpty) || (processorBlocks.tail.isEmpty)) {
       // All blocks are free of processor joints - check for duplicates then return
       val mergedBlocksDuplicates = completedBlocks ++ mergedBlocks
       val mergedBlocksUnique = mergedBlocksDuplicates.foldLeft(Seq.empty[Block]) { (unique, current) =>
@@ -216,18 +232,20 @@ object RockSlicer {
           unique
         }
       }
-      val uniqueOrphanBlocks = (originalBlocks ++ matchedBlocks).foldLeft(Seq.empty[Block]) { (unique, current) =>
+
+      val uniqueOrphanBlocks = currentOrphanBlocks.foldLeft(Seq.empty[Block]) { (unique, current) =>
         if (!unique.exists(current.approximateEquals(_))) {
           current +: unique
         } else {
           unique
         }
       }
-      (mergedBlocksUnique, uniqueOrphanBlocks)
+
+      (mergedBlocksUnique, uniqueOrphanBlocks) 
     } else {
       // Proceed to next processor block
       mergeBlocks(processorBlocks.tail, completedBlocks ++ mergedBlocks, origin,
-                  originalBlocks ++ matchedBlocks)
+                  originalPairedBlocks ++ matchedBlocks, currentOrphanBlocks)
     }
   }
 

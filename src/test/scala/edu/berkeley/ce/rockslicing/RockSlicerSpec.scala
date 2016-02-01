@@ -224,12 +224,8 @@ class RockSlicerSpec extends FunSuite {
   test("Two blocks should be merged into unit cube") {
     val globalOrigin = (0.0, 0.0, 0.0)
     val processorBlocks = Seq(leftHalfUnitCube, rightHalfUnitCube)
-    val (mergedBlocks, matedBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
-                                                             globalOrigin, Seq.empty[Block])
-    val updatedProcessorBlocks = processorBlocks.map { block =>
-      Block(globalOrigin, block.updateFaces(globalOrigin))
-    }
-    val orphanBlocks = updatedProcessorBlocks.diff(matedBlocks)
+    val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
+                                                             globalOrigin, Seq.empty[Block], Seq.empty[Block])
     assert(orphanBlocks.isEmpty)
     assert(mergedBlocks.length == 1)
     assert(mergedBlocks.head.approximateEquals(unitCube))
@@ -238,12 +234,8 @@ class RockSlicerSpec extends FunSuite {
   test("Three blocks should be merged into unit cube") {
     val globalOrigin = (0.0, 0.0, 0.0)
     val processorBlocks = Seq(leftQuarterUnitCube, centerPartUnitCube, rightQuarterUnitCube)
-    val (mergedBlocks, matedBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
-                                                              globalOrigin, Seq.empty[Block])
-    val updatedProcessorBlocks = processorBlocks.map { block =>
-      Block(globalOrigin, block.updateFaces(globalOrigin))
-    }
-    val orphanBlocks = updatedProcessorBlocks.diff(matedBlocks)
+    val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
+                                                              globalOrigin, Seq.empty[Block], Seq.empty[Block])
     assert(orphanBlocks.isEmpty)
     assert(mergedBlocks.length == 1)
     assert(mergedBlocks.head.approximateEquals(unitCube))
@@ -253,12 +245,8 @@ class RockSlicerSpec extends FunSuite {
     val globalOrigin = (0.0, 0.0, 0.0)
     val processorBlocks = Seq(leftQuarterUnitCube, leftCenterQuarterUnitCube,
                               rightCenterQuarterUnitCube, rightQuarterUnitCube)
-    val (mergedBlocks, matedBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
-                                                              globalOrigin, Seq.empty[Block])
-    val updatedProcessorBlocks = processorBlocks.map { block =>
-      Block(globalOrigin, block.updateFaces(globalOrigin))
-    }
-    val orphanBlocks = updatedProcessorBlocks.diff(matedBlocks)
+    val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
+                                                              globalOrigin, Seq.empty[Block], Seq.empty[Block])
     assert(orphanBlocks.isEmpty)
     assert(mergedBlocks.length == 1)
     assert(mergedBlocks.head.approximateEquals(unitCube))
@@ -271,8 +259,8 @@ class RockSlicerSpec extends FunSuite {
                               bottomRightCenterEighthUnitCube, bottomRightEighthUnitCube,
                               topLeftEighthUnitCube, topLeftCenterEighthUnitCube,
                               topRightCenterEighthUnitCube, topRightEighthUnitCube)
-    val (mergedBlocks, matedBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
-                                                              globalOrigin, Seq.empty[Block])
+    val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
+                                                              globalOrigin, Seq.empty[Block], Seq.empty[Block])
     val expectedBlocks = Seq(bottomHalfUnitCube, topHalfUnitCube)
     val expectedBlocksCentroid = expectedBlocks map { block =>
       val centroid = block.centroid
@@ -285,10 +273,6 @@ class RockSlicerSpec extends FunSuite {
     val blockCheck = mergedBlocksCentroid.zip(expectedBlocksCentroid) map { case (calc, expected) =>
       calc.approximateEquals(expected)
     }
-    val updatedProcessorBlocks = processorBlocks.map { block =>
-      Block(globalOrigin, block.updateFaces(globalOrigin))
-    }
-    val orphanBlocks = updatedProcessorBlocks.diff(matedBlocks)
     assert(orphanBlocks.isEmpty)
     assert(mergedBlocksCentroid.length == 2)
     assert(!blockCheck.contains(false))
@@ -319,8 +303,8 @@ class RockSlicerSpec extends FunSuite {
       block.faces.exists { face => face.processorJoint }
     }
 
-    val (mergedBlocks, matedBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
-                                                              globalOrigin, Seq.empty[Block])
+    val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
+                                                              globalOrigin, Seq.empty[Block], Seq.empty[Block])
     val mergedBlocksCentroid = mergedBlocks map { block =>
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
@@ -334,10 +318,6 @@ class RockSlicerSpec extends FunSuite {
     val blockCheck = mergedBlocksCentroid.zip(expectedBlocksCentroid) forall { case (calc, expected) =>
       calc.approximateEquals(expected)
     }
-    val updatedProcessorBlocks = processorBlocks.map { block =>
-      Block(globalOrigin, block.updateFaces(globalOrigin))
-    }
-    val orphanBlocks = updatedProcessorBlocks.diff(matedBlocks)
     assert(orphanBlocks.isEmpty)
     assert(mergedBlocks.length == 3)
     assert(blockCheck)
@@ -368,8 +348,8 @@ class RockSlicerSpec extends FunSuite {
       block.faces.exists { face => face.processorJoint }
     }
 
-    val (mergedBlocks, matedBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
-                                                              globalOrigin, Seq.empty[Block])
+    val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
+                                                              globalOrigin, Seq.empty[Block], Seq.empty[Block])
     val mergedBlocksCentroid = mergedBlocks map { block =>
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
@@ -383,10 +363,6 @@ class RockSlicerSpec extends FunSuite {
     val blockCheck = mergedBlocksCentroid.zip(expectedBlocksCentroid) forall { case (calc, expected) =>
       calc.approximateEquals(expected)
     }
-    val updatedProcessorBlocks = processorBlocks.map { block =>
-      Block(globalOrigin, block.updateFaces(globalOrigin))
-    }
-    val orphanBlocks = updatedProcessorBlocks.diff(matedBlocks)
     assert(orphanBlocks.isEmpty)
     assert(mergedBlocks.length == 3)
     assert(blockCheck)
