@@ -49,8 +49,15 @@ class EndToEndSpec extends FunSuite {
     }
 
     // Search blocks for matching processor joints
-    val (reconBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
-                                                             globalOrigin, Seq.empty[Block])
+    val (reconBlocks, matedBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
+                                                            globalOrigin, Seq.empty[Block])
+    val updatedProcessorBlocks = processorBlocks.map { block =>
+      Block(globalOrigin, block.updateFaces(globalOrigin))
+    }
+    val orphanBlocks = updatedProcessorBlocks.diff(matedBlocks)
+    println("Orphan Blocks: ")
+    orphanBlocks.foreach(println)
+    println(orphanBlocks(0).approximateEquals(orphanBlocks(1)))
 
     // Update centroids of reconstructed processor blocks and remove duplicates
     val reconCentroidBlocks = reconBlocks.map {block =>

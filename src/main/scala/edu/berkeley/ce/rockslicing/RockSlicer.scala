@@ -67,6 +67,9 @@ object RockSlicer {
     val processorBlocks = nonRedundantBlocks.filter { block => 
       block.faces.exists(_.processorJoint)
     }
+    val processorBlocksOrigin = processorBlocks.map { block =>
+      Block(globalOrigin, block.updateFaces(globalOrigin))
+    }
 
     // Find blocks that do not contain processor joints
     val realBlocks = nonRedundantBlocks.filter { block =>
@@ -86,17 +89,22 @@ object RockSlicer {
 
       // val treeReduceBlockPairsRDD = sc.parallelize((processorBlocks.toLocalIterator.toSeq, Seq.empty[Block]))
 
-      val treeReduceBlockPairsRDD = processorBlocks.map{ blocks => (blocks, Seq.empty[Block])}
+      val treeReduceBlockPairsRDD = processorBlocksOrigin.map{ blocks => (Seq(blocks), Seq.empty[Block])}
       val (allReconstructedBlocks, allOrphanBlocks) = treeReduceBlockPairsRDD.treeReduce{ case (part1, part2) =>
-        val (treeReconBlocks, treeMatedBlocks) = mergeBlocks(part1._1 ++ part2._1, Seq.empty[Block],
-                                                             globalOrigin, part1._2 ++ part2._2)
+        val (treeReconBlocks1, treeMatedBlocks1) = mergeBlocks(part1._1, Seq.empty[Block],
+                                                             globalOrigin, part1._2)
+        val (treeReconBlocks2, treeMatedBlocks2) = mergeBlocks(part2._1, Seq.empty[Block],
+                                                             globalOrigin, part2._2)
 
-        // val (treeReconBlocks, treeMatedBlocks) = mergeBlocks(procBlocks ++ orphans, Seq.empty[Block],
-        //                                                      globalOrigin, Seq.empty[Block])
-        val treeOrphanBlocks = (part._1 ++ part2._1 ++ part1._2 ++ part2._2).diff(treeMatedBlocks)
-        (treeReconBlocks, treeOrphanBlocks)
+        println("These are the reconstructed blocks:")
+        (treeReconBlocks1 ++ treeReconBlocks2).foreach(println)
+        val treeOrphanBlocks1 = (part1._1).diff(treeMatedBlocks1)
+        val treeOrphanBlocks2 = (part2._1).diff(treeMatedBlocks2)
+        println("\nThese are the orphan blocks:")
+        (treeOrphanBlocks1 ++ treeOrphanBlocks2).foreach(println)
+        (treeReconBlocks1 ++ treeReconBlocks2, treeOrphanBlocks1 ++ treeOrphanBlocks2)
       }
-      assert(allOrphanBlocks.isEmpty)
+      // assert(allOrphanBlocks.isEmpty)
 
       // Update centroids of reconstructed processor blocks and remove duplicates
       val reconCentroidBlocks = allReconstructedBlocks.map {block =>
@@ -262,32 +270,36 @@ object RockSlicer {
     * 
     */
   def findMates(processorBlocks: Seq[Block], origin: (Double, Double, Double)): Seq[(Block, Seq[Block])] = {
-    processorBlocks.tail flatMap { block =>
-      val currentBlock = Block(origin, processorBlocks.head.updateFaces(origin))
-      val updatedBlock = Block(origin, block.updateFaces(origin))
-      val sharedProcFaces = compareProcessorBlocks(currentBlock, updatedBlock)
-      if (sharedProcFaces.nonEmpty) {
-        val currentFaces = currentBlock.faces.diff(sharedProcFaces)
-        val updatedFaces = updatedBlock.faces.diff(sharedProcFaces)
-        val allFaces = currentFaces ++ updatedFaces
-        // Check for any actual shared faces between blocks - if these exists blocks
-        // should not be merged since there is a real joint seperating the blocks
-        val nonSharedFaces =
-          allFaces.foldLeft(Seq.empty[Face]) { (unique, current) =>
-            if (!unique.exists(current.isSharedWith(_))) {
-              current +: unique
-            } else {
-              unique
+    if (processorBlocks.nonEmpty) {
+      processorBlocks.tail flatMap { block =>
+        val currentBlock = Block(origin, processorBlocks.head.updateFaces(origin))
+        val updatedBlock = Block(origin, block.updateFaces(origin))
+        val sharedProcFaces = compareProcessorBlocks(currentBlock, updatedBlock)
+        if (sharedProcFaces.nonEmpty) {
+          val currentFaces = currentBlock.faces.diff(sharedProcFaces)
+          val updatedFaces = updatedBlock.faces.diff(sharedProcFaces)
+          val allFaces = currentFaces ++ updatedFaces
+          // Check for any actual shared faces between blocks - if these exists blocks
+          // should not be merged since there is a real joint seperating the blocks
+          val nonSharedFaces =
+            allFaces.foldLeft(Seq.empty[Face]) { (unique, current) =>
+              if (!unique.exists(current.isSharedWith(_))) {
+                current +: unique
+              } else {
+                unique
+              }
             }
+          if (allFaces.diff(nonSharedFaces).isEmpty) {
+            Some(Block(origin, nonSharedFaces), Seq[Block](currentBlock, updatedBlock))
+          } else {
+            None
           }
-        if (allFaces.diff(nonSharedFaces).isEmpty) {
-          Some(Block(origin, nonSharedFaces), Seq[Block](currentBlock, updatedBlock))
         } else {
           None
         }
-      } else {
-        None
       }
+    } else {
+      Seq((Block(origin, Seq.empty[Face]), Seq.empty[Block]))
     }
   }
 
