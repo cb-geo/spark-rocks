@@ -67,9 +67,9 @@ object RockSlicer {
     val processorBlocks = nonRedundantBlocks.filter { block => 
       block.faces.exists(_.processorJoint)
     }
-    val processorBlocksOrigin = processorBlocks.map { block =>
-      Block(globalOrigin, block.updateFaces(globalOrigin))
-    }
+
+    println("\nProcessor blocks:")
+    processorBlocks.foreach(println)
 
     // Find blocks that do not contain processor joints
     val realBlocks = nonRedundantBlocks.filter { block =>
@@ -92,14 +92,11 @@ object RockSlicer {
 
       // val treeReduceBlockPairsRDD = sc.parallelize((processorBlocks.toLocalIterator.toSeq, Seq.empty[Block]))
 
-      val treeReduceBlockPairsRDD = processorBlocksOrigin.map{ blocks => (Seq(blocks), Seq.empty[Block])}
-      val (allOrphanBlocks, treeRealBlocks) = treeReduceBlockPairsRDD.treeReduce{ (part1, part2) =>
+      val treeReduceBlockPairsRDD = processorBlocks.map{ blocks => (Seq(blocks), Seq.empty[Block])}
+      val (allOrphanBlocks, allReconstructedBlocks) = treeReduceBlockPairsRDD.treeReduce{ (part1, part2) =>
         val (treeReconBlocks, treeOrphanBlocks) = mergeBlocks(part1._1 ++ part2._1, Seq.empty[Block], globalOrigin,
                                                               Seq.empty[Block], Seq.empty[Block])
-        // val (treeReconBlocks1, treeOrphanBlocks1) = mergeBlocks(part1._1, Seq.empty[Block],
-        //                                                         globalOrigin, Seq.empty[Block], Seq.empty[Block])
-        // val (treeReconBlocks2, treeOrphanBlocks2) = mergeBlocks(part2._1, Seq.empty[Block],
-        //                                                         globalOrigin, Seq.empty[Block], Seq.empty[Block])
+
         val treeProcessorBlocks = treeReconBlocks.filter { block =>
           block.faces.exists(_.processorJoint)
         }
@@ -108,10 +105,14 @@ object RockSlicer {
           !block.faces.exists(_.processorJoint)
         }
 
-        println("\nReconstructed Blocks: ")
-        treeReconBlocks.foreach(println)
-        println("\nOrphan Blocks: ")
-        treeOrphanBlocks.foreach(println)
+        println("\nPart 1")
+        (part1._1 ++ part2._1).foreach(println)
+        // println("\nPart 2")
+        // part2._1.foreach(println)
+        // println("\nReconstructed Blocks: ")
+        // treeReconBlocks.foreach(println)
+        // println("\nOrphan Blocks: ")
+        // treeOrphanBlocks.foreach(println)
 
         (treeProcessorBlocks ++ treeOrphanBlocks, treeRealBlocks)
       }
