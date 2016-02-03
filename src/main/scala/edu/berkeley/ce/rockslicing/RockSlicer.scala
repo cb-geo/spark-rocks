@@ -68,9 +68,6 @@ object RockSlicer {
       block.faces.exists(_.processorJoint)
     }
 
-    println("\nProcessor blocks:")
-    processorBlocks.foreach(println)
-
     // Find blocks that do not contain processor joints
     val realBlocks = nonRedundantBlocks.filter { block =>
       !block.faces.exists(_.processorJoint)
@@ -91,32 +88,28 @@ object RockSlicer {
       // processorBlocksRDD.join(sortedProcessorBlocks)
 
       // val treeReduceBlockPairsRDD = sc.parallelize((processorBlocks.toLocalIterator.toSeq, Seq.empty[Block]))
-
-      val treeReduceBlockPairsRDD = processorBlocks.map{ blocks => (Seq(blocks), Seq.empty[Block])}
-      val (allOrphanBlocks, allReconstructedBlocks) = treeReduceBlockPairsRDD.treeReduce{ (part1, part2) =>
-        val (treeReconBlocks, treeOrphanBlocks) = mergeBlocks(part1._1 ++ part2._1, Seq.empty[Block], globalOrigin,
-                                                              Seq.empty[Block], Seq.empty[Block])
-
-        val treeProcessorBlocks = treeReconBlocks.filter { block =>
-          block.faces.exists(_.processorJoint)
-        }
-
-        val treeRealBlocks = treeReconBlocks.filter { block =>
-          !block.faces.exists(_.processorJoint)
-        }
-
-        println("\nPart 1")
-        (part1._1 ++ part2._1).foreach(println)
-        // println("\nPart 2")
-        // part2._1.foreach(println)
-        // println("\nReconstructed Blocks: ")
-        // treeReconBlocks.foreach(println)
-        // println("\nOrphan Blocks: ")
-        // treeOrphanBlocks.foreach(println)
-
-        (treeProcessorBlocks ++ treeOrphanBlocks, treeRealBlocks)
+      val updatedProcessorBlocks = processorBlocks.map { block =>
+        Block(globalOrigin, block.updateFaces(globalOrigin))
       }
-      assert(allOrphanBlocks.isEmpty)
+
+      val treeReduceBlockPairsRDD = updatedProcessorBlocks.map{ blocks => (Seq(blocks), Seq.empty[Block])}
+      val (allOrphanBlocks, allReconstructedBlocks) = treeReduceBlockPairsRDD.treeReduce({
+        case ((toMerge1, merged1), (toMerge2, merged2)) =>
+          val (treeReconBlocks, treeOrphanBlocks) = mergeBlocks(toMerge1 ++ toMerge2, Seq.empty[Block],
+                                                                globalOrigin, Seq.empty[Block], Seq.empty[Block])
+
+          val (treeProcessorBlocks, treeRealBlocks) = treeReconBlocks.partition { block =>
+            block.faces.exists(_.processorJoint)
+          }
+
+         // println("\nReconstructed Blocks: ")
+         // treeReconBlocks.foreach(println)
+         // println("\nOrphan Blocks: ")
+         // treeOrphanBlocks.foreach(println)
+
+          (treeProcessorBlocks ++ treeOrphanBlocks, treeRealBlocks ++ merged1 ++ merged2)
+          }, math.ceil(math.log(arguments.numProcessors)/math.log(2)).toInt)
+      // assert(allOrphanBlocks.isEmpty)
 
 
       // Update centroids of reconstructed processor blocks and remove duplicates
@@ -202,10 +195,18 @@ object RockSlicer {
     val blockMatches = findMates(processorBlocks, origin)
     val pairedBlocks = blockMatches.map{ case (paired, _) => paired }
     val originalPairedBlocks = blockMatches.flatMap{ case (_, original) => original }
-    val currentOrphanBlocks = originalPairedBlocks.filter { originalBlock =>
-      (processorBlocks ++ orphanBlocks).exists { block =>
-        !block.approximateEquals(originalBlock)
+    val originalPairedBlocksNonRedundant = originalPairedBlocks.map { case block@Block(center, _) =>
+      Block(center, block.nonRedundantFaces)
+    }.filter { block => block.faces.nonEmpty}
+
+    val currentOrphanBlocks = if (originalPairedBlocksNonRedundant.nonEmpty) {
+      originalPairedBlocks.filter { originalBlock =>
+        (processorBlocks ++ orphanBlocks).exists { block =>
+         !block.approximateEquals(originalBlock)
+        }
       }
+    } else {
+      processorBlocks ++ orphanBlocks
     }
 
     // Remove redundant faces and remove duplicates
@@ -223,7 +224,7 @@ object RockSlicer {
       // Merged blocks still contain some processor joints
       mergeBlocks(remainingBlocks ++ processorBlocks.tail, completedBlocks ++ mergedBlocks,
                   origin, originalPairedBlocks ++ matchedBlocks, currentOrphanBlocks)
-    } else if ((processorBlocks.isEmpty) || (processorBlocks.tail.isEmpty)) {
+    } else if (processorBlocks.isEmpty || processorBlocks.tail.isEmpty) {
       // All blocks are free of processor joints - check for duplicates then return
       val mergedBlocksDuplicates = completedBlocks ++ mergedBlocks
       val mergedBlocksUnique = mergedBlocksDuplicates.foldLeft(Seq.empty[Block]) { (unique, current) =>
@@ -241,7 +242,8 @@ object RockSlicer {
           unique
         }
       }
-
+      // println("\nOrphan Blocks")
+      // uniqueOrphanBlocks.foreach(println)
       (mergedBlocksUnique, uniqueOrphanBlocks) 
     } else {
       // Proceed to next processor block
@@ -290,26 +292,33 @@ object RockSlicer {
     */
   def findMates(processorBlocks: Seq[Block], origin: (Double, Double, Double)): Seq[(Block, Seq[Block])] = {
     if (processorBlocks.nonEmpty) {
-      processorBlocks.tail flatMap { block =>
-        val currentBlock = Block(origin, processorBlocks.head.updateFaces(origin))
-        val updatedBlock = Block(origin, block.updateFaces(origin))
-        val sharedProcFaces = compareProcessorBlocks(currentBlock, updatedBlock)
+      processorBlocks.tail flatMap { comparisonBlock =>
+        val currentBlock = processorBlocks.head
+        val sharedProcFaces = compareProcessorBlocks(currentBlock, comparisonBlock)
         if (sharedProcFaces.nonEmpty) {
           val currentFaces = currentBlock.faces.diff(sharedProcFaces)
-          val updatedFaces = updatedBlock.faces.diff(sharedProcFaces)
+          val updatedFaces = comparisonBlock.faces.diff(sharedProcFaces)
           val allFaces = currentFaces ++ updatedFaces
           // Check for any actual shared faces between blocks - if these exists blocks
           // should not be merged since there is a real joint seperating the blocks
           val nonSharedFaces =
             allFaces.foldLeft(Seq.empty[Face]) { (unique, current) =>
-              if (!unique.exists(current.isSharedWith(_))) {
+              if (!unique.exists(current.isSharedWith)) {
                 current +: unique
               } else {
                 unique
               }
             }
+
+          // val nonSharedFacesNonNegative = nonSharedFaces.map { face =>
+          //   if (face.d < 0.0) {
+          //     Face((-face.a, -face.b, -face.c), -face.d, face.phi, face.cohesion, face.processorJoint)
+          //   } else {
+          //     face
+          //   }
+          // }
           if (allFaces.diff(nonSharedFaces).isEmpty) {
-            Some(Block(origin, nonSharedFaces), Seq[Block](currentBlock, updatedBlock))
+            Some(Block(origin, nonSharedFaces), Seq[Block](currentBlock, comparisonBlock))
           } else {
             None
           }
@@ -321,7 +330,6 @@ object RockSlicer {
       Seq((Block(origin, Seq.empty[Face]), Seq.empty[Block]))
     }
   }
-
 
   // Function that writes JSON string to file for single node - taken from 
   // http://stackoverflow.com/questions/4604237/how-to-write-to-a-file-in-scala

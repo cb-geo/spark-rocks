@@ -1,8 +1,6 @@
 package edu.berkeley.ce.rockslicing
 
 import org.scalatest._
-import scala.math.sqrt
-import breeze.linalg.{DenseVector, DenseMatrix}
 
 class LoadBalancerSpec extends FunSuite {
   val boundingFaces = List(
@@ -34,13 +32,6 @@ class LoadBalancerSpec extends FunSuite {
     Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0) 
   )
   val twoCube = Block((0.0, 0.0, 0.0), boundingFaces3)
-
-  private def tupleDifference(c1: (Double, Double, Double), c2: (Double, Double, Double)): Double =
-    c1 match {
-      case (a, b, c) => c2 match {
-        case (x, y, z) => math.abs(x - a) + math.abs(y - b) + math.abs(z - c)
-      }
-    }
 
   test("Twenty seed joints should be generated for unit cube") {
     val numProcessors = 21

@@ -494,12 +494,28 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
   def approximateEquals(inputBlock: Block, tolerance: Double=NumericUtils.EPSILON):
                     Boolean = {
     if (faces.length != inputBlock.faces.length) {
-      false
+      return false
     }
     val centroid = (centerX, centerY, centerZ)
     val updatedInputBlock = Block(centroid, inputBlock.updateFaces(centroid))
-    val sortedFaces1 = faces.sortBy(face => (face.d, face.a, face.b, face.c))
-    val sortedFaces2 = updatedInputBlock.faces.sortBy(face => (face.d, face.a, face.b, face.c))
+    val nonNegativeFaces1 = faces.map { face =>
+      if (face.d < 0.0) {
+        Face((-face.a, -face.b, -face.c), -face.d, face.phi, face.cohesion, face.processorJoint)
+      } else {
+        face
+      }
+    }
+
+    val nonNegativeFaces2 = updatedInputBlock.faces.map { face =>
+      if (face.d < 0.0) {
+        Face((-face.a, -face.b, -face.c), -face.d, face.phi, face.cohesion, face.processorJoint)
+      } else {
+        face
+      }
+    }
+
+    val sortedFaces1 = nonNegativeFaces1.sortBy(face => (face.d, face.a, face.b, face.c))
+    val sortedFaces2 = nonNegativeFaces2.sortBy(face => (face.d, face.a, face.b, face.c))
 
     val zippedFaces = sortedFaces1.zip(sortedFaces2)
     val faceMatches = zippedFaces forall { case (face1, face2) =>
@@ -508,6 +524,6 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     (math.abs(centerX - updatedInputBlock.centerX) < tolerance) &&
     (math.abs(centerY - updatedInputBlock.centerY) < tolerance) &&
     (math.abs(centerZ - updatedInputBlock.centerZ) < tolerance) &&
-    (faceMatches)
+    faceMatches
   }
 }
