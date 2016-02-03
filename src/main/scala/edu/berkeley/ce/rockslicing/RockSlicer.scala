@@ -222,8 +222,30 @@ object RockSlicer {
 
     if (remainingBlocks.nonEmpty) {
       // Merged blocks still contain some processor joints
-      mergeBlocks(remainingBlocks ++ processorBlocks.tail, completedBlocks ++ mergedBlocks,
-                  origin, originalPairedBlocks ++ matchedBlocks, currentOrphanBlocks)
+      if (processorBlocks.diff(remainingBlocks).isEmpty) {
+        // All remaining blocks still contain processor blocks
+        val mergedBlocksDuplicates = completedBlocks ++ mergedBlocks
+        val mergedBlocksUnique = mergedBlocksDuplicates.foldLeft(Seq.empty[Block]) { (unique, current) =>
+          if (!unique.exists(current.approximateEquals(_))) {
+            current +: unique
+          } else {
+            unique
+          }
+        }
+
+        val uniqueOrphanBlocks = currentOrphanBlocks.foldLeft(Seq.empty[Block]) { (unique, current) =>
+          if (!unique.exists(current.approximateEquals(_))) {
+            current +: unique
+          } else {
+            unique
+          }
+        }
+        (mergedBlocksUnique, uniqueOrphanBlocks)
+      } else {
+        // Not all blocks in processor blocks have been checked
+        mergeBlocks(remainingBlocks ++ processorBlocks.tail, completedBlocks ++ mergedBlocks,
+                    origin, originalPairedBlocks ++ matchedBlocks, currentOrphanBlocks)
+      }
     } else if (processorBlocks.isEmpty || processorBlocks.tail.isEmpty) {
       // All blocks are free of processor joints - check for duplicates then return
       val mergedBlocksDuplicates = completedBlocks ++ mergedBlocks
@@ -244,7 +266,7 @@ object RockSlicer {
       }
       // println("\nOrphan Blocks")
       // uniqueOrphanBlocks.foreach(println)
-      (mergedBlocksUnique, uniqueOrphanBlocks) 
+      (mergedBlocksUnique, uniqueOrphanBlocks)
     } else {
       // Proceed to next processor block
       mergeBlocks(processorBlocks.tail, completedBlocks ++ mergedBlocks, origin,
