@@ -53,7 +53,7 @@ class EndToEndSpec extends FunSuite {
       Block(globalOrigin, block.updateFaces(globalOrigin))
     }
     val (reconBlocks, orphanBlocks) = RockSlicer.mergeBlocks(updatedProcessorBlocks, Seq.empty[Block],
-                                                            globalOrigin, Seq.empty[Block], Seq.empty[Block])
+                                                            globalOrigin, Seq.empty[Block])
 
     // Update centroids of reconstructed processor blocks and remove duplicates
     val reconCentroidBlocks = reconBlocks.map {block =>

@@ -96,7 +96,7 @@ object RockSlicer {
       val (allOrphanBlocks, allReconstructedBlocks) = treeReduceBlockPairsRDD.treeReduce({
         case ((toMerge1, merged1), (toMerge2, merged2)) =>
           val (treeReconBlocks, treeOrphanBlocks) = mergeBlocks(toMerge1 ++ toMerge2, Seq.empty[Block],
-                                                                globalOrigin, Seq.empty[Block], Seq.empty[Block])
+                                                                globalOrigin, Seq.empty[Block])
 
           val (treeProcessorBlocks, treeRealBlocks) = treeReconBlocks.partition { block =>
             block.faces.exists(_.processorJoint)
@@ -189,20 +189,20 @@ object RockSlicer {
     */
   @tailrec
   def mergeBlocks(processorBlocks: Seq[Block], mergedBlocks: Seq[Block],
-                  origin: (Double, Double, Double), matchedBlocks: Seq[Block],
-                  orphanBlocks: Seq[Block]):
+                  origin: (Double, Double, Double), orphanBlocks: Seq[Block]):
                  (Seq[Block], Seq[Block]) = {
     val blockMatches = findMates(processorBlocks, origin)
     val pairedBlocks = blockMatches.map{ case (paired, _) => paired }
-    val originalPairedBlocks = blockMatches.flatMap{ case (_, original) => original }
-    val originalPairedBlocksNonRedundant = originalPairedBlocks.map { case block@Block(center, _) =>
+    val matchIndices = blockMatches.flatMap { case (_, indices) => indices}.distinct
+    val originalPairedBlocks = matchIndices.collect(processorBlocks)
+    val originalPairedBlocksNonRedundant = originalPairedBlocks.map { case block @ Block(center, _) =>
       Block(center, block.nonRedundantFaces)
     }.filter { block => block.faces.nonEmpty}
 
     val currentOrphanBlocks = if (originalPairedBlocksNonRedundant.nonEmpty) {
-      originalPairedBlocks.filter { originalBlock =>
-        (processorBlocks ++ orphanBlocks).exists { block =>
-         !block.approximateEquals(originalBlock)
+      (processorBlocks ++ orphanBlocks).filter { block =>
+        originalPairedBlocksNonRedundant.exists { originalBlock =>
+          !block.approximateEquals(originalBlock)
         }
       }
     } else {
@@ -243,8 +243,8 @@ object RockSlicer {
         (mergedBlocksUnique, uniqueOrphanBlocks)
       } else {
         // Not all blocks in processor blocks have been checked
-        mergeBlocks(remainingBlocks ++ processorBlocks.tail, completedBlocks ++ mergedBlocks,
-                    origin, originalPairedBlocks ++ matchedBlocks, currentOrphanBlocks)
+        mergeBlocks(processorBlocks.tail ++ remainingBlocks, completedBlocks ++ mergedBlocks,
+                    origin, currentOrphanBlocks)
       }
     } else if (processorBlocks.isEmpty || processorBlocks.tail.isEmpty) {
       // All blocks are free of processor joints - check for duplicates then return
@@ -270,7 +270,7 @@ object RockSlicer {
     } else {
       // Proceed to next processor block
       mergeBlocks(processorBlocks.tail, completedBlocks ++ mergedBlocks, origin,
-                  originalPairedBlocks ++ matchedBlocks, currentOrphanBlocks)
+                  currentOrphanBlocks)
     }
   }
 
@@ -312,7 +312,7 @@ object RockSlicer {
   /**
     * 
     */
-  def findMates(processorBlocks: Seq[Block], origin: (Double, Double, Double)): Seq[(Block, Seq[Block])] = {
+  def findMates(processorBlocks: Seq[Block], origin: (Double, Double, Double)): Seq[(Block, Seq[Int])] = {
     if (processorBlocks.nonEmpty) {
       processorBlocks.tail flatMap { comparisonBlock =>
         val currentBlock = processorBlocks.head
@@ -322,7 +322,7 @@ object RockSlicer {
           val updatedFaces = comparisonBlock.faces.diff(sharedProcFaces)
           val allFaces = currentFaces ++ updatedFaces
           // Check for any actual shared faces between blocks - if these exists blocks
-          // should not be merged since there is a real joint seperating the blocks
+          // should not be merged since there is a real joint separating the blocks
           val nonSharedFaces =
             allFaces.foldLeft(Seq.empty[Face]) { (unique, current) =>
               if (!unique.exists(current.isSharedWith)) {
@@ -332,15 +332,8 @@ object RockSlicer {
               }
             }
 
-          // val nonSharedFacesNonNegative = nonSharedFaces.map { face =>
-          //   if (face.d < 0.0) {
-          //     Face((-face.a, -face.b, -face.c), -face.d, face.phi, face.cohesion, face.processorJoint)
-          //   } else {
-          //     face
-          //   }
-          // }
           if (allFaces.diff(nonSharedFaces).isEmpty) {
-            Some(Block(origin, nonSharedFaces), Seq[Block](currentBlock, comparisonBlock))
+            Some(Block(origin, nonSharedFaces), Seq[Int](0, processorBlocks.indexOf(comparisonBlock)))
           } else {
             None
           }
@@ -349,7 +342,7 @@ object RockSlicer {
         }
       }
     } else {
-      Seq((Block(origin, Seq.empty[Face]), Seq.empty[Block]))
+      Seq((Block(origin, Seq.empty[Face]), Seq.empty[Int]))
     }
   }
 

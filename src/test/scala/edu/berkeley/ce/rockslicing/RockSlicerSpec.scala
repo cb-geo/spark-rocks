@@ -228,8 +228,8 @@ class RockSlicerSpec extends FunSuite {
       Block(globalOrigin, block.updateFaces(globalOrigin))
     }
     val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(updatedProcessorBlocks, Seq.empty[Block],
-                                                              globalOrigin, Seq.empty[Block], Seq.empty[Block])
-    // assert(orphanBlocks.isEmpty)
+                                                              globalOrigin, Seq.empty[Block])
+//    assert(orphanBlocks.isEmpty)
     assert(mergedBlocks.length == 1)
     assert(mergedBlocks.head.approximateEquals(unitCube))
   }
@@ -241,7 +241,7 @@ class RockSlicerSpec extends FunSuite {
       Block(globalOrigin, block.updateFaces(globalOrigin))
     }
     val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(updatedProcessorBlocks, Seq.empty[Block],
-                                                              globalOrigin, Seq.empty[Block], Seq.empty[Block])
+                                                              globalOrigin, Seq.empty[Block])
     // assert(orphanBlocks.isEmpty)
     assert(mergedBlocks.length == 1)
     assert(mergedBlocks.head.approximateEquals(unitCube))
@@ -255,7 +255,7 @@ class RockSlicerSpec extends FunSuite {
       Block(globalOrigin, block.updateFaces(globalOrigin))
     }
     val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(updatedProcessorBlocks, Seq.empty[Block],
-                                                              globalOrigin, Seq.empty[Block], Seq.empty[Block])
+                                                              globalOrigin, Seq.empty[Block])
     // assert(orphanBlocks.isEmpty)
     assert(mergedBlocks.length == 1)
     assert(mergedBlocks.head.approximateEquals(unitCube))
@@ -272,7 +272,7 @@ class RockSlicerSpec extends FunSuite {
       Block(globalOrigin, block.updateFaces(globalOrigin))
     }
     val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(updatedProcessorBlocks, Seq.empty[Block],
-                                                              globalOrigin, Seq.empty[Block], Seq.empty[Block])
+                                                              globalOrigin, Seq.empty[Block])
     val expectedBlocks = Seq(bottomHalfUnitCube, topHalfUnitCube)
     val expectedBlocksCentroid = expectedBlocks map { block =>
       val centroid = block.centroid
@@ -315,13 +315,13 @@ class RockSlicerSpec extends FunSuite {
       Block(globalOrigin, block.updateFaces(globalOrigin))
     }
     val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(updatedProcessorBlocks, Seq.empty[Block],
-                                                              globalOrigin, Seq.empty[Block], Seq.empty[Block])
+                                                              globalOrigin, Seq.empty[Block])
     val mergedBlocksCentroid = mergedBlocks map { block =>
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
     }
 
-    val expectedBlocks = Seq(centerPartUnitCube, leftQuarterUnitCube, rightQuarterUnitCube)
+    val expectedBlocks = Seq(leftQuarterUnitCube, rightQuarterUnitCube, centerPartUnitCube)
     val expectedBlocksCentroid = expectedBlocks map { block =>
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
@@ -359,7 +359,7 @@ class RockSlicerSpec extends FunSuite {
       Block(globalOrigin, block.updateFaces(globalOrigin))
     }
     val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(updatedProcessorBlocks, Seq.empty[Block],
-                                                              globalOrigin, Seq.empty[Block], Seq.empty[Block])
+                                                              globalOrigin, Seq.empty[Block])
     val mergedBlocksCentroid = mergedBlocks map { block =>
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
@@ -385,7 +385,7 @@ class RockSlicerSpec extends FunSuite {
       Block(globalOrigin, block.updateFaces(globalOrigin))
     }
     val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(updatedProcessorBlocks, Seq.empty[Block],
-                                                              globalOrigin, Seq.empty[Block], Seq.empty[Block])
+                                                              globalOrigin, Seq.empty[Block])
     assert(mergedBlocks.isEmpty)
     assert(updatedProcessorBlocks.diff(orphanBlocks).isEmpty)
   }
