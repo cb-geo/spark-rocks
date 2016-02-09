@@ -174,13 +174,16 @@ for joint in masterJoints:
                                joint.center[1] + centerIncrement[1],
                                joint.center[2] + centerIncrement[2]])
 
-# Write face data to output file:
+# Write global origin to output file
 f = open(outputFile, 'w')
+
+f.write(str(origin[0])+" "+str(origin[1])+" "+str(origin[2])+"\n")
+
+# Write face data to output file:
 
 for face in faces:
     f.write(str(face.normalVec[0])+" "+str(face.normalVec[1])+" "+str(face.normalVec[2])+" "+
             str(face.distance)+" "+str(face.phi)+" "+str(face.cohesion)+" \n")
-
 
 # Write symbol to show transition to joint data (Yes, this is silly...)
 f.write("%\n")

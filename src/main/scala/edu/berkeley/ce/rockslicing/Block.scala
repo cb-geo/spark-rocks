@@ -507,7 +507,8 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     }
     val centroid = (centerX, centerY, centerZ)
     val updatedInputBlock = Block(centroid, inputBlock.updateFaces(centroid))
-    val nonNegativeFaces1 = faces.map { face =>
+
+    val inputBlockFaces = updatedInputBlock.faces.map { face =>
       if (face.d < 0.0) {
         Face((-face.a, -face.b, -face.c), -face.d, face.phi, face.cohesion, face.processorJoint)
       } else {
@@ -515,16 +516,11 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
       }
     }
 
-    val nonNegativeFaces2 = updatedInputBlock.faces.map { face =>
-      if (face.d < 0.0) {
-        Face((-face.a, -face.b, -face.c), -face.d, face.phi, face.cohesion, face.processorJoint)
-      } else {
-        face
-      }
-    }
+    val cleanFaces = faces.map(_.applyTolerance)
+    val cleanInputFaces = inputBlockFaces.map(_.applyTolerance)
 
-    val sortedFaces1 = nonNegativeFaces1.sortBy(face => (face.d, face.a, face.b, face.c))
-    val sortedFaces2 = nonNegativeFaces2.sortBy(face => (face.d, face.a, face.b, face.c))
+    val sortedFaces1 = cleanFaces.sortBy(face => (face.d, face.a, face.b, face.c))
+    val sortedFaces2 = cleanInputFaces.sortBy(face => (face.d, face.a, face.b, face.c))
 
     val zippedFaces = sortedFaces1.zip(sortedFaces2)
     val faceMatches = zippedFaces forall { case (face1, face2) =>
