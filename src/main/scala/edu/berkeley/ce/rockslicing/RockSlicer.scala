@@ -174,87 +174,59 @@ object RockSlicer {
   def mergeBlocks(processorBlocks: Seq[Block], mergedBlocks: Seq[Block],
                   orphanBlocks: Seq[Block]):
                  (Seq[Block], Seq[Block]) = {
+    println("\nProcessor Blocks")
+    processorBlocks.foreach(println)
     val blockMatches = findMates(processorBlocks)
     val pairedBlocks = blockMatches.map{ case (paired, _) => paired }
     val matchIndices = blockMatches.flatMap { case (_, indices) => indices}.distinct
     val originalPairedBlocks = matchIndices.collect(processorBlocks)
-    val originalPairedBlocksNonRedundant = originalPairedBlocks.map { case block @ Block(center, _) =>
-      Block(center, block.nonRedundantFaces)
-    }.filter { block => block.faces.nonEmpty}
+    println("These are the paired blocks")
+    originalPairedBlocks.foreach(println)
 
-    val currentOrphanBlocks = if (originalPairedBlocksNonRedundant.nonEmpty) {
-      (processorBlocks ++ orphanBlocks).filter { block =>
-        originalPairedBlocksNonRedundant.exists { originalBlock =>
-          val comparisonCenter = (block.centerX, block.centerY, block.centerZ)
-          val comparisonBlock = Block(comparisonCenter, originalBlock.updateFaces(comparisonCenter))
-          !block.approximateEquals(comparisonBlock)
-        }
+    val uniqueBlocks = (processorBlocks ++ orphanBlocks).foldLeft(Seq.empty[Block]) { (unique, current) =>
+      if (!unique.exists(current.approximateEquals(_))) {
+        current +: unique
+      } else {
+        unique
       }
-    } else {
-      processorBlocks ++ orphanBlocks
     }
+    val currentOrphanBlocks = uniqueBlocks.diff(originalPairedBlocks)
+    val newProcessorBlocks = if (originalPairedBlocks.isEmpty) {
+      processorBlocks.tail
+    } else {
+      processorBlocks.diff(originalPairedBlocks)
+    }
+    println("These are the orphan blocks")
+    currentOrphanBlocks.foreach(println)
 
     // Remove redundant faces and remove duplicates
     val joinedBlocks = (pairedBlocks map { case block @ Block(center, _) =>
       Block(center, block.nonRedundantFaces)
     }).filter { block => block.faces.nonEmpty } // Filters blocks that actually aren't adjacent at all,
                                                 // but shared a processor joint
+    println("Merged Blocks")
+    joinedBlocks.foreach(println)
 
     // Divide blocks into groups with and without processor joints remaining
     val (remainingBlocks, completedBlocks) = joinedBlocks.partition { block =>
       block.faces.exists(_.processorJoint)
     }
+    println("Remaining Blocks")
+    remainingBlocks.foreach(println)
 
     if (remainingBlocks.nonEmpty) {
       // Merged blocks still contain some processor joints
-      if (processorBlocks.diff(remainingBlocks).isEmpty) {
-        // All remaining blocks still contain processor blocks
-        val mergedBlocksDuplicates = completedBlocks ++ mergedBlocks
-        val mergedBlocksUnique = mergedBlocksDuplicates.foldLeft(Seq.empty[Block]) { (unique, current) =>
-          if (!unique.exists(current.approximateEquals(_))) {
-            current +: unique
-          } else {
-            unique
-          }
-        }
-
-        val uniqueOrphanBlocks = currentOrphanBlocks.foldLeft(Seq.empty[Block]) { (unique, current) =>
-          if (!unique.exists(current.approximateEquals(_))) {
-            current +: unique
-          } else {
-            unique
-          }
-        }
-
-        (mergedBlocksUnique, uniqueOrphanBlocks)
-      } else {
-        // Not all blocks in processor blocks have been checked
-        mergeBlocks(processorBlocks.tail ++ remainingBlocks, completedBlocks ++ mergedBlocks,
-                    currentOrphanBlocks)
-      }
-    } else if (processorBlocks.isEmpty || processorBlocks.tail.isEmpty) {
+      println("DAAR IS NOG BAIE KAK OM TE DOEN")
+      mergeBlocks(newProcessorBlocks ++ remainingBlocks, completedBlocks ++ mergedBlocks,
+                  currentOrphanBlocks)
+    } else if (newProcessorBlocks.isEmpty) {
       // All blocks are free of processor joints - check for duplicates then return
-      val mergedBlocksDuplicates = completedBlocks ++ mergedBlocks
-      val mergedBlocksUnique = mergedBlocksDuplicates.foldLeft(Seq.empty[Block]) { (unique, current) =>
-        if (!unique.exists(current.approximateEquals(_))) {
-          current +: unique
-        } else {
-          unique
-        }
-      }
-
-      val uniqueOrphanBlocks = currentOrphanBlocks.foldLeft(Seq.empty[Block]) { (unique, current) =>
-        if (!unique.exists(current.approximateEquals(_))) {
-          current +: unique
-        } else {
-          unique
-        }
-      }
-
-      (mergedBlocksUnique, uniqueOrphanBlocks)
+      println("FOK DIT, EK IS KLAAR, HIER IS DIE BLOKKE")
+      (completedBlocks ++ mergedBlocks, currentOrphanBlocks)
     } else {
       // Proceed to next processor block
-      mergeBlocks(processorBlocks.tail, completedBlocks ++ mergedBlocks, currentOrphanBlocks)
+      println("REG, AAN NA DIE VOLGENDE EEN")
+      mergeBlocks(newProcessorBlocks, completedBlocks ++ mergedBlocks, currentOrphanBlocks)
     }
   }
 

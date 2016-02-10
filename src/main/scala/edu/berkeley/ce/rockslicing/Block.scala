@@ -508,16 +508,8 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     val centroid = (centerX, centerY, centerZ)
     val updatedInputBlock = Block(centroid, inputBlock.updateFaces(centroid))
 
-    val inputBlockFaces = updatedInputBlock.faces.map { face =>
-      if (face.d < 0.0) {
-        Face((-face.a, -face.b, -face.c), -face.d, face.phi, face.cohesion, face.processorJoint)
-      } else {
-        face
-      }
-    }
-
     val cleanFaces = faces.map(_.applyTolerance)
-    val cleanInputFaces = inputBlockFaces.map(_.applyTolerance)
+    val cleanInputFaces = updatedInputBlock.faces.map(_.applyTolerance)
 
     val sortedFaces1 = cleanFaces.sortBy(face => (face.d, face.a, face.b, face.c))
     val sortedFaces2 = cleanInputFaces.sortBy(face => (face.d, face.a, face.b, face.c))
