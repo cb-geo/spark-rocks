@@ -283,14 +283,14 @@ object RockSlicer {
             }
 
           if (allFaces.diff(nonSharedFaces).isEmpty) {
-            val nonNegativeFaces = nonSharedFaces.map { face =>
-              if (face.d < 0.0) {
-                Face((-face.a, -face.b, -face.c), -face.d, face.phi, face.cohesion, face.processorJoint)
-              } else {
-                face
-              }
-            }
-            Some(Block(localCenter, nonNegativeFaces), Seq[Int](0, processorBlocks.indexOf(block)))
+//            val nonNegativeFaces = nonSharedFaces.map { face =>
+//              if (face.d < 0.0) {
+//                Face((-face.a, -face.b, -face.c), -face.d, face.phi, face.cohesion, face.processorJoint)
+//              } else {
+//                face
+//              }
+//            }
+            Some(Block(localCenter, nonSharedFaces), Seq[Int](0, processorBlocks.indexOf(block)))
           } else {
             None
           }

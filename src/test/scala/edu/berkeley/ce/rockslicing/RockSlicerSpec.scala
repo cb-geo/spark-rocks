@@ -355,12 +355,14 @@ class RockSlicerSpec extends FunSuite {
                                  processorJoint = true)
     val actualJoint1 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.5, 0.0), phi = 0.0,
                              cohesion = 0.0, shape = Nil)
-//    val actualJoint2 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.75, 0.0), phi = 0.0,
-//                             cohesion = 0.0, shape = Nil)
-    val joints = Seq(processorJoint1, processorJoint2, actualJoint1)
+    val actualJoint2 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.75, 0.0), phi = 0.0,
+                             cohesion = 0.0, shape = Nil)
+    val joints = Seq(processorJoint1, actualJoint1)
     var blocks = Seq(unitCube)
     for (joint <- joints) {
+      println("Volgende snit")
       blocks = blocks.flatMap(_.cut(joint))
+      blocks.foreach(println)
     }
 
     val nonRedundantBlocks = blocks.map { case block @ Block(center, _) =>
@@ -369,6 +371,12 @@ class RockSlicerSpec extends FunSuite {
 
     println("HIERDIE IS ALL DIE BLOKKE")
     nonRedundantBlocks.foreach(println)
+
+    nonRedundantBlocks.foreach { block =>
+      println("\n")
+      val vertices = block.findVertices
+      vertices.foreach(println)
+    }
 
     val processorBlocks = nonRedundantBlocks.filter { block =>
       block.faces.exists { face => face.processorJoint }
@@ -390,6 +398,12 @@ class RockSlicerSpec extends FunSuite {
     val blockCheck = centroidMergedBlocks.zip(expectedBlocksCentroid) forall { case (calc, expected) =>
       calc.approximateEquals(expected)
     }
+
+    println("\nKLAAR MET ALLES, HIER IS DIE RESULTAAT")
+    println("MERGED BLOCKS")
+    centroidMergedBlocks.foreach(println)
+    println("\nORPHAN BLOCKS")
+    orphanBlocks.foreach(println)
     assert(orphanBlocks.isEmpty)
     assert(centroidMergedBlocks.length == 3)
     assert(blockCheck)

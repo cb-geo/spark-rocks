@@ -204,7 +204,7 @@ object Joint {
   *        This avoids recalculation of a known dip angle.
   * @param dipDirectionParam An optional parameter that can be used to specify the dip direction for
   *        the joint. This avoids recalculation of a known dip direction.
-  * @param artificialJoint Parameter that identifies joint as being artificial joint introduced as part
+  * @param processorJoint Parameter that identifies joint as being artificial joint introduced as part
   *                        of load balancing
   */
 case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Double, Double),
