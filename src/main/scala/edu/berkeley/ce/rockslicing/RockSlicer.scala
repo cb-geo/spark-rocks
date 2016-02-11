@@ -217,8 +217,10 @@ object RockSlicer {
     if (remainingBlocks.nonEmpty) {
       // Merged blocks still contain some processor joints
       println("DAAR IS NOG BAIE KAK OM TE DOEN")
-      mergeBlocks(newProcessorBlocks ++ remainingBlocks, completedBlocks ++ mergedBlocks,
-                  currentOrphanBlocks)
+      mergeBlocks(remainingBlocks ++ newProcessorBlocks, completedBlocks ++ mergedBlocks,
+        currentOrphanBlocks)
+//    } else if (processorBlocks.diff(currentOrphanBlocks).isEmpty) {
+//      (completedBlocks ++ mergedBlocks, currentOrphanBlocks)
     } else if (newProcessorBlocks.isEmpty) {
       // All blocks are free of processor joints - check for duplicates then return
       println("FOK DIT, EK IS KLAAR, HIER IS DIE BLOKKE")
