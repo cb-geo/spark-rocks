@@ -18,7 +18,7 @@ class EndToEndSpec extends FunSuite {
     val blocks = Seq(Block(globalOrigin, rockVolume))
 
     // Generate processor joints
-    val numProcessors = 6
+    val numProcessors = 3
     val processorJoints = LoadBalancer.generateProcessorJoints(blocks.head, numProcessors)
     val joints = processorJoints ++ jointList
 
@@ -87,7 +87,9 @@ class EndToEndSpec extends FunSuite {
 
     val blockJson = Json.blockSeqToReadableJson(cleanedBlocks)
     val expectedJsonSource = Source.fromURL(getClass.getResource(s"/$OUTPUT_FILE_NAME"))
-    // assert(orphanBlocks.isEmpty)
+    println("ORPHAN BLOCKS:")
+    (orphanBlocks.map(_.faces.filter(_.processorJoint))).foreach(println)
+    assert(orphanBlocks.isEmpty)
     try {
       val expectedJson = expectedJsonSource.mkString
       assert(blockJson.trim == expectedJson.trim)

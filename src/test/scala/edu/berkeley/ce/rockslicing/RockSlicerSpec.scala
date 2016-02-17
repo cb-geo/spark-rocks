@@ -204,178 +204,167 @@ class RockSlicerSpec extends FunSuite {
   )
   val topRightEighthUnitCube = Block((0.0, 0.5, 0.5), boundingFaces20)
 
-//  test("The two cubes should share one processor face") {
-//    val leftCenter = (leftCube.centerX, leftCube.centerY, leftCube.centerZ)
-//    val updatedRightCube = Block(leftCenter, rightCube.updateFaces(leftCenter))
-//
-//    val sharedFaces = RockSlicer.compareProcessorBlocks(leftCube, updatedRightCube)
-//    assert(!sharedFaces.exists( face => math.abs(face.d) != 1.0))
-//    assert(sharedFaces.length == 2)
-//  }
-//
-//  test("The two blocks should share one processor face, but with distances reversed") {
-//    val rightCenter = (rightCube.centerX, rightCube.centerY, rightCube.centerZ)
-//    val updatedLeftCube = Block(rightCenter, leftCube.updateFaces(rightCenter))
-//    val sharedFaces = RockSlicer.compareProcessorBlocks(rightCube, updatedLeftCube)
-//    assert(!sharedFaces.exists( face => face.d != 0.0))
-//    assert(sharedFaces.length == 2)
-//  }
-//
-//  test("Two blocks should be merged into unit cube") {
-//    val processorBlocks = Seq(leftHalfUnitCube, rightHalfUnitCube)
-//    val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
-//                                                              Seq.empty[Block])
-//    val centroidMergedBlocks = mergedBlocks.map{ block =>
-//      val centroid = block.centroid
-//      Block(centroid, block.updateFaces(centroid))
-//    }
-//
-//    assert(orphanBlocks.isEmpty)
-//    assert(centroidMergedBlocks.length == 1)
-//    assert(centroidMergedBlocks.head.approximateEquals(unitCube))
-//  }
-//
-//  test("Three blocks should be merged into unit cube") {
-//    val processorBlocks = Seq(leftQuarterUnitCube, centerPartUnitCube, rightQuarterUnitCube)
-//    val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
-//                                                              Seq.empty[Block])
-//    val centroidMergedBlocks = mergedBlocks.map{ block =>
-//      val centroid = block.centroid
-//      Block(centroid, block.updateFaces(centroid))
-//    }
-//
-//    assert(orphanBlocks.isEmpty)
-//    assert(centroidMergedBlocks.length == 1)
-//    assert(centroidMergedBlocks.head.approximateEquals(unitCube))
-//  }
-//
-//  test("Four blocks should be merged into unit cube") {
-//    val processorBlocks = Seq(leftQuarterUnitCube, leftCenterQuarterUnitCube,
-//                              rightCenterQuarterUnitCube, rightQuarterUnitCube)
-//    val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
-//                                                              Seq.empty[Block])
-//    val centroidMergedBlocks = mergedBlocks.map{ block =>
-//      val centroid = block.centroid
-//      Block(centroid, block.updateFaces(centroid))
-//    }
-//
-//    assert(orphanBlocks.isEmpty)
-//    assert(centroidMergedBlocks.length == 1)
-//    assert(centroidMergedBlocks.head.approximateEquals(unitCube))
-//  }
-//
-//  test("Eight blocks should be merged into two blocks that comprise top and bottom halves "+
-//       "of unit cube") {
-//    val processorBlocks = Seq(bottomLeftEighthUnitCube, bottomLeftCenterEighthUnitCube,
-//                              bottomRightCenterEighthUnitCube, bottomRightEighthUnitCube,
-//                              topLeftEighthUnitCube, topLeftCenterEighthUnitCube,
-//                              topRightCenterEighthUnitCube, topRightEighthUnitCube)
-//    val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
-//                                                              Seq.empty[Block])
-//    val centroidMergedBlocks = mergedBlocks.map{ block =>
-//      val centroid = block.centroid
-//      Block(centroid, block.updateFaces(centroid))
-//    }
-//
-//    val expectedBlocks = Seq(topHalfUnitCube, bottomHalfUnitCube)
-//    val expectedBlocksCentroid = expectedBlocks map { block =>
-//      val centroid = block.centroid
-//      Block(centroid, block.updateFaces(centroid))
-//    }
-//
-//    val blockCheck = centroidMergedBlocks.zip(expectedBlocksCentroid) map { case (calc, expected) =>
-//      calc.approximateEquals(expected)
-//    }
-//    assert(orphanBlocks.isEmpty)
-//    assert(centroidMergedBlocks.length == 2)
-//    assert(!blockCheck.contains(false))
-//  }
-//
-//  test("Processor joints should be removed and actual blocks restored") {
-//    val processorJoint1 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0),
-//                                (0.0, 0.3, 0.0), phi = 0.0, cohesion = 0.0, shape = Nil,
-//                                 processorJoint = true)
-//    val processorJoint2 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0),
-//                                (0.0, 0.7, 0.0), phi = 0.0, cohesion = 0.0, shape = Nil,
-//                                 processorJoint = true)
-//    val processorJoint3 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0),
-//                                (0.0, 0.2, 0.0), phi = 0.0, cohesion = 0.0, shape = Nil,
-//                                processorJoint = true)
-//    val processorJoint4 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0),
-//                                (0.0, 0.8, 0.0), phi = 0.0, cohesion = 0.0, shape = Nil,
-//                                processorJoint = true)
-//
-//    val actualJoint1 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.25, 0.0), phi = 0.0,
-//                             cohesion = 0.0, shape = Nil)
-//    val actualJoint2 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.75, 0.0), phi = 0.0,
-//                             cohesion = 0.0, shape = Nil)
-//    val joints = Seq(processorJoint1, processorJoint2, processorJoint3, processorJoint4,
-//                     actualJoint1, actualJoint2)
-//    var blocks = Seq(unitCube)
-//    for (joint <- joints) {
-//      blocks = blocks.flatMap(_.cut(joint))
-//    }
-//
-//    val nonRedundantBlocks = blocks.map { case block @ Block(center, _) =>
-//      Block(center, block.nonRedundantFaces)
-//    }
-//
-//    val processorBlocks = nonRedundantBlocks.filter { block =>
-//      block.faces.exists { face => face.processorJoint }
-//    }
-//    val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
-//                                                              Seq.empty[Block])
-//
-//    val centroidMergedBlocks = mergedBlocks.map{ block =>
-//      val centroid = block.centroid
-//      Block(centroid, block.updateFaces(centroid))
-//    }
-//
-//    val expectedBlocks = Seq(rightQuarterUnitCube, centerPartUnitCube, leftQuarterUnitCube)
-//    val expectedBlocksCentroid = expectedBlocks map { block =>
-//      val centroid = block.centroid
-//      Block(centroid, block.updateFaces(centroid))
-//    }
-//
-//    val blockCheck = centroidMergedBlocks.zip(expectedBlocksCentroid) forall { case (calc, expected) =>
-//      calc.approximateEquals(expected)
-//    }
-//
-//    assert(orphanBlocks.isEmpty)
-//    assert(centroidMergedBlocks.length == 3)
-//    assert(blockCheck)
-//  }
+ test("The two cubes should share one processor face") {
+   val leftCenter = (leftCube.centerX, leftCube.centerY, leftCube.centerZ)
+   val updatedRightCube = Block(leftCenter, rightCube.updateFaces(leftCenter))
+
+   val sharedFaces = RockSlicer.compareProcessorBlocks(leftCube, updatedRightCube)
+   assert(!sharedFaces.exists( face => math.abs(face.d) != 1.0))
+   assert(sharedFaces.length == 2)
+ }
+
+ test("The two blocks should share one processor face, but with distances reversed") {
+   val rightCenter = (rightCube.centerX, rightCube.centerY, rightCube.centerZ)
+   val updatedLeftCube = Block(rightCenter, leftCube.updateFaces(rightCenter))
+   val sharedFaces = RockSlicer.compareProcessorBlocks(rightCube, updatedLeftCube)
+   assert(!sharedFaces.exists( face => face.d != 0.0))
+   assert(sharedFaces.length == 2)
+ }
+
+ test("Two blocks should be merged into unit cube") {
+   val processorBlocks = Seq(leftHalfUnitCube, rightHalfUnitCube)
+   val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
+                                                             Seq.empty[Block])
+   val centroidMergedBlocks = mergedBlocks.map{ block =>
+     val centroid = block.centroid
+     Block(centroid, block.updateFaces(centroid))
+   }
+
+   assert(orphanBlocks.isEmpty)
+   assert(centroidMergedBlocks.length == 1)
+   assert(centroidMergedBlocks.head.approximateEquals(unitCube))
+ }
+
+ test("Three blocks should be merged into unit cube") {
+   val processorBlocks = Seq(leftQuarterUnitCube, centerPartUnitCube, rightQuarterUnitCube)
+   val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
+                                                             Seq.empty[Block])
+   val centroidMergedBlocks = mergedBlocks.map{ block =>
+     val centroid = block.centroid
+     Block(centroid, block.updateFaces(centroid))
+   }
+
+   assert(orphanBlocks.isEmpty)
+   assert(centroidMergedBlocks.length == 1)
+   assert(centroidMergedBlocks.head.approximateEquals(unitCube))
+ }
+
+ test("Four blocks should be merged into unit cube") {
+   val processorBlocks = Seq(leftQuarterUnitCube, leftCenterQuarterUnitCube,
+                             rightCenterQuarterUnitCube, rightQuarterUnitCube)
+   val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
+                                                             Seq.empty[Block])
+   val centroidMergedBlocks = mergedBlocks.map{ block =>
+     val centroid = block.centroid
+     Block(centroid, block.updateFaces(centroid))
+   }
+
+   assert(orphanBlocks.isEmpty)
+   assert(centroidMergedBlocks.length == 1)
+   assert(centroidMergedBlocks.head.approximateEquals(unitCube))
+ }
+
+ test("Eight blocks should be merged into two blocks that comprise top and bottom halves "+
+      "of unit cube") {
+   val processorBlocks = Seq(bottomLeftEighthUnitCube, bottomLeftCenterEighthUnitCube,
+                             bottomRightCenterEighthUnitCube, bottomRightEighthUnitCube,
+                             topLeftEighthUnitCube, topLeftCenterEighthUnitCube,
+                             topRightCenterEighthUnitCube, topRightEighthUnitCube)
+   val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
+                                                             Seq.empty[Block])
+   val centroidMergedBlocks = mergedBlocks.map{ block =>
+     val centroid = block.centroid
+     Block(centroid, block.updateFaces(centroid))
+   }
+
+   val expectedBlocks = Seq(topHalfUnitCube, bottomHalfUnitCube)
+   val expectedBlocksCentroid = expectedBlocks map { block =>
+     val centroid = block.centroid
+     Block(centroid, block.updateFaces(centroid))
+   }
+
+   val blockCheck = centroidMergedBlocks.zip(expectedBlocksCentroid) map { case (calc, expected) =>
+     calc.approximateEquals(expected)
+   }
+   assert(orphanBlocks.isEmpty)
+   assert(centroidMergedBlocks.length == 2)
+   assert(!blockCheck.contains(false))
+ }
+
+ test("Processor joints should be removed and actual blocks restored") {
+   val processorJoint1 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0),
+                               (0.0, 0.3, 0.0), phi = 0.0, cohesion = 0.0, shape = Nil,
+                                processorJoint = true)
+   val processorJoint2 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0),
+                               (0.0, 0.7, 0.0), phi = 0.0, cohesion = 0.0, shape = Nil,
+                                processorJoint = true)
+   val processorJoint3 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0),
+                               (0.0, 0.2, 0.0), phi = 0.0, cohesion = 0.0, shape = Nil,
+                               processorJoint = true)
+   val processorJoint4 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0),
+                               (0.0, 0.8, 0.0), phi = 0.0, cohesion = 0.0, shape = Nil,
+                               processorJoint = true)
+
+   val actualJoint1 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.25, 0.0), phi = 0.0,
+                            cohesion = 0.0, shape = Nil)
+   val actualJoint2 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.75, 0.0), phi = 0.0,
+                            cohesion = 0.0, shape = Nil)
+   val joints = Seq(processorJoint1, processorJoint2, processorJoint3, processorJoint4,
+                    actualJoint1, actualJoint2)
+   var blocks = Seq(unitCube)
+   for (joint <- joints) {
+     blocks = blocks.flatMap(_.cut(joint))
+   }
+
+   val nonRedundantBlocks = blocks.map { case block @ Block(center, _) =>
+     Block(center, block.nonRedundantFaces)
+   }
+
+   val processorBlocks = nonRedundantBlocks.filter { block =>
+     block.faces.exists { face => face.processorJoint }
+   }
+   val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
+                                                             Seq.empty[Block])
+
+   val centroidMergedBlocks = mergedBlocks.map{ block =>
+     val centroid = block.centroid
+     Block(centroid, block.updateFaces(centroid))
+   }
+
+   val expectedBlocks = Seq(rightQuarterUnitCube, centerPartUnitCube, leftQuarterUnitCube)
+   val expectedBlocksCentroid = expectedBlocks map { block =>
+     val centroid = block.centroid
+     Block(centroid, block.updateFaces(centroid))
+   }
+
+   val blockCheck = centroidMergedBlocks.zip(expectedBlocksCentroid) forall { case (calc, expected) =>
+     calc.approximateEquals(expected)
+   }
+
+   assert(orphanBlocks.isEmpty)
+   assert(centroidMergedBlocks.length == 3)
+   assert(blockCheck)
+ }
 
   test("Oblique processor joints should be removed and actual blocks restored") {
     val processorJoint1 = Joint((1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)),
-                                (0.0, 0.0, 0.0), (0.3, 0.3, 0.3), phi = 0.0, cohesion = 0.0, shape = Nil,
+                                (0.0, 0.0, 0.0), (0.0, 0.9, 0.0), phi = 0.0, cohesion = 0.0, shape = Nil,
                                  processorJoint = true)
     val processorJoint2 = Joint((1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)),
                                 (0.0, 0.0, 0.0), (0.7, 0.7, 0.7), phi = 0.0, cohesion = 0.0, shape = Nil,
                                  processorJoint = true)
-    val actualJoint1 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.5, 0.0), phi = 0.0,
+    val actualJoint1 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.25, 0.0), phi = 0.0,
                              cohesion = 0.0, shape = Nil)
     val actualJoint2 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.75, 0.0), phi = 0.0,
                              cohesion = 0.0, shape = Nil)
-    val joints = Seq(processorJoint1, actualJoint1)
+    val joints = Seq(processorJoint1, actualJoint1, actualJoint2)
     var blocks = Seq(unitCube)
     for (joint <- joints) {
-      println("Volgende snit")
       blocks = blocks.flatMap(_.cut(joint))
-      blocks.foreach(println)
     }
 
     val nonRedundantBlocks = blocks.map { case block @ Block(center, _) =>
         Block(center, block.nonRedundantFaces)
-    }
-
-    println("HIERDIE IS ALL DIE BLOKKE")
-    nonRedundantBlocks.foreach(println)
-
-    nonRedundantBlocks.foreach { block =>
-      println("\n")
-      val vertices = block.findVertices
-      vertices.foreach(println)
     }
 
     val processorBlocks = nonRedundantBlocks.filter { block =>
@@ -390,7 +379,7 @@ class RockSlicerSpec extends FunSuite {
       Block(centroid, block.updateFaces(centroid))
     }
 
-    val expectedBlocks = Seq(centerPartUnitCube, rightQuarterUnitCube, leftQuarterUnitCube)
+    val expectedBlocks = Seq(leftQuarterUnitCube, rightQuarterUnitCube, centerPartUnitCube)
     val expectedBlocksCentroid = expectedBlocks map { block =>
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
@@ -399,22 +388,17 @@ class RockSlicerSpec extends FunSuite {
       calc.approximateEquals(expected)
     }
 
-    println("\nKLAAR MET ALLES, HIER IS DIE RESULTAAT")
-    println("MERGED BLOCKS")
-    centroidMergedBlocks.foreach(println)
-    println("\nORPHAN BLOCKS")
-    orphanBlocks.foreach(println)
     assert(orphanBlocks.isEmpty)
     assert(centroidMergedBlocks.length == 3)
     assert(blockCheck)
   }
 
-//  test("Orphan blocks should be initial input list") {
-//    val processorBlocks = Seq(leftQuarterUnitCube, rightQuarterUnitCube)
-//
-//    val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
-//                                                              Seq.empty[Block])
-//    assert(mergedBlocks.isEmpty)
-//    assert(processorBlocks.diff(orphanBlocks).isEmpty)
-//  }
+ test("Orphan blocks should be initial input list") {
+   val processorBlocks = Seq(leftQuarterUnitCube, rightQuarterUnitCube)
+
+   val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
+                                                             Seq.empty[Block])
+   assert(mergedBlocks.isEmpty)
+   assert(processorBlocks.diff(orphanBlocks).isEmpty)
+ }
 }

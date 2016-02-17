@@ -174,14 +174,10 @@ object RockSlicer {
   def mergeBlocks(processorBlocks: Seq[Block], mergedBlocks: Seq[Block],
                   orphanBlocks: Seq[Block]):
                  (Seq[Block], Seq[Block]) = {
-    println("\nProcessor Blocks")
-    processorBlocks.foreach(println)
     val blockMatches = findMates(processorBlocks)
-    val pairedBlocks = blockMatches.map{ case (paired, _) => paired }
+    val joinedBlocks = blockMatches.map{ case (paired, _) => paired }
     val matchIndices = blockMatches.flatMap { case (_, indices) => indices}.distinct
     val originalPairedBlocks = matchIndices.collect(processorBlocks)
-    println("These are the paired blocks")
-    originalPairedBlocks.foreach(println)
 
     val uniqueBlocks = (processorBlocks ++ orphanBlocks).foldLeft(Seq.empty[Block]) { (unique, current) =>
       if (!unique.exists(current.approximateEquals(_))) {
@@ -196,38 +192,21 @@ object RockSlicer {
     } else {
       processorBlocks.diff(originalPairedBlocks)
     }
-    println("These are the orphan blocks")
-    currentOrphanBlocks.foreach(println)
-
-    // Remove redundant faces and remove duplicates
-    val joinedBlocks = (pairedBlocks map { case block @ Block(center, _) =>
-      Block(center, block.nonRedundantFaces)
-    }).filter { block => block.faces.nonEmpty } // Filters blocks that actually aren't adjacent at all,
-                                                // but shared a processor joint
-    println("Merged Blocks")
-    joinedBlocks.foreach(println)
 
     // Divide blocks into groups with and without processor joints remaining
     val (remainingBlocks, completedBlocks) = joinedBlocks.partition { block =>
       block.faces.exists(_.processorJoint)
     }
-    println("Remaining Blocks")
-    remainingBlocks.foreach(println)
 
     if (remainingBlocks.nonEmpty) {
       // Merged blocks still contain some processor joints
-      println("DAAR IS NOG BAIE KAK OM TE DOEN")
       mergeBlocks(remainingBlocks ++ newProcessorBlocks, completedBlocks ++ mergedBlocks,
         currentOrphanBlocks)
-//    } else if (processorBlocks.diff(currentOrphanBlocks).isEmpty) {
-//      (completedBlocks ++ mergedBlocks, currentOrphanBlocks)
     } else if (newProcessorBlocks.isEmpty) {
       // All blocks are free of processor joints - check for duplicates then return
-      println("FOK DIT, EK IS KLAAR, HIER IS DIE BLOKKE")
       (completedBlocks ++ mergedBlocks, currentOrphanBlocks)
     } else {
       // Proceed to next processor block
-      println("REG, AAN NA DIE VOLGENDE EEN")
       mergeBlocks(newProcessorBlocks, completedBlocks ++ mergedBlocks, currentOrphanBlocks)
     }
   }
@@ -267,6 +246,7 @@ object RockSlicer {
         val localCenter = (currentBlock.centerX, currentBlock.centerY, currentBlock.centerZ)
         val comparisonBlock = Block(localCenter, block.updateFaces(localCenter))
         val sharedProcFaces = compareProcessorBlocks(currentBlock, comparisonBlock)
+
         if (sharedProcFaces.nonEmpty) {
           val currentFaces = currentBlock.faces.diff(sharedProcFaces)
           val updatedFaces = comparisonBlock.faces.diff(sharedProcFaces)
@@ -283,14 +263,15 @@ object RockSlicer {
             }
 
           if (allFaces.diff(nonSharedFaces).isEmpty) {
-//            val nonNegativeFaces = nonSharedFaces.map { face =>
-//              if (face.d < 0.0) {
-//                Face((-face.a, -face.b, -face.c), -face.d, face.phi, face.cohesion, face.processorJoint)
-//              } else {
-//                face
-//              }
-//            }
-            Some(Block(localCenter, nonSharedFaces), Seq[Int](0, processorBlocks.indexOf(block)))
+            val mergedBlock = Block(localCenter, nonSharedFaces)
+            val nonRedundantNonSharedFaces = mergedBlock.nonRedundantFaces
+            // Filter blocks that actually aren't adjacent at all,
+            // but share a processor joint
+            nonRedundantNonSharedFaces match {
+              case Nil => None
+              case x => Some(Block(localCenter, nonRedundantNonSharedFaces),
+                             Seq[Int](0, processorBlocks.indexOf(block)))
+            }
           } else {
             None
           }

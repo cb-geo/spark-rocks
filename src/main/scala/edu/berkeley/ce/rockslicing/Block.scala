@@ -136,16 +136,20 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
    *         bounding sphere.
    */
   private def findBoundingSphere: ((Double,Double,Double), Double) = {
-    val basisVectors = Array(
+    val positiveBasisVectors = Array(
       Array[Double](1.0, 0.0, 0.0),
       Array[Double](0.0, 1.0, 0.0),
-      Array[Double](0.0, 0.0, 1.0),
+      Array[Double](0.0, 0.0, 1.0)
+    )
+
+    val negativeBasisVectors = Array(
       Array[Double](-1.0, 0.0, 0.0),
       Array[Double](0.0, -1.0, 0.0),
       Array[Double](0.0, 0.0, -1.0)
     )
 
-    val maxCoordinates = basisVectors.map { v =>
+    // Solve LP to find maximum principal coordinate values
+    val maxCoordinates = positiveBasisVectors.map { v =>
       val linProg = new LinearProgram(3)
       linProg.setObjFun(v.toArray, LinearProgram.MAX)
       faces foreach { face =>
@@ -155,13 +159,30 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
       }
       val results = linProg.solve().get._1
       val resultsSeq = Seq[Double](results(0), results(1), results(2))
-      resultsSeq.filter(math.abs(_) > NumericUtils.EPSILON) match {
+      resultsSeq match {
         case Nil => 0.0
-        case x+:xs => x
+        case x => x.max
       }
     }
 
-    val pairedCoords = maxCoordinates.take(3).zip(maxCoordinates.takeRight(3))
+    // Solve LP to find minimum principal coordinate values
+    val minCoordinates = negativeBasisVectors.map { v =>
+      val linProg = new LinearProgram(3)
+      linProg.setObjFun(v.toArray, LinearProgram.MAX)
+      faces foreach { face =>
+        val coeffs = Array[Double](face.a, face.b, face.c).map(NumericUtils.applyTolerance)
+        val rhs = NumericUtils.applyTolerance(face.d)
+        linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
+      }
+      val results = linProg.solve().get._1
+      val resultsSeq = Seq[Double](results(0), results(1), results(2))
+      resultsSeq match {
+        case Nil => 0.0
+        case x => x.min
+      }
+    }
+
+    val pairedCoords = maxCoordinates.zip(minCoordinates)
     val center = pairedCoords.map { case (x,y) => 0.5 * (x+y) }
     val diffVector = pairedCoords.map { case (x,y) => x - y }
     val radius = 0.5 * linalg.norm(DenseVector[Double](diffVector))
