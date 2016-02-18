@@ -42,7 +42,6 @@ object RockSlicer {
 
     val blockRdd = sc.parallelize(blocks)
     val broadcastJoints = sc.broadcast(joints)
-    val broadcastProcJoints = sc.broadcast(processorJoints)
 
     // Iterate through the discontinuities, cutting blocks where appropriate
     var cutBlocks = blockRdd
@@ -68,11 +67,7 @@ object RockSlicer {
     // Process processor blocks before continuing with remaining blocks
     // Search blocks for matching processor joints
     if (processorBlocks.count() > 0) {
-      val updatedProcessorBlocks = processorBlocks.map { block =>
-        Block(globalOrigin, block.updateFaces(globalOrigin))
-      }
-
-      val treeReduceBlockPairsRDD = updatedProcessorBlocks.map{ blocks => (Seq(blocks), Seq.empty[Block])}
+      val treeReduceBlockPairsRDD = processorBlocks.map{ blocks => (Seq(blocks), Seq.empty[Block])}
       val (allOrphanBlocks, allReconstructedBlocks) = treeReduceBlockPairsRDD.treeReduce({
         case ((toMerge1, merged1), (toMerge2, merged2)) =>
           val (treeReconBlocks, treeOrphanBlocks) = mergeBlocks(toMerge1 ++ toMerge2, Seq.empty[Block],
@@ -84,8 +79,8 @@ object RockSlicer {
 
           (treeProcessorBlocks ++ treeOrphanBlocks, treeRealBlocks ++ merged1 ++ merged2)
       }, math.ceil(math.log(arguments.numProcessors)/math.log(2)).toInt)
-      assert(allOrphanBlocks.isEmpty)
 
+      assert(allOrphanBlocks.isEmpty)
 
       // Update centroids of reconstructed processor blocks and remove duplicates
       val reconCentroidBlocks = allReconstructedBlocks.map {block =>
@@ -93,34 +88,30 @@ object RockSlicer {
         Block(centroid, block.updateFaces(centroid))
       }
 
-      val uniqueReconBlocks = reconCentroidBlocks.foldLeft(Seq.empty[Block]) { (unique, current) =>
-        if (!unique.exists(current.approximateEquals(_))) {
-          current +: unique
-        } else {
-          unique
-        }
-      }
-
       // Clean up faces of reconstructed blocks with values that should be zero, but have
       // arbitrarily small floating point values
-      val squeakyCleanRecon = uniqueReconBlocks.map { case Block(center, faces) =>
+      val squeakyCleanRecon = reconCentroidBlocks.map { case Block(center, faces) =>
         Block(center, faces.map(_.applyTolerance))
       }
 
       // Convert reconstructed blocks to requested output
       if (arguments.toInequalities) {
         val jsonReconBlocks = squeakyCleanRecon.map(Json.blockToMinimalJson)
-        printToFile(new File("reconstructedBlocks.json")) { field =>
-          jsonReconBlocks.foreach(field.println)
+        val pw = new PrintWriter(new File("reconstructedBlocks.json"))
+        jsonReconBlocks.foreach { block =>
+          pw.write(block+"\n")
         }
+        pw.close()
       }
 
       if (arguments.toVTK) {
         val vtkBlocksRecon = squeakyCleanRecon.map(BlockVTK(_))
         val jsonVtkBlocksRecon = vtkBlocksRecon.map(JsonToVtk.blockVtkToMinimalJson)
-        printToFile(new File("vtkReconstructedBlocks.json")) { field =>
-          jsonVtkBlocksRecon.foreach(field.println)
+        val pw = new PrintWriter(new File("vtkReconstructedBlocks.json"))
+        jsonVtkBlocksRecon.foreach { block =>
+          pw.write(block+"\n")
         }
+        pw.close()
       }
     }
 
@@ -304,12 +295,5 @@ object RockSlicer {
     } else {
       Seq((Block((0.0, 0.0, 0.0), Seq.empty[Face]), Seq.empty[Int]))
     }
-  }
-
-  // Function that writes JSON string to file for single node - taken from 
-  // http://stackoverflow.com/questions/4604237/how-to-write-to-a-file-in-scala
-  private def printToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) {
-    val p = new java.io.PrintWriter(f)
-    try { op(p) } finally { p.close() }
   }
 }
