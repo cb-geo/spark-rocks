@@ -24,8 +24,17 @@ object NumericUtils {
    *         that is within ESPILON of 0.0 is converted to 0.0. All other elements
    *         of the sequence are unchanged.
    */
-  def applyTolerance(values: Seq[Double]): Seq[Double] =
-    values map applyTolerance
+  def applyTolerance(values: Array[Double]): Array[Double] = {
+    // We fall back to a good old-fashioned while loop to avoid boxing
+    val roundedValues = new Array[Double](values.length)
+    var i = 0
+    while (i < values.length) {
+      roundedValues(i) = applyTolerance(values(i))
+      i += 1
+    }
+
+    roundedValues
+  }
 
   /**
     * Rounds to the specified number of decimal places. If not specified, default

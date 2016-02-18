@@ -72,26 +72,26 @@ object Joint {
     // Linear program only in 2-D since constraints are specified entirely 
     // by persistence of joint within the joint plane
     val basisVectors = Array(
-      Array[Double](1.0, 0.0),
-      Array[Double](0.0, 1.0),
-      Array[Double](-1.0, 0.0),
-      Array[Double](0.0, -1.0)
+      Array(1.0, 0.0),
+      Array(0.0, 1.0),
+      Array(-1.0, 0.0),
+      Array(0.0, -1.0)
     )
 
     val maxCoordinates = basisVectors.map { v =>
       // Only 2 variables in linear program - in-plane bounding circle so 2-D
       val linProg = new LinearProgram(2)
-      linProg.setObjFun(v.toArray, LinearProgram.MAX)
+      linProg.setObjFun(v, LinearProgram.MAX)
       
       faces foreach { face =>
         val (a, b, c) = face._1
         val d = face._2
         if (d < 0.0) {
-          val coeffs = Array[Double](-a, -b).map(NumericUtils.applyTolerance)
+          val coeffs = Array(NumericUtils.applyTolerance(-a), NumericUtils.applyTolerance(-b))
           val rhs = NumericUtils.applyTolerance(-d)
           linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
         } else {
-          val coeffs = Array[Double](a, b).map(NumericUtils.applyTolerance)
+          val coeffs = Array(NumericUtils.applyTolerance(a), NumericUtils.applyTolerance(b))
           val rhs = NumericUtils.applyTolerance(d)
           linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
         }

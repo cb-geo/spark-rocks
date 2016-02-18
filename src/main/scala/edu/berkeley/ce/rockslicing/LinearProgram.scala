@@ -25,7 +25,7 @@ class LinearProgram(val numVars: Int) {
   val solver = LpSolve.makeLp(0, numVars)
   solver.setVerbose(LpSolve.IMPORTANT)
 
-  private def sanitizeCoefficients(coeffs: Seq[Double]): Seq[Double] =
+  private def sanitizeCoefficients(coeffs: Array[Double]): Array[Double] =
     if (coeffs.length > numVars) {
       coeffs.slice(0, numVars)
     } else if (coeffs.length < numVars) {
@@ -42,7 +42,7 @@ class LinearProgram(val numVars: Int) {
     * than the number of variables, coefficients of 0.0 are added by default.
     * @param objType One of either MIN (to minimize) or MAX (to maximize).
     */
-  def setObjFun(coeffs: Seq[Double], objType: LinearProgram.ObjectiveType): Unit = {
+  def setObjFun(coeffs: Array[Double], objType: LinearProgram.ObjectiveType): Unit = {
     val sanitizedCoeffs = sanitizeCoefficients(coeffs)
     solver.strSetObjFn(sanitizedCoeffs.mkString(" "))
     objType match {
@@ -64,7 +64,7 @@ class LinearProgram(val numVars: Int) {
     * @param operator One of LE, for <=, EQ for ==, or GE for =>.
     * @param rhs The right-hand side of the constraint.
     */
-  def addConstraint(coeffs: Seq[Double], operator: LinearProgram.Operator, rhs: Double): Unit = {
+  def addConstraint(coeffs: Array[Double], operator: LinearProgram.Operator, rhs: Double): Unit = {
     val sanitizedCoeffs = sanitizeCoefficients(coeffs)
     val op = operator match {
       case LinearProgram.LE => LpSolve.LE
@@ -82,11 +82,11 @@ class LinearProgram(val numVars: Int) {
     * where varSettings is the value assigned to each value to optimize the
     * objective function and opt is the optimal objective value itself.
     */
-  def solve(): Option[(Seq[Double], Double)] = {
+  def solve(): Option[(Array[Double], Double)] = {
     try {
       solver.solve()
       val objectiveValue = solver.getObjective
-      val variableSettings = solver.getPtrVariables.toVector
+      val variableSettings = solver.getPtrVariables
       Some((variableSettings, objectiveValue))
     } catch {
       case _: LpSolveException => None

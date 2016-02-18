@@ -114,7 +114,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
   // Computing the maximum radius of an inscribed sphere is also expensive
   lazy val maxInscribableRadius = findMaxInscribableRadius
 
-  /** 
+  /**
     * Determines whether the input point is outside the input block
     * @param point The point as a tuple
     * @return True if the point is outside the block, false otherwise
@@ -168,9 +168,9 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     // Solve LP to find minimum principal coordinate values
     val minCoordinates = negativeBasisVectors.map { v =>
       val linProg = new LinearProgram(3)
-      linProg.setObjFun(v.toArray, LinearProgram.MAX)
+      linProg.setObjFun(v, LinearProgram.MAX)
       faces foreach { face =>
-        val coeffs = Array[Double](face.a, face.b, face.c).map(NumericUtils.applyTolerance)
+        val coeffs = Array(face.a, face.b, face.c).map(NumericUtils.applyTolerance)
         val rhs = NumericUtils.applyTolerance(face.d)
         linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
       }
@@ -198,9 +198,9 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
      * rather than falling back on absolute value.
      */
     val linProg = new LinearProgram(4)
-    linProg.setObjFun(Seq[Double](0.0, 0.0, 0.0, 1.0), LinearProgram.MAX)
+    linProg.setObjFun(Array(0.0, 0.0, 0.0, 1.0), LinearProgram.MAX)
     faces foreach { face =>
-      val coeffs = Seq[Double](face.a, face.b, face.c, 1.0)
+      val coeffs = Array(face.a, face.b, face.c, 1.0)
       linProg.addConstraint(coeffs map NumericUtils.applyTolerance, LinearProgram.LE,
                             NumericUtils.applyTolerance(face.d))
     }
@@ -232,24 +232,24 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
   private def bruteForceIntersects(joint: Joint): Option[(Double,Double,Double)] = {
     val linProg = new LinearProgram(4)
     // Minimize s
-    linProg.setObjFun(Vector[Double](0.0, 0.0, 0.0, 1.0), LinearProgram.MIN)
+    linProg.setObjFun(Array(0.0, 0.0, 0.0, 1.0), LinearProgram.MIN)
 
     // Restrict our attention to plane of joint
-    val coeffs = Vector[Double](joint.a, joint.b, joint.c, 0.0).
+    val coeffs = Array(joint.a, joint.b, joint.c, 0.0).
                     map(NumericUtils.applyTolerance)
     val rhs = NumericUtils.applyTolerance(joint.d)
     linProg.addConstraint(coeffs, LinearProgram.EQ, rhs)
 
     // Require s to be within planes defined by faces of block
     faces.foreach { face =>
-      val faceCoeffs = Vector[Double](face.a, face.b, face.c, -1.0).map(NumericUtils.applyTolerance)
+      val faceCoeffs = NumericUtils.applyTolerance(Array(face.a, face.b, face.c, -1.0))
       val rhs = NumericUtils.applyTolerance(face.d)
       linProg.addConstraint(faceCoeffs, LinearProgram.LE, rhs)
     }
 
     // Require s to be within planes defining shape of joint
     joint.globalCoordinates.foreach { case ((a,b,c),d) =>
-      val jointCoeffs = Vector[Double](a, b, c, -1.0).map(NumericUtils.applyTolerance)
+      val jointCoeffs = NumericUtils.applyTolerance(Array(a, b, c, -1.0))
       val rhs = NumericUtils.applyTolerance(d)
       linProg.addConstraint(jointCoeffs, LinearProgram.LE, rhs)
     }
@@ -257,7 +257,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     linProg.solve() match {
       case None => None
       case Some((_, opt)) if opt >= -NumericUtils.EPSILON => None
-      case Some((vars, _)) => Some((vars(0), vars(1), vars(2)))      
+      case Some((vars, _)) => Some((vars(0), vars(1), vars(2)))
     }
   }
 
@@ -329,10 +329,10 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
   def nonRedundantFaces: Seq[Face] =
     faces.distinct.filter { face =>
       val linProg = new LinearProgram(3)
-      val objCoeffs = Vector(face.a, face.b, face.c).map(NumericUtils.applyTolerance)
+      val objCoeffs = NumericUtils.applyTolerance(Array(face.a, face.b, face.c))
       linProg.setObjFun(objCoeffs, LinearProgram.MAX)
       faces.foreach { f =>
-        val faceCoeffs = Vector(f.a, f.b, f.c).map(NumericUtils.applyTolerance)
+        val faceCoeffs = NumericUtils.applyTolerance(Array(f.a, f.b, f.c))
         val rhs = NumericUtils.applyTolerance(f.d)
         linProg.addConstraint(faceCoeffs, LinearProgram.LE, rhs)
       }
@@ -371,7 +371,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
           }
         }
       } map (_.distinct)
-    ).toMap                              
+    ).toMap
 
   /**
     * Mesh the faces using Delaunay triangulation. This meshing is done

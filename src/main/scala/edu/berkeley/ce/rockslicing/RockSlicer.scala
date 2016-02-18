@@ -1,9 +1,9 @@
 package edu.berkeley.ce.rockslicing
 
-import java.io._
 import org.apache.spark.{SparkConf, SparkContext}
-import scala.io.Source
+
 import scala.annotation.tailrec
+import scala.io.Source
 
 object RockSlicer {
 
