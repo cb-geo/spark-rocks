@@ -18,7 +18,7 @@ class EndToEndSpec extends FunSuite {
     val blocks = Seq(Block(globalOrigin, rockVolume))
 
     // Generate processor joints
-    val numProcessors = 3
+    val numProcessors = 6
     val processorJoints = LoadBalancer.generateProcessorJoints(blocks.head, numProcessors)
     val joints = processorJoints ++ jointList
 
@@ -56,17 +56,9 @@ class EndToEndSpec extends FunSuite {
                                                              Seq.empty[Block])
 
     // Update centroids of reconstructed processor blocks and remove duplicates
-    val reconCentroidBlocks = reconBlocks.map {block =>
+    val reconCentroidBlocks = reconBlocks.map { block =>
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
-    }
-
-    val uniqueCentroidBlocks = reconCentroidBlocks.foldLeft(Seq.empty[Block]) { (unique, current) =>
-      if (!unique.exists(current.approximateEquals(_))) {
-        current +: unique
-      } else {
-        unique
-      }
     }
 
     // Calculate the centroid of each real block
@@ -78,7 +70,7 @@ class EndToEndSpec extends FunSuite {
 
     // Merge real blocks and reconstructed blocks - this won't happen on Spark since collect will
     // be called and all reconstructed blocks will be on one node
-    val allBlocks = centroidBlocks ++ uniqueCentroidBlocks
+    val allBlocks = centroidBlocks ++ reconCentroidBlocks
 
     // Clean up double values arbitrarily close to 0.0
     val cleanedBlocks = allBlocks.map { case Block(center, faces) =>
@@ -87,8 +79,7 @@ class EndToEndSpec extends FunSuite {
 
     val blockJson = Json.blockSeqToReadableJson(cleanedBlocks)
     val expectedJsonSource = Source.fromURL(getClass.getResource(s"/$OUTPUT_FILE_NAME"))
-    println("ORPHAN BLOCKS:")
-    (orphanBlocks.map(_.faces.filter(_.processorJoint))).foreach(println)
+
     assert(orphanBlocks.isEmpty)
     try {
       val expectedJson = expectedJsonSource.mkString

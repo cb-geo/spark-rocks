@@ -65,7 +65,7 @@ object RockSlicer {
       !block.faces.exists(_.processorJoint)
     }
 
-    // Process processor blocks before continueing with remaining blocks
+    // Process processor blocks before continuing with remaining blocks
     // Search blocks for matching processor joints
     if (processorBlocks.count() > 0) {
       val updatedProcessorBlocks = processorBlocks.map { block =>
@@ -84,7 +84,7 @@ object RockSlicer {
 
           (treeProcessorBlocks ++ treeOrphanBlocks, treeRealBlocks ++ merged1 ++ merged2)
       }, math.ceil(math.log(arguments.numProcessors)/math.log(2)).toInt)
-      // assert(allOrphanBlocks.isEmpty)
+      assert(allOrphanBlocks.isEmpty)
 
 
       // Update centroids of reconstructed processor blocks and remove duplicates
@@ -157,18 +157,15 @@ object RockSlicer {
 
   /**
     * Recursive function that merges sequence of blocks containing processor joints
-    * along matching processor joints, elliminating false blocks caused by division of 
+    * along matching processor joints, eliminating false blocks caused by division of
     * input rock volume into equal volumes by load balancer
     * @param processorBlocks Sequence of blocks containing one or more processor joints each
     * @param mergedBlocks Sequence of blocks that have had processor joints removed. Initial
     *                     input is an empty sequence
-    * @param origin Origin that all blocks and their faces will be referenced to for consistency
-    * @param nonMergedBlocks Sequence of blocks that can not be matched with other blocks. Initial
-                             input is an empty sequence
-    * @return Sequence of blocks with all processor joints removed by merging input blocks along
-    *         matching processor joints. Redundant faces and duplicate blocks are already removed
-    *         in this list, so it is not necessary to perform these computations on the returned
-    *         sequence.
+    * @param orphanBlocks Sequence of blocks that cannot be matched with other blocks. Initial
+    *                     input is an empty sequence
+    * @return Tuple containing two sequences of blocks. The first sequence is all the merged blocks.
+    *         The second is all blocks that could not be merged.
     */
   @tailrec
   def mergeBlocks(processorBlocks: Seq[Block], mergedBlocks: Seq[Block],
@@ -186,6 +183,7 @@ object RockSlicer {
         unique
       }
     }
+
     val currentOrphanBlocks = uniqueBlocks.diff(originalPairedBlocks)
     val newProcessorBlocks = if (originalPairedBlocks.isEmpty) {
       processorBlocks.tail
@@ -193,8 +191,32 @@ object RockSlicer {
       processorBlocks.diff(originalPairedBlocks)
     }
 
+    // Check if more than one match was found. If so, merge all matches into one block
+    val mergedJoinedBlock = if (joinedBlocks.length > 1) {
+      // Note: originalPairedBlocks.head will be equal to processorBlocks.head
+      val temporaryOrigin = (originalPairedBlocks.head.centerX,
+                             originalPairedBlocks.head.centerY,
+                             originalPairedBlocks.head.centerZ)
+      val temporaryBlocks = originalPairedBlocks.tail.map { block =>
+        Block(temporaryOrigin, block.updateFaces(temporaryOrigin))
+      }
+
+      val sharedProcessorFaces = temporaryBlocks.flatMap { block =>
+        compareProcessorBlocks(originalPairedBlocks.head, block)
+      }
+      val allFaces = temporaryBlocks.flatMap { block =>
+        block.faces
+      }
+      // Remove any faces that are shared between blocks
+      val nonSharedFaces = allFaces.diff(sharedProcessorFaces)
+      val smushedBlock = Block(temporaryOrigin, nonSharedFaces)
+      Seq(Block(temporaryOrigin, smushedBlock.nonRedundantFaces))
+    } else {
+      joinedBlocks
+    }
+
     // Divide blocks into groups with and without processor joints remaining
-    val (remainingBlocks, completedBlocks) = joinedBlocks.partition { block =>
+    val (remainingBlocks, completedBlocks) = mergedJoinedBlock.partition { block =>
       block.faces.exists(_.processorJoint)
     }
 
@@ -221,8 +243,8 @@ object RockSlicer {
   def compareProcessorBlocks(block1: Block, block2: Block): Seq[Face] = {
     val processorFaces1 = block1.faces.filter(_.processorJoint)
     val processorFaces2 = block2.faces.filter(_.processorJoint)
-    (processorFaces1 flatMap { case face1 =>
-      processorFaces2 flatMap { case face2 =>
+    (processorFaces1 flatMap { face1 =>
+      processorFaces2 flatMap { face2 =>
         if (face1.isSharedWith(face2)) {
           Seq[Face](face1, face2)
         } else {
