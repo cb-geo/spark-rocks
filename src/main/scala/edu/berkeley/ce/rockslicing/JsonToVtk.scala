@@ -13,7 +13,7 @@ import play.api.libs.json.{Json => PlayJson}
 object JsonToVtk {
   private implicit object FaceFormat extends Format[Face] {
     def reads(jsonVal: JsValue) = JsSuccess(Face(
-      ((jsonVal \ "a").as[Double], (jsonVal \ "b").as[Double], (jsonVal \ "c").as[Double]),
+      Array((jsonVal \ "a").as[Double], (jsonVal \ "b").as[Double], (jsonVal \ "c").as[Double]),
       (jsonVal \ "d").as[Double],
       (jsonVal \ "phi").as[Double],
       (jsonVal \ "cohesion").as[Double]
@@ -31,7 +31,7 @@ object JsonToVtk {
 
   private implicit object BlockFormat extends Format[Block] {
     def reads(jsonVal: JsValue) = JsSuccess(Block(
-      ((jsonVal \ "centerX").as[Double], (jsonVal \ "centerY").as[Double], (jsonVal \ "centerZ").as[Double]),
+      Array((jsonVal \ "centerX").as[Double], (jsonVal \ "centerY").as[Double], (jsonVal \ "centerZ").as[Double]),
       (jsonVal \ "faces").as[List[Face]]
     ))
 
@@ -47,7 +47,7 @@ object JsonToVtk {
 
   private implicit object BlockVtkFormat extends Format[BlockVTK] {
     def reads(jsonVal: JsValue) = JsSuccess(BlockVTK(Block(
-      ((jsonVal  \ "centerX").as[Double], (jsonVal \ "centerY").as[Double], (jsonVal \ "centerZ").as[Double]),
+      Array((jsonVal  \ "centerX").as[Double], (jsonVal \ "centerY").as[Double], (jsonVal \ "centerZ").as[Double]),
       (jsonVal \ "faces").as[List[Face]]
     )))
 

@@ -15,9 +15,12 @@ import breeze.linalg.{DenseVector, DenseMatrix}
   * @param processorJoint Parameter that identifies joint as being artificial joint introduced as part
   *                        of load balancing
   */
-case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double, cohesion: Double,
+case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesion: Double,
                 processorJoint: Boolean=false) {
-  val (a,b,c) = normalVec
+  assert(normalVec.length == 3)
+  val a = normalVec(0)
+  val b = normalVec(1)
+  val c = normalVec(2)
   val d = distance
 
   /**
@@ -31,7 +34,7 @@ case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double
     val newD = if (math.abs(d) > NumericUtils.EPSILON) d else 0.0
     val newPhi = if (math.abs(phi) > NumericUtils.EPSILON) phi else 0.0
     val newCohesion = if (math.abs(cohesion) > NumericUtils.EPSILON) cohesion else 0.0
-    Face((newA,newB,newC), newD, newPhi, newCohesion, processorJoint)
+    Face(Array(newA, newB, newC), newD, newPhi, newCohesion, processorJoint)
   }
 
   /**
@@ -63,35 +66,48 @@ case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double
     (math.abs(c + inputFace.c) < tolerance) &&
     (math.abs(d + inputFace.d) < tolerance)
   }
+
+  override def equals(obj: Any): Boolean = {
+    obj match {
+      case f: Face =>
+        this.a == f.a && this.b == f.b && this.c == f.c &&
+        this.distance == f.distance && this.phi == f.phi &&
+        this.cohesion == f.cohesion &&
+        this.processorJoint == f.processorJoint
+
+      case _ => false
+    }
+  }
 }
 
 object Block {
   /**
     * Calculates the rotation matrix to rotate the input plane (specified by its normal)
     * to the desired orientation (specified by the desired normal)
-    * @param n_current: Current normal of plane
-    * @param n_desired: Desired new normal
+    * @param nCurrent: Current normal of plane
+    * @param nDesired: Desired new normal
     * @return 3*3 rotation matrix
     */
-  def rotationMatrix(n_current: (Double, Double, Double), n_desired: (Double, Double, Double)):
-      DenseMatrix[Double] = {
-    val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
-    val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
+  def rotationMatrix(nCurrent: Array[Double], nDesired: Array[Double]): DenseMatrix[Double] = {
+    assert(nCurrent.length == 3 && nDesired.length == 3)
+
+    val nC = DenseVector[Double](nCurrent(0), nCurrent(1), nCurrent(2))
+    val nD = DenseVector[Double](nDesired(0), nDesired(1), nDesired(2))
     // Check if vectors are parallel
-    if (math.abs(linalg.norm(linalg.cross(n_c,n_d))) > NumericUtils.EPSILON) {
-      val v = linalg.cross(n_c, n_d)
+    if (math.abs(linalg.norm(linalg.cross(nC, nD))) > NumericUtils.EPSILON) {
+      val v = linalg.cross(nC, nD)
       val s = linalg.norm(v)
-      val c = n_c dot n_d
+      val c = nC dot nD
 
-      val A_skew = DenseMatrix.zeros[Double](3,3)
-      A_skew(0,1) = -v(2)
-      A_skew(0,2) = v(1)
-      A_skew(1,0) = v(2)
-      A_skew(1,2) = -v(0)
-      A_skew(2,0) = -v(1)
-      A_skew(2,1) = v(0)
+      val ASkew = DenseMatrix.zeros[Double](3,3)
+      ASkew(0,1) = -v(2)
+      ASkew(0,2) = v(1)
+      ASkew(1,0) = v(2)
+      ASkew(1,2) = -v(0)
+      ASkew(2,0) = -v(1)
+      ASkew(2,1) = v(0)
 
-      DenseMatrix.eye[Double](3) + A_skew + (A_skew * A_skew) * (1-c)/(s*s)
+      DenseMatrix.eye[Double](3) + ASkew + (ASkew * ASkew) * (1-c)/(s*s)
     } else {
       // Vectors are parallel, so return identity
       DenseMatrix.eye[Double](3)
@@ -106,11 +122,16 @@ object Block {
   * components can be accessed as 'centerX', 'centerY', and 'centerZ'.
   * @param faces: The faces that define the boundaries of the rock block.
   */
-case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
-  val (centerX, centerY, centerZ) = center
+case class Block(center: Array[Double], faces: Seq[Face]) {
+  assert(center.length == 3)
+  val centerX = center(0)
+  val centerY = center(1)
+  val centerZ = center(2)
 
   // Computing a bounding sphere is expensive, so we only do it if necessary
-  lazy val ((sphereCenterX, sphereCenterY, sphereCenterZ), sphereRadius) = findBoundingSphere
+  lazy val ((sphereCenterX, sphereCenterY, sphereCenterZ), sphereRadius) = findBoundingSphere match {
+    case (sphereCenter, radius) => ((sphereCenter(0), sphereCenter(1), sphereCenter(2)), radius)
+  }
   // Computing the maximum radius of an inscribed sphere is also expensive
   lazy val maxInscribableRadius = findMaxInscribableRadius
 
@@ -119,9 +140,11 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     * @param point The point as a tuple
     * @return True if the point is outside the block, false otherwise
     */
-  private def pointOutsideBlock(point: (Double, Double, Double)): Boolean = {
+  private def pointOutsideBlock(point: Array[Double]): Boolean = {
+    assert(point.length == 3)
+
     faces exists { face =>
-      val pointVector = DenseVector[Double](point._1, point._2, point._3)
+      val pointVector = DenseVector[Double](point(0), point(1), point(2))
       val faceNormal = DenseVector[Double](face.a, face.b, face.c)
       // If distance is negative, point lies within block - planes will not intersect within block
       // since block is convex
@@ -135,7 +158,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
    *         the bounding sphere and the second element is the radius of the
    *         bounding sphere.
    */
-  private def findBoundingSphere: ((Double,Double,Double), Double) = {
+  private def findBoundingSphere: (Array[Double], Double) = {
     val positiveBasisVectors = Array(
       Array[Double](1.0, 0.0, 0.0),
       Array[Double](0.0, 1.0, 0.0),
@@ -188,7 +211,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     val radius = 0.5 * linalg.norm(DenseVector[Double](diffVector))
 
     // Shift from Block local coordinates to global coordinates
-    ((center(0) + centerX, center(1) + centerY, center(2) + centerZ), radius)
+    (Array(center(0) + centerX, center(1) + centerY, center(2) + centerZ), radius)
   }
 
   private def findMaxInscribableRadius: Double = {
@@ -201,7 +224,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     linProg.setObjFun(Array(0.0, 0.0, 0.0, 1.0), LinearProgram.MAX)
     faces foreach { face =>
       val coeffs = Array(face.a, face.b, face.c, 1.0)
-      linProg.addConstraint(coeffs map NumericUtils.applyTolerance, LinearProgram.LE,
+      linProg.addConstraint(NumericUtils.applyTolerance(coeffs), LinearProgram.LE,
                             NumericUtils.applyTolerance(face.d))
     }
     linProg.solve().get._2
@@ -213,15 +236,15 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     * @return None if the joint does not intersect this block, or Some((x,y,z))
     * where (x,y,z) is the point of intersection.
     */
-  def intersects(joint: Joint): Option[(Double,Double,Double)] = {
-    val sphereJoint = joint.updateJoint(sphereCenterX, sphereCenterY, sphereCenterZ)
+  def intersects(joint: Joint): Option[Array[Double]] = {
+    val sphereJoint = joint.updateJoint(Array(sphereCenterX, sphereCenterY, sphereCenterZ))
     sphereJoint.boundingSphere match {
       case None =>
         // The joint is persistent
         if (math.abs(sphereJoint.d) > sphereRadius) None else bruteForceIntersects(joint)
-      case Some(((x,y,z),r)) =>
+      case Some((cent,r)) =>
         // The joint is not persistent
-        val jointOrigin = DenseVector[Double](x,y,z)
+        val jointOrigin = DenseVector[Double](cent)
         val blockOrigin = DenseVector[Double](sphereCenterX, sphereCenterY, sphereCenterZ)
         val distance = linalg.norm(jointOrigin - blockOrigin)
         if (distance > (sphereRadius + r)) None else bruteForceIntersects(joint)
@@ -229,7 +252,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
   }
 
   // This computes intersection without any sort of intelligence -- just solves an LP
-  private def bruteForceIntersects(joint: Joint): Option[(Double,Double,Double)] = {
+  private def bruteForceIntersects(joint: Joint): Option[Array[Double]] = {
     val linProg = new LinearProgram(4)
     // Minimize s
     linProg.setObjFun(Array(0.0, 0.0, 0.0, 1.0), LinearProgram.MIN)
@@ -248,7 +271,10 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     }
 
     // Require s to be within planes defining shape of joint
-    joint.globalCoordinates.foreach { case ((a,b,c),d) =>
+    joint.globalCoordinates.foreach { case (normal, d) =>
+      val a = normal(0)
+      val b = normal(1)
+      val c = normal(2)
       val jointCoeffs = NumericUtils.applyTolerance(Array(a, b, c, -1.0))
       val rhs = NumericUtils.applyTolerance(d)
       linProg.addConstraint(jointCoeffs, LinearProgram.LE, rhs)
@@ -257,7 +283,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     linProg.solve() match {
       case None => None
       case Some((_, opt)) if opt >= -NumericUtils.EPSILON => None
-      case Some((vars, _)) => Some((vars(0), vars(1), vars(2)))
+      case Some((vars, _)) => Some(vars)
     }
   }
 
@@ -275,28 +301,31 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     * only this block.
     */
   def cut(joint: Joint, minSize: Double=0.0, maxAspectRatio: Double=Double.PositiveInfinity): Seq[Block] = {
-    val translatedJoint = joint.updateJoint(centerX, centerY, centerZ)
+    val translatedJoint = joint.updateJoint(Array(centerX, centerY, centerZ))
     this.intersects(translatedJoint) match {
       case None => Vector(this)
-      case Some((x,y,z)) =>
+      case Some(coord) =>
+        val x = coord(0)
+        val y = coord(1)
+        val z = coord(2)
         val newX = NumericUtils.roundToTolerance(centerX + x)
         val newY = NumericUtils.roundToTolerance(centerY + y)
         val newZ = NumericUtils.roundToTolerance(centerZ + z)
-        val updatedFaces = updateFaces(newX, newY, newZ)
+        val updatedFaces = updateFaces(Array(newX, newY, newZ))
 
         // New origin is guaranteed to lie within joint, so initial d = 0 for all child blocks
         val childBlockA = if (translatedJoint.d < 0.0) {
-          Block((newX,newY,newZ), Face((-translatedJoint.a, -translatedJoint.b, -translatedJoint.c), 0.0,
+          Block(Array(newX,newY,newZ), Face(Array(-translatedJoint.a, -translatedJoint.b, -translatedJoint.c), 0.0,
             translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces)
         } else {
-          Block((newX,newY,newZ), Face((translatedJoint.a, translatedJoint.b, translatedJoint.c), 0.0,
+          Block(Array(newX,newY,newZ), Face(Array(translatedJoint.a, translatedJoint.b, translatedJoint.c), 0.0,
             translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces)
         }
         val childBlockB = if (translatedJoint.d < 0.0) {
-          Block((newX,newY,newZ), Face((translatedJoint.a,translatedJoint.b,translatedJoint.c), 0.0,
+          Block(Array(newX,newY,newZ), Face(Array(translatedJoint.a,translatedJoint.b,translatedJoint.c), 0.0,
             translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces)
         } else {
-          Block((newX,newY,newZ), Face((-translatedJoint.a,-translatedJoint.b,-translatedJoint.c), 0.0,
+          Block(Array(newX,newY,newZ), Face(Array(-translatedJoint.a,-translatedJoint.b,-translatedJoint.c), 0.0,
             translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces)
         }
 
@@ -345,7 +374,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     * @return A mapping from each face of the block to a Seq of vertices for that face
     * This function should only be called once all redundant faces have been removed.
     */
-  def findVertices: Map[Face, Seq[(Double, Double, Double)]] =
+  def findVertices: Map[Face, Seq[Array[Double]]] =
     faces.zip (
       faces map { f1 =>
         val n1 = DenseVector[Double](f1.a, f1.b, f1.c)
@@ -362,8 +391,8 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
               A_matx(2, ::) := n3.t
               val p_vect = A_matx \ b_vect
               // Check if point is within block, otherwise discard it
-              if (!pointOutsideBlock(p_vect(0), p_vect(1), p_vect(2))) {
-                Some((p_vect(0) + centerX,
+              if (!pointOutsideBlock(Array(p_vect(0), p_vect(1), p_vect(2)))) {
+                Some(Array(p_vect(0) + centerX,
                       p_vect(1) + centerY,
                       p_vect(2) + centerZ))
               } else None
@@ -379,14 +408,14 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     * @return A Seq of seqs that give the local to global mapping for the
     * triangulation of each of the faces.
     */
-  def meshFaces(vertices: Map[Face, Seq[(Double, Double, Double)]]): Map[Face, Seq[(Int, Int, Int)]] =
+  def meshFaces(vertices: Map[Face, Seq[Array[Double]]]): Map[Face, Seq[Array[Int]]] =
     // Determine rotation matrix to rotate faces perpendicular to z-axis. This way all vertices
     // are only in the x-y plane which makes triangulation easier.
     faces.zip (
       faces.map { face =>
-        val R = Block.rotationMatrix(face.normalVec, (0.0, 0.0, 1.0))
+        val R = Block.rotationMatrix(face.normalVec, Array(0.0, 0.0, 1.0))
         val rotatedVertices = vertices(face).map { vertex =>
-          val rotatedVertex = R * DenseVector(vertex._1, vertex._2, vertex._3)
+          val rotatedVertex = R * DenseVector(vertex(0), vertex(1), vertex(2))
           Delaunay.Vector2(rotatedVertex(0), rotatedVertex(1))
         }.distinct.toList
         assert(rotatedVertices.nonEmpty)
@@ -395,10 +424,12 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
         // takes care of all other cases.
         if (math.abs(face.c + 1.0) < NumericUtils.EPSILON) {
           Delaunay.Triangulation(rotatedVertices).map { vert =>
-            (vert._3, vert._2, vert._1)
+            Array(vert._3, vert._2, vert._1)
           }
         } else {
-          Delaunay.Triangulation(rotatedVertices)
+          Delaunay.Triangulation(rotatedVertices).map { vert =>
+            Array(vert._1, vert._2, vert._3)
+          }
         }
       }
     ).toMap
@@ -408,19 +439,19 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     * See http://wwwf.imperial.ac.uk/~rn/centroid.pdf for theoretical background.
     * @return The centroid of the block, (centerX, centerY, centerZ).
     */
-  def centroid: (Double, Double, Double) = {
+  def centroid: Array[Double] = {
     val vertices = findVertices
     val mesh = meshFaces(vertices)
 
     val increments = faces.flatMap { face =>
       mesh(face).map { m =>
         // Access triangulation entries backwards so they are in counterclockwise order
-        val a_vals = vertices(face)(m._3)
-        val b_vals = vertices(face)(m._2)
-        val c_vals = vertices(face)(m._1)
-        val a = DenseVector[Double](a_vals._1, a_vals._2, a_vals._3)
-        val b = DenseVector[Double](b_vals._1, b_vals._2, b_vals._3)
-        val c = DenseVector[Double](c_vals._1, c_vals._2, c_vals._3)
+        val a_vals = vertices(face)(m(2))
+        val b_vals = vertices(face)(m(1))
+        val c_vals = vertices(face)(m(0))
+        val a = DenseVector[Double](a_vals(0), a_vals(1), a_vals(2))
+        val b = DenseVector[Double](b_vals(0), b_vals(1), b_vals(2))
+        val c = DenseVector[Double](c_vals(0), c_vals(1), c_vals(2))
 
         val n = linalg.cross(b - a, c - a)
         val volIncrement = a dot n
@@ -445,7 +476,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
       case ((volInc1, (centX1, centY1, centZ1)),  (volInc2, (centX2, centY2, centZ2))) =>
         (volInc1 + volInc2, (centX1 + centX2, centY1 + centY2, centZ1 + centZ2))
     }
-    (
+    Array(
       // Factor of 3 comes from: centroid / (2.0 * (volume/6.0))
       3.0 * centroidX / totalVolume,
       3.0 * centroidY / totalVolume,
@@ -465,12 +496,12 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     val volIncrements = faces.flatMap { face =>
       mesh(face).map { m =>
         // Access triangulation entries backwards so they are in counterclockwise order
-        val a_vals = vertices(face)(m._3)
-        val b_vals = vertices(face)(m._2)
-        val c_vals = vertices(face)(m._1)
-        val a = DenseVector[Double](a_vals._1, a_vals._2, a_vals._3)
-        val b = DenseVector[Double](b_vals._1, b_vals._2, b_vals._3)
-        val c = DenseVector[Double](c_vals._1, c_vals._2, c_vals._3)
+        val a_vals = vertices(face)(m(2))
+        val b_vals = vertices(face)(m(1))
+        val c_vals = vertices(face)(m(0))
+        val a = DenseVector[Double](a_vals(0), a_vals(1), a_vals(2))
+        val b = DenseVector[Double](b_vals(0), b_vals(1), b_vals(2))
+        val c = DenseVector[Double](c_vals(0), c_vals(1), c_vals(2))
 
         val n = linalg.cross(b - a, c - a)
         a dot n
@@ -485,25 +516,31 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     * @param localOrigin: new local origin
     * @return List of faces with updated distances
     */
-  def updateFaces(localOrigin: (Double, Double,Double)): Seq[Face] = {
-    faces.map { case Face((a,b,c), d, phi, cohesion, processorJoint) =>
+  def updateFaces(localOrigin: Array[Double]): Seq[Face] = {
+    assert(localOrigin.length == 3)
+
+    faces.map { case Face(normal, d, phi, cohesion, processorJoint) =>
+      val a = normal(0)
+      val b = normal(1)
+      val c = normal(2)
+
       val w = DenseVector.zeros[Double](3)
       if (math.abs(c) >= NumericUtils.EPSILON) {
-        w(0) = localOrigin._1 - centerX
-        w(1) = localOrigin._2 - centerY
-        w(2) = localOrigin._3 - (d/c + centerZ)
+        w(0) = localOrigin(0) - centerX
+        w(1) = localOrigin(1) - centerY
+        w(2) = localOrigin(2) - (d/c + centerZ)
       } else if (math.abs(b) >= NumericUtils.EPSILON) {
-        w(0) = localOrigin._1 - centerX
-        w(1) = localOrigin._2 - (d/b + centerY)
-        w(2) = localOrigin._3 - centerZ
+        w(0) = localOrigin(0) - centerX
+        w(1) = localOrigin(1) - (d/b + centerY)
+        w(2) = localOrigin(2) - centerZ
       } else if (math.abs(a) >= NumericUtils.EPSILON) {
-        w(0) = localOrigin._1 - (d/a + centerX)
-        w(1) = localOrigin._2 - centerY
-        w(2) = localOrigin._3 - centerZ
+        w(0) = localOrigin(0) - (d/a + centerX)
+        w(1) = localOrigin(1) - centerY
+        w(2) = localOrigin(2) - centerZ
       }
       val n = DenseVector[Double](a, b, c)
       val new_d = NumericUtils.roundToTolerance(-(n dot w) / linalg.norm(n))
-      Face((a, b, c), new_d, phi, cohesion, processorJoint)
+      Face(Array(a, b, c), new_d, phi, cohesion, processorJoint)
     }
   }
 
@@ -517,7 +554,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     if (faces.length != inputBlock.faces.length) {
       return false
     }
-    val centroid = (centerX, centerY, centerZ)
+    val centroid = Array(centerX, centerY, centerZ)
     val updatedInputBlock = Block(centroid, inputBlock.updateFaces(centroid))
 
     val cleanFaces = faces.map(_.applyTolerance)
@@ -534,5 +571,13 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
     (math.abs(centerY - updatedInputBlock.centerY) < tolerance) &&
     (math.abs(centerZ - updatedInputBlock.centerZ) < tolerance) &&
     faceMatches
+  }
+
+  override def equals(obj: Any): Boolean = {
+    obj match {
+      case b: Block =>
+        this.centerX == b.centerX && this.centerY == b.centerY &&
+        this.centerZ == b.centerZ && this.faces == b.faces
+    }
   }
 }

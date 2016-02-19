@@ -4,209 +4,208 @@ import org.scalatest._
 
 class RockSlicerSpec extends FunSuite {
   val boundingFaces = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0),
-    Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0), 
-    Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0, processorJoint = true),
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), 
-    Face((0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0)   
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0)
   )
-  val leftCube = Block((0.0, 0.0, 0.0), boundingFaces)
+  val leftCube = Block(Array(0.0, 0.0, 0.0), boundingFaces)
 
   val boundingFaces2 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0),
-    Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
-    Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), 
-    Face((0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0)
   )
-  val rightCube = Block((0.0, 1.0, 0.0), boundingFaces2)
+  val rightCube = Block(Array(0.0, 1.0, 0.0), boundingFaces2)
 
   val boundingFaces3 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0), 
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0), 
-    Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), 
-    Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
   )
-  val unitCube = Block((0.0, 0.0, 0.0), boundingFaces3)
+  val unitCube = Block(Array(0.0, 0.0, 0.0), boundingFaces3)
 
   val boundingFaces4 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, -1.0, 0.0), 0.5, phi=0, cohesion=0),
-    Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true), 
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), 0.5, phi=0, cohesion=0),
+    Face(Array(0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
   )
-  val leftHalfUnitCube = Block((0.0, 0.5, 0.0), boundingFaces4)
+  val leftHalfUnitCube = Block(Array(0.0, 0.5, 0.0), boundingFaces4)
 
   val boundingFaces5 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
-    Face((0.0, 1.0, 0.0), 0.5, phi=0, cohesion=0), 
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 1.0, 0.0), 0.5, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
   )
-  val rightHalfUnitCube = Block((0.0, 0.5, 0.0), boundingFaces5)
+  val rightHalfUnitCube = Block(Array(0.0, 0.5, 0.0), boundingFaces5)
 
   val boundingFaces6 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, -1.0, 0.0), 0.5, phi=0, cohesion=0),
-    Face((0.0, 1.0, 0.0), -0.25, phi=0, cohesion=0, processorJoint = true), 
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), 0.5, phi=0, cohesion=0),
+    Face(Array(0.0, 1.0, 0.0), -0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
   )
-  val leftQuarterUnitCube = Block((0.0, 0.5, 0.0), boundingFaces6)
+  val leftQuarterUnitCube = Block(Array(0.0, 0.5, 0.0), boundingFaces6)
 
   val boundingFaces7 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, -1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
-    Face((0.0, 1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true), 
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
   )
-  val centerPartUnitCube = Block((0.0, 0.5, 0.0), boundingFaces7)
+  val centerPartUnitCube = Block(Array(0.0, 0.5, 0.0), boundingFaces7)
 
   val boundingFaces8 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, -1.0, 0.0), -0.25, phi=0, cohesion=0, processorJoint = true),
-    Face((0.0, 1.0, 0.0), 0.5, phi=0, cohesion=0), 
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), -0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 1.0, 0.0), 0.5, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
   )
-  val rightQuarterUnitCube = Block((0.0, 0.5, 0.0), boundingFaces8)
+  val rightQuarterUnitCube = Block(Array(0.0, 0.5, 0.0), boundingFaces8)
 
   val boundingFaces9 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, -1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
-    Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true), 
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
   )
-  val leftCenterQuarterUnitCube = Block((0.0, 0.5, 0.0), boundingFaces9)
+  val leftCenterQuarterUnitCube = Block(Array(0.0, 0.5, 0.0), boundingFaces9)
 
   val boundingFaces10 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
-    Face((0.0, 1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true), 
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
   )
-  val rightCenterQuarterUnitCube = Block((0.0, 0.5, 0.0), boundingFaces10)
+  val rightCenterQuarterUnitCube = Block(Array(0.0, 0.5, 0.0), boundingFaces10)
 
   val boundingFaces11 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
-  val bottomHalfUnitCube = Block((0.0, 0.0, 0.0), boundingFaces11)
+  val bottomHalfUnitCube = Block(Array(0.0, 0.0, 0.0), boundingFaces11)
 
   val boundingFaces12 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
-  val topHalfUnitCube = Block((0.0, 0.0, 0.5), boundingFaces12)
+  val topHalfUnitCube = Block(Array(0.0, 0.0, 0.5), boundingFaces12)
 
   // Divide unit cube into eight pieces with three processor joints present
   val boundingFaces13 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, -1.0, 0.0), 0.5, phi=0, cohesion=0),
-    Face((0.0, 1.0, 0.0), -0.25, phi=0, cohesion=0, processorJoint = true), 
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), 0.5, phi=0, cohesion=0),
+    Face(Array(0.0, 1.0, 0.0), -0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
-  val bottomLeftEighthUnitCube = Block((0.0, 0.5, 0.0), boundingFaces13)
+  val bottomLeftEighthUnitCube = Block(Array(0.0, 0.5, 0.0), boundingFaces13)
 
   val boundingFaces14 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, -1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
-    Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true), 
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
-  val bottomLeftCenterEighthUnitCube = Block((0.0, 0.5, 0.0), boundingFaces14)
+  val bottomLeftCenterEighthUnitCube = Block(Array(0.0, 0.5, 0.0), boundingFaces14)
 
   val boundingFaces15 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
-    Face((0.0, 1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true), 
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
-  val bottomRightCenterEighthUnitCube = Block((0.0, 0.5, 0.0), boundingFaces15)
+  val bottomRightCenterEighthUnitCube = Block(Array(0.0, 0.5, 0.0), boundingFaces15)
 
   val boundingFaces16 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, -1.0, 0.0), -0.25, phi=0, cohesion=0, processorJoint = true),
-    Face((0.0, 1.0, 0.0), 0.5, phi=0, cohesion=0), 
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), -0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 1.0, 0.0), 0.5, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
-  val bottomRightEighthUnitCube = Block((0.0, 0.5, 0.0), boundingFaces16)
+  val bottomRightEighthUnitCube = Block(Array(0.0, 0.5, 0.0), boundingFaces16)
 
   val boundingFaces17 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, -1.0, 0.0), 0.5, phi=0, cohesion=0),
-    Face((0.0, 1.0, 0.0), -0.25, phi=0, cohesion=0, processorJoint = true), 
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), 0.5, phi=0, cohesion=0),
+    Face(Array(0.0, 1.0, 0.0), -0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
-  val topLeftEighthUnitCube = Block((0.0, 0.5, 0.5), boundingFaces17)
+  val topLeftEighthUnitCube = Block(Array(0.0, 0.5, 0.5), boundingFaces17)
 
   val boundingFaces18 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, -1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
-    Face((0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true), 
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
-  val topLeftCenterEighthUnitCube = Block((0.0, 0.5, 0.5), boundingFaces18)
+  val topLeftCenterEighthUnitCube = Block(Array(0.0, 0.5, 0.5), boundingFaces18)
 
   val boundingFaces19 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
-    Face((0.0, 1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true), 
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
-  val topRightCenterEighthUnitCube = Block((0.0, 0.5, 0.5), boundingFaces19)
+  val topRightCenterEighthUnitCube = Block(Array(0.0, 0.5, 0.5), boundingFaces19)
 
   val boundingFaces20 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), 
-    Face((0.0, -1.0, 0.0), -0.25, phi=0, cohesion=0, processorJoint = true),
-    Face((0.0, 1.0, 0.0), 0.5, phi=0, cohesion=0), 
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face((0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0) 
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), -0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 1.0, 0.0), 0.5, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
-  val topRightEighthUnitCube = Block((0.0, 0.5, 0.5), boundingFaces20)
+  val topRightEighthUnitCube = Block(Array(0.0, 0.5, 0.5), boundingFaces20)
 
  test("The two cubes should share one processor face") {
-   val leftCenter = (leftCube.centerX, leftCube.centerY, leftCube.centerZ)
-   val updatedRightCube = Block(leftCenter, rightCube.updateFaces(leftCenter))
+   val updatedRightCube = Block(leftCube.center, rightCube.updateFaces(leftCube.center))
 
    val sharedFaces = RockSlicer.findSharedProcessorFaces(leftCube, updatedRightCube)
    assert(!sharedFaces.exists( face => math.abs(face.d) != 1.0))
@@ -214,8 +213,7 @@ class RockSlicerSpec extends FunSuite {
  }
 
  test("The two blocks should share one processor face, but with distances reversed") {
-   val rightCenter = (rightCube.centerX, rightCube.centerY, rightCube.centerZ)
-   val updatedLeftCube = Block(rightCenter, leftCube.updateFaces(rightCenter))
+   val updatedLeftCube = Block(rightCube.center, leftCube.updateFaces(rightCube.center))
    val sharedFaces = RockSlicer.findSharedProcessorFaces(rightCube, updatedLeftCube)
    assert(sharedFaces.forall(_.d == 0.0))
    assert(sharedFaces.length == 2)
@@ -291,23 +289,23 @@ class RockSlicerSpec extends FunSuite {
  }
 
  test("Processor joints should be removed and actual blocks restored") {
-   val processorJoint1 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0),
-                               (0.0, 0.3, 0.0), phi = 0.0, cohesion = 0.0, shape = Nil,
+   val processorJoint1 = Joint(Array(0.0, 1.0, 0.0), Array(0.0, 0.0, 0.0),
+                               Array(0.0, 0.3, 0.0), phi = 0.0, cohesion = 0.0, shape = Vector.empty,
                                 processorJoint = true)
-   val processorJoint2 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0),
-                               (0.0, 0.7, 0.0), phi = 0.0, cohesion = 0.0, shape = Nil,
+   val processorJoint2 = Joint(Array(0.0, 1.0, 0.0), Array(0.0, 0.0, 0.0),
+                               Array(0.0, 0.7, 0.0), phi = 0.0, cohesion = 0.0, shape = Vector.empty,
                                 processorJoint = true)
-   val processorJoint3 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0),
-                               (0.0, 0.2, 0.0), phi = 0.0, cohesion = 0.0, shape = Nil,
+   val processorJoint3 = Joint(Array(0.0, 1.0, 0.0), Array(0.0, 0.0, 0.0),
+                               Array(0.0, 0.2, 0.0), phi = 0.0, cohesion = 0.0, shape = Vector.empty,
                                processorJoint = true)
-   val processorJoint4 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0),
-                               (0.0, 0.8, 0.0), phi = 0.0, cohesion = 0.0, shape = Nil,
+   val processorJoint4 = Joint(Array(0.0, 1.0, 0.0), Array(0.0, 0.0, 0.0),
+                               Array(0.0, 0.8, 0.0), phi = 0.0, cohesion = 0.0, shape = Vector.empty,
                                processorJoint = true)
 
-   val actualJoint1 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.25, 0.0), phi = 0.0,
-                            cohesion = 0.0, shape = Nil)
-   val actualJoint2 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.75, 0.0), phi = 0.0,
-                            cohesion = 0.0, shape = Nil)
+   val actualJoint1 = Joint(Array(0.0, 1.0, 0.0), Array(0.0, 0.0, 0.0), Array(0.0, 0.25, 0.0), phi = 0.0,
+                            cohesion = 0.0, shape = Vector.empty)
+   val actualJoint2 = Joint(Array(0.0, 1.0, 0.0), Array(0.0, 0.0, 0.0), Array(0.0, 0.75, 0.0), phi = 0.0,
+                            cohesion = 0.0, shape = Vector.empty)
    val joints = Seq(processorJoint1, processorJoint2, processorJoint3, processorJoint4,
                     actualJoint1, actualJoint2)
    var blocks = Seq(unitCube)
@@ -344,25 +342,25 @@ class RockSlicerSpec extends FunSuite {
  }
 
   test("Oblique processor joints should be removed and actual blocks restored") {
-    val processorJoint1 = Joint((1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)),
-                                (0.0, 0.0, 0.0), (0.0, 0.9, 0.0), phi = 0.0, cohesion = 0.0, shape = Nil,
+    val processorJoint1 = Joint(Array(1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)),
+                                Array(0.0, 0.0, 0.0), Array(0.0, 0.9, 0.0), phi = 0.0, cohesion = 0.0, shape = Vector.empty,
                                  processorJoint = true)
-    val processorJoint2 = Joint((1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)),
-                                (0.0, 0.0, 0.0), (0.7, 0.7, 0.7), phi = 0.0, cohesion = 0.0, shape = Nil,
+    val processorJoint2 = Joint(Array(1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)),
+                                Array(0.0, 0.0, 0.0), Array(0.7, 0.7, 0.7), phi = 0.0, cohesion = 0.0, shape = Vector.empty,
                                  processorJoint = true)
-    val processorJoint3 = Joint((1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)),
-                                (0.0, 0.0, 0.0), (0.5, 0.5, 0.5), phi = 0.0, cohesion = 0.0, shape = Nil,
+    val processorJoint3 = Joint(Array(1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)),
+                                Array(0.0, 0.0, 0.0), Array(0.5, 0.5, 0.5), phi = 0.0, cohesion = 0.0, shape = Vector.empty,
                                 processorJoint = true)
-    val processorJoint4 = Joint((1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)),
-                                (0.0, 0.0, 0.0), (0.4, 0.4, 0.4), phi = 0.0, cohesion = 0.0, shape = Nil,
+    val processorJoint4 = Joint(Array(1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)),
+                                Array(0.0, 0.0, 0.0), Array(0.4, 0.4, 0.4), phi = 0.0, cohesion = 0.0, shape = Vector.empty,
                                 processorJoint = true)
-    val processorJoint5 = Joint((1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)),
-                                (0.0, 0.0, 0.0), (0.6, 0.6, 0.6), phi = 0.0, cohesion = 0.0, shape = Nil,
+    val processorJoint5 = Joint(Array(1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)),
+                                Array(0.0, 0.0, 0.0), Array(0.6, 0.6, 0.6), phi = 0.0, cohesion = 0.0, shape = Vector.empty,
                                 processorJoint = true)
-    val actualJoint1 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.25, 0.0), phi = 0.0,
-                             cohesion = 0.0, shape = Nil)
-    val actualJoint2 = Joint((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.75, 0.0), phi = 0.0,
-                             cohesion = 0.0, shape = Nil)
+    val actualJoint1 = Joint(Array(0.0, 1.0, 0.0), Array(0.0, 0.0, 0.0), Array(0.0, 0.25, 0.0), phi = 0.0,
+                             cohesion = 0.0, shape = Vector.empty)
+    val actualJoint2 = Joint(Array(0.0, 1.0, 0.0), Array(0.0, 0.0, 0.0), Array(0.0, 0.75, 0.0), phi = 0.0,
+                             cohesion = 0.0, shape = Vector.empty)
 
     val joints = Seq(processorJoint1, processorJoint2, processorJoint3, processorJoint4, processorJoint5,
                      actualJoint1, actualJoint2)
@@ -410,3 +408,4 @@ class RockSlicerSpec extends FunSuite {
    assert(processorBlocks.diff(orphanBlocks).isEmpty)
  }
 }
+

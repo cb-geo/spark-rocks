@@ -5,63 +5,63 @@ import scala.math.sqrt
 
 class BlockVTKSpec extends FunSuite {
   val boundingFaces = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0), // -x = 0
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),  // x = 1
-    Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0), // -y = 0
-    Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),  // y = 1
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), // -z = 0
-    Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)   // z = 1
+    Face(Array(1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0), // -x = 0
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),  // x = 1
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0), // -y = 0
+    Face(Array(0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),  // y = 1
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), // -z = 0
+    Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)   // z = 1
   )
-  val unitCube = Block((0.0, 0.0, 0.0), boundingFaces)
+  val unitCube = Block(Array(0.0, 0.0, 0.0), boundingFaces)
 
   // Seven sided block
   val distance = 1.0 // Should be greater than 1/sqrt(2.0) for intercept calcs to hold
   val boundingFaces2 = List(
-    Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0), // -x <= 0
-    Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),  // x <= 1
-    Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0), // -y <= 0
-    Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),  // y <= 1
-    Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), // -z <= 0
-    Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0),  // z <= 1
-    Face((1/sqrt(2.0), 1/sqrt(2.0), 0.0), distance, phi=0, cohesion=0) // 1/sqrt(2)*x + 1/sqrt(2)*y <= 1
+    Face(Array(1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0), // -x <= 0
+    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),  // x <= 1
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0), // -y <= 0
+    Face(Array(0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),  // y <= 1
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), // -z <= 0
+    Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0),  // z <= 1
+    Face(Array(1/sqrt(2.0), 1/sqrt(2.0), 0.0), distance, phi=0, cohesion=0) // 1/sqrt(2)*x + 1/sqrt(2)*y <= 1
   )
-  val sevenSidedBlock = Block((0.0, 0.0, 0.0), boundingFaces2)
+  val sevenSidedBlock = Block(Array(0.0, 0.0, 0.0), boundingFaces2)
 
   // Faces for unit Cube
-  val face1 = Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
-  val face2 = Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
-  val face3 = Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0)
-  val face4 = Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
-  val face5 = Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0)
-  val face6 = Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
-  val face1Verts = List((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 1.0), (0.0, 1.0, 1.0))
-  val face2Verts = List((1.0, 1.0, 1.0), (1.0, 0.0, 1.0), (1.0, 0.0, 0.0), (1.0, 1.0, 0.0))
-  val face3Verts = List((0.0, 0.0, 1.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), (1.0, 0.0, 1.0))
-  val face4Verts = List((0.0, 1.0, 0.0), (0.0, 1.0, 1.0), (1.0, 1.0, 1.0), (1.0, 1.0, 0.0))
-  val face5Verts = List((1.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 1.0, 0.0))
-  val face6Verts = List((0.0, 1.0, 1.0), (0.0, 0.0, 1.0), (1.0, 0.0, 1.0), (1.0, 1.0, 1.0))
+  val face1 = Face(Array(1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
+  val face2 = Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
+  val face3 = Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0)
+  val face4 = Face(Array(0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
+  val face5 = Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0)
+  val face6 = Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
+  val face1Verts = List(Array(0.0, 1.0, 0.0), Array(0.0, 0.0, 0.0), Array(0.0, 0.0, 1.0), Array(0.0, 1.0, 1.0))
+  val face2Verts = List(Array(1.0, 1.0, 1.0), Array(1.0, 0.0, 1.0), Array(1.0, 0.0, 0.0), Array(1.0, 1.0, 0.0))
+  val face3Verts = List(Array(0.0, 0.0, 1.0), Array(0.0, 0.0, 0.0), Array(1.0, 0.0, 0.0), Array(1.0, 0.0, 1.0))
+  val face4Verts = List(Array(0.0, 1.0, 0.0), Array(0.0, 1.0, 1.0), Array(1.0, 1.0, 1.0), Array(1.0, 1.0, 0.0))
+  val face5Verts = List(Array(1.0, 1.0, 0.0), Array(1.0, 0.0, 0.0), Array(0.0, 0.0, 0.0), Array(0.0, 1.0, 0.0))
+  val face6Verts = List(Array(0.0, 1.0, 1.0), Array(0.0, 0.0, 1.0), Array(1.0, 0.0, 1.0), Array(1.0, 1.0, 1.0))
 
   // Faces for seven sided cube
   val x_intercept = NumericUtils.roundToTolerance(distance - sqrt(2.0)*(sqrt(2.0) - distance))
   val y_intercept = NumericUtils.roundToTolerance(distance - sqrt(2.0)*(sqrt(2.0) - distance))
-  val face1_s7 = Face((-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
-  val face2_s7 = Face((1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
-  val face3_s7 = Face((0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0)
-  val face4_s7 = Face((0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
-  val face5_s7 = Face((0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0)
-  val face6_s7 = Face((0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
-  val face7_s7 = Face((1/sqrt(2.0), 1/sqrt(2.0), 0.0), 1.0, phi=0, cohesion=0)
-  val face1Verts_s7 = List((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 1.0), (0.0, 1.0, 1.0))
-  val face2Verts_s7 = List((1.0, y_intercept, 1.0), (1.0, 0.0, 1.0), (1.0, 0.0, 0.0),
-                           (1.0, y_intercept, 0.0))
-  val face3Verts_s7 = List((0.0, 0.0, 1.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), (1.0, 0.0, 1.0))
-  val face4Verts_s7 = List((0.0, 1.0, 0.0), (0.0, 1.0, 1.0), (x_intercept, 1.0, 1.0),
+  val face1_s7 = Face(Array(1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0)
+  val face2_s7 = Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
+  val face3_s7 = Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0)
+  val face4_s7 = Face(Array(0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
+  val face5_s7 = Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0)
+  val face6_s7 = Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
+  val face7_s7 = Face(Array(1/sqrt(2.0), 1/sqrt(2.0), 0.0), 1.0, phi=0, cohesion=0)
+  val face1Verts_s7 = List(Array(0.0, 1.0, 0.0), Array(0.0, 0.0, 0.0), Array(0.0, 0.0, 1.0), Array(0.0, 1.0, 1.0))
+  val face2Verts_s7 = List(Array(1.0, y_intercept, 1.0), Array(1.0, 0.0, 1.0), Array(1.0, 0.0, 0.0),
+                           Array(1.0, y_intercept, 0.0))
+  val face3Verts_s7 = List(Array(0.0, 0.0, 1.0), Array(0.0, 0.0, 0.0), Array(1.0, 0.0, 0.0), Array(1.0, 0.0, 1.0))
+  val face4Verts_s7 = List(Array(0.0, 1.0, 0.0), Array(0.0, 1.0, 1.0), (x_intercept, 1.0, 1.0),
                            (x_intercept, 1.0, 0.0))
-  val face5Verts_s7 = List((1.0, y_intercept, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 1.0, 0.0),
+  val face5Verts_s7 = List(Array(1.0, y_intercept, 0.0), Array(1.0, 0.0, 0.0), Array(0.0, 0.0, 0.0), Array(0.0, 1.0, 0.0),
                            (x_intercept, 1.0, 0.0))
-  val face6Verts_s7 = List((x_intercept, 1.0, 1.0), (0.0, 1.0, 1.0), (0.0, 0.0, 1.0), (1.0, 0.0, 1.0),
-                           (1.0, y_intercept, 1.0))
-  val face7Verts_s7 = List((x_intercept, 1.0, 1.0), (1.0, y_intercept, 1.0), (1.0, y_intercept, 0.0),
+  val face6Verts_s7 = List((x_intercept, 1.0, 1.0), Array(0.0, 1.0, 1.0), Array(0.0, 0.0, 1.0), Array(1.0, 0.0, 1.0),
+                           Array(1.0, y_intercept, 1.0))
+  val face7Verts_s7 = List((x_intercept, 1.0, 1.0), Array(1.0, y_intercept, 1.0), Array(1.0, y_intercept, 0.0),
                            (x_intercept, 1.0, 0.0))
 
   private def doubleListElementDiff(list1: Seq[Double], list2: Seq[Double]): Seq[Double] = {
@@ -103,17 +103,17 @@ class BlockVTKSpec extends FunSuite {
 
   test("List of vertices should contain only distinct vertices as tuples") {
     val vtkBlock = BlockVTK(unitCube)
-    val expectedVertices = Seq((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 1.0), (0.0, 1.0, 1.0),
-                               (1.0, 1.0, 1.0), (1.0, 0.0, 1.0), (1.0, 0.0, 0.0), (1.0, 1.0, 0.0))
+    val expectedVertices = Seq(Array(0.0, 1.0, 0.0), Array(0.0, 0.0, 0.0), Array(0.0, 0.0, 1.0), Array(0.0, 1.0, 1.0),
+                               Array(1.0, 1.0, 1.0), Array(1.0, 0.0, 1.0), Array(1.0, 0.0, 0.0), Array(1.0, 1.0, 0.0))
 
     assert(expectedVertices == vtkBlock.tupleVertices)
   }
 
   test("List of vertices should contain only distinct vertices as tuples (seven-sided block)") {
     val vtkBlock = BlockVTK(sevenSidedBlock)
-    val expectedVertices = Seq((0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 1.0),
-                               (0.0, 1.0, 1.0), (1.0, y_intercept, 1.0), (1.0, 0.0, 1.0),
-                               (1.0, 0.0, 0.0), (1.0, y_intercept, 0.0),
+    val expectedVertices = Seq(Array(0.0, 1.0, 0.0), Array(0.0, 0.0, 0.0), Array(0.0, 0.0, 1.0),
+                               Array(0.0, 1.0, 1.0), Array(1.0, y_intercept, 1.0), Array(1.0, 0.0, 1.0),
+                               Array(1.0, 0.0, 0.0), Array(1.0, y_intercept, 0.0),
                                (x_intercept, 1.0, 1.0), (x_intercept, 1.0, 0.0))
 
     assert(expectedVertices == vtkBlock.tupleVertices)

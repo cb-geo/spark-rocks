@@ -198,9 +198,9 @@ object RockSlicer {
     // Check if more than one match was found. If so, merge all matches into one block
     val mergedJoinedBlock = if (joinedBlocks.length > 1) {
       // Note: originalPairedBlocks.head will be equal to processorBlocks.head
-      val temporaryOrigin = (originalPairedBlocks.head.centerX,
-                             originalPairedBlocks.head.centerY,
-                             originalPairedBlocks.head.centerZ)
+      val temporaryOrigin = Array(originalPairedBlocks.head.centerX,
+                                  originalPairedBlocks.head.centerY,
+                                  originalPairedBlocks.head.centerZ)
       val temporaryBlocks = originalPairedBlocks.tail.map { block =>
         Block(temporaryOrigin, block.updateFaces(temporaryOrigin))
       }
@@ -269,7 +269,7 @@ object RockSlicer {
     if (processorBlocks.nonEmpty) {
       processorBlocks.tail flatMap { block =>
         val currentBlock = processorBlocks.head
-        val localCenter = (currentBlock.centerX, currentBlock.centerY, currentBlock.centerZ)
+        val localCenter = currentBlock.center
         val comparisonBlock = Block(localCenter, block.updateFaces(localCenter))
         val sharedProcFaces = findSharedProcessorFaces(currentBlock, comparisonBlock)
 
@@ -306,7 +306,7 @@ object RockSlicer {
         }
       }
     } else {
-      Seq((Block((0.0, 0.0, 0.0), Seq.empty[Face]), Seq.empty[Int]))
+      Seq((Block(Array(0.0, 0.0, 0.0), Seq.empty[Face]), Seq.empty[Int]))
     }
   }
 }
