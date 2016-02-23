@@ -208,7 +208,7 @@ class RockSlicerSpec extends FunSuite {
    val leftCenter = (leftCube.centerX, leftCube.centerY, leftCube.centerZ)
    val updatedRightCube = Block(leftCenter, rightCube.updateFaces(leftCenter))
 
-   val sharedFaces = RockSlicer.compareProcessorBlocks(leftCube, updatedRightCube)
+   val sharedFaces = RockSlicer.findSharedProcessorFaces(leftCube, updatedRightCube)
    assert(!sharedFaces.exists( face => math.abs(face.d) != 1.0))
    assert(sharedFaces.length == 2)
  }
@@ -216,8 +216,8 @@ class RockSlicerSpec extends FunSuite {
  test("The two blocks should share one processor face, but with distances reversed") {
    val rightCenter = (rightCube.centerX, rightCube.centerY, rightCube.centerZ)
    val updatedLeftCube = Block(rightCenter, leftCube.updateFaces(rightCenter))
-   val sharedFaces = RockSlicer.compareProcessorBlocks(rightCube, updatedLeftCube)
-   assert(!sharedFaces.exists( face => face.d != 0.0))
+   val sharedFaces = RockSlicer.findSharedProcessorFaces(rightCube, updatedLeftCube)
+   assert(sharedFaces.forall(_.d == 0.0))
    assert(sharedFaces.length == 2)
  }
 
@@ -283,12 +283,11 @@ class RockSlicerSpec extends FunSuite {
      Block(centroid, block.updateFaces(centroid))
    }
 
-   val blockCheck = centroidMergedBlocks.zip(expectedBlocksCentroid) map { case (calc, expected) =>
+   assert(centroidMergedBlocks.zip(expectedBlocksCentroid) forall { case (calc, expected) =>
      calc.approximateEquals(expected)
-   }
+   })
    assert(orphanBlocks.isEmpty)
    assert(centroidMergedBlocks.length == 2)
-   assert(!blockCheck.contains(false))
  }
 
  test("Processor joints should be removed and actual blocks restored") {
@@ -337,13 +336,11 @@ class RockSlicerSpec extends FunSuite {
      Block(centroid, block.updateFaces(centroid))
    }
 
-   val blockCheck = centroidMergedBlocks.zip(expectedBlocksCentroid) forall { case (calc, expected) =>
+   assert(centroidMergedBlocks.zip(expectedBlocksCentroid) forall { case (calc, expected) =>
      calc.approximateEquals(expected)
-   }
-
+   })
    assert(orphanBlocks.isEmpty)
    assert(centroidMergedBlocks.length == 3)
-   assert(blockCheck)
  }
 
   test("Oblique processor joints should be removed and actual blocks restored") {

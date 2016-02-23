@@ -67,16 +67,25 @@ object RockSlicer {
     // Process processor blocks before continuing with remaining blocks
     // Search blocks for matching processor joints
     if (processorBlocks.count() > 0) {
+      // Create pair RDD that contains initially all the blocks on each partion as the keys and
+      // an empty sequence of blocks as the values. The keys represent blocks that are yet to be merged,
+      // the values are blocks that have already been merged.
       val treeReduceBlockPairsRDD = processorBlocks.map{ blocks => (Seq(blocks), Seq.empty[Block])}
       val (allOrphanBlocks, allReconstructedBlocks) = treeReduceBlockPairsRDD.treeReduce({
         case ((toMerge1, merged1), (toMerge2, merged2)) =>
+          // All blocks that share a processor joint are merged/reconstructed. Blocks that do not share
+          // a processor joint with any of the blocks that are to be merged are "orphan" blocks.
           val (treeReconBlocks, treeOrphanBlocks) = mergeBlocks(toMerge1 ++ toMerge2, Seq.empty[Block],
                                                                 Seq.empty[Block])
 
+          // Merged/reconstructed blocks are partitioned based on whether they still contain processor joints
           val (treeProcessorBlocks, treeRealBlocks) = treeReconBlocks.partition { block =>
             block.faces.exists(_.processorJoint)
           }
 
+          // Orphan blocks and merged/reconstructed blocks that still contain processor joints are returned
+          // as the keys to the pair RDD. These will be merged with the next level of the tree. Blocks that
+          // have no remaining processor joints are returned as the values in the pair RDD.
           (treeProcessorBlocks ++ treeOrphanBlocks, treeRealBlocks ++ merged1 ++ merged2)
       }, math.ceil(math.log(arguments.numProcessors)/math.log(2)).toInt)
 
@@ -99,7 +108,7 @@ object RockSlicer {
         val jsonReconBlocks = squeakyCleanRecon.map(Json.blockToMinimalJson)
         val pw = new PrintWriter(new File("reconstructedBlocks.json"))
         jsonReconBlocks.foreach { block =>
-          pw.write(block+"\n")
+          pw.println(block)
         }
         pw.close()
       }
@@ -109,7 +118,7 @@ object RockSlicer {
         val jsonVtkBlocksRecon = vtkBlocksRecon.map(JsonToVtk.blockVtkToMinimalJson)
         val pw = new PrintWriter(new File("vtkReconstructedBlocks.json"))
         jsonVtkBlocksRecon.foreach { block =>
-          pw.write(block+"\n")
+          pw.println(block)
         }
         pw.close()
       }
@@ -193,7 +202,7 @@ object RockSlicer {
       }
 
       val sharedProcessorFaces = temporaryBlocks.flatMap { block =>
-        compareProcessorBlocks(originalPairedBlocks.head, block)
+        findSharedProcessorFaces(originalPairedBlocks.head, block)
       }
       val allFaces = temporaryBlocks.flatMap { block =>
         block.faces
@@ -225,13 +234,13 @@ object RockSlicer {
   }
 
   /**
-    * Compares two input blocks and determines whether they share a processor face
+    * Compares two input blocks and find shared processor faces
     * @param block1 First input block
     * @param block2 Second input block
     * @return List of processor faces that are shared by the two blocks. Will be 
     *         empty if they share no faces
     */
-  def compareProcessorBlocks(block1: Block, block2: Block): Seq[Face] = {
+  def findSharedProcessorFaces(block1: Block, block2: Block): Seq[Face] = {
     val processorFaces1 = block1.faces.filter(_.processorJoint)
     val processorFaces2 = block2.faces.filter(_.processorJoint)
     (processorFaces1 flatMap { face1 =>
@@ -258,7 +267,7 @@ object RockSlicer {
         val currentBlock = processorBlocks.head
         val localCenter = (currentBlock.centerX, currentBlock.centerY, currentBlock.centerZ)
         val comparisonBlock = Block(localCenter, block.updateFaces(localCenter))
-        val sharedProcFaces = compareProcessorBlocks(currentBlock, comparisonBlock)
+        val sharedProcFaces = findSharedProcessorFaces(currentBlock, comparisonBlock)
 
         if (sharedProcFaces.nonEmpty) {
           val currentFaces = currentBlock.faces.diff(sharedProcFaces)
