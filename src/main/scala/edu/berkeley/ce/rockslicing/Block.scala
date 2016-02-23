@@ -42,7 +42,7 @@ case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double
     * @return True if faces are equal, otherwise false
     */
   def approximateEquals(inputFace: Face, tolerance: Double=NumericUtils.EPSILON):
-                   Boolean = {
+      Boolean = {
     (math.abs(a - inputFace.a) < tolerance) &&
     (math.abs(b - inputFace.b) < tolerance) &&
     (math.abs(c - inputFace.c) < tolerance) &&
@@ -56,11 +56,12 @@ case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double
     * @param inputFace Input face
     * @return True if faces are shared, false otherwise
     */
-  def isSharedWith(inputFace: Face): Boolean = {
-    (math.abs(a + inputFace.a) < NumericUtils.EPSILON) &&
-    (math.abs(b + inputFace.b) < NumericUtils.EPSILON) &&
-    (math.abs(c + inputFace.c) < NumericUtils.EPSILON) &&
-    (math.abs(d + inputFace.d) < NumericUtils.EPSILON)
+  def isSharedWith(inputFace: Face, tolerance: Double = NumericUtils.EPSILON):
+      Boolean = {
+    (math.abs(a + inputFace.a) < tolerance) &&
+    (math.abs(b + inputFace.b) < tolerance) &&
+    (math.abs(c + inputFace.c) < tolerance) &&
+    (math.abs(d + inputFace.d) < tolerance)
   }
 }
 
@@ -73,7 +74,7 @@ object Block {
     * @return 3*3 rotation matrix
     */
   def rotationMatrix(n_current: (Double, Double, Double), n_desired: (Double, Double, Double)):
-                             DenseMatrix[Double] = {
+      DenseMatrix[Double] = {
     val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
     val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
     // Check if vectors are parallel
@@ -527,7 +528,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
 
     val zippedFaces = sortedFaces1.zip(sortedFaces2)
     val faceMatches = zippedFaces forall { case (face1, face2) =>
-      face1.approximateEquals(face2)
+      face1.approximateEquals(face2, tolerance)
     }
     (math.abs(centerX - updatedInputBlock.centerX) < tolerance) &&
     (math.abs(centerY - updatedInputBlock.centerY) < tolerance) &&

@@ -67,9 +67,9 @@ object RockSlicer {
     // Process processor blocks before continuing with remaining blocks
     // Search blocks for matching processor joints
     if (processorBlocks.count() > 0) {
-      // Create pair RDD that contains initially all the blocks on each partion as the keys and
-      // an empty sequence of blocks as the values. The keys represent blocks that are yet to be merged,
-      // the values are blocks that have already been merged.
+      // Create pair RDD that contains initially all the blocks on each partion as the first entry and
+      // an empty sequence of blocks as the second entry. The first entry represents blocks that are yet
+      // to be merged, the second entry is blocks that have already been merged.
       val treeReduceBlockPairsRDD = processorBlocks.map{ blocks => (Seq(blocks), Seq.empty[Block])}
       val (allOrphanBlocks, allReconstructedBlocks) = treeReduceBlockPairsRDD.treeReduce({
         case ((toMerge1, merged1), (toMerge2, merged2)) =>
@@ -84,9 +84,11 @@ object RockSlicer {
           }
 
           // Orphan blocks and merged/reconstructed blocks that still contain processor joints are returned
-          // as the keys to the pair RDD. These will be merged with the next level of the tree. Blocks that
-          // have no remaining processor joints are returned as the values in the pair RDD.
+          // as the first entry to the pair RDD. These will be merged with the next level of the tree. Blocks
+          // that have no remaining processor joints are returned as the second entry in the pair RDD.
           (treeProcessorBlocks ++ treeOrphanBlocks, treeRealBlocks ++ merged1 ++ merged2)
+      // The following formula specifies the tree depth for treeReduce. It ensures that at most two leaves are
+      // merged during each reduction.
       }, math.ceil(math.log(arguments.numProcessors)/math.log(2)).toInt)
 
       assert(allOrphanBlocks.isEmpty)
@@ -245,7 +247,7 @@ object RockSlicer {
     val processorFaces2 = block2.faces.filter(_.processorJoint)
     (processorFaces1 flatMap { face1 =>
       processorFaces2 flatMap { face2 =>
-        if (face1.isSharedWith(face2)) {
+        if (face1.isSharedWith(face2, tolerance = 1.0e-5)) {
           Seq[Face](face1, face2)
         } else {
           Seq.empty[Face]
@@ -277,7 +279,7 @@ object RockSlicer {
           // should not be merged since there is a real joint separating the blocks
           val nonSharedFaces =
             allFaces.foldLeft(Seq.empty[Face]) { (unique, current) =>
-              if (!unique.exists(current.isSharedWith)) {
+              if (!unique.exists(current.isSharedWith(_, tolerance = 1.0e-5))) {
                 current +: unique
               } else {
                 unique

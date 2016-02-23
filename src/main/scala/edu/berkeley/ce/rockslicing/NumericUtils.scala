@@ -5,7 +5,7 @@ import scala.math.BigDecimal
  * Numerical utilities for implementation and test cases.
  */
 object NumericUtils {
-  val EPSILON = 1.0e-5
+  val EPSILON = 1.0e-6
 
   /**
    * Converts a value to 0.0 if it is arbitrarily close to it.
