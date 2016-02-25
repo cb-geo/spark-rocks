@@ -2,6 +2,7 @@ package edu.berkeley.ce.rockslicing
 
 import breeze.linalg
 import breeze.linalg.{DenseMatrix, DenseVector}
+import org.apache.commons.lang3.builder.HashCodeBuilder
 
 object Joint {
   /**
@@ -335,5 +336,38 @@ case class Joint(normalVec: Array[Double], localOrigin: Array[Double],
        (math.abs(face.c + c) < NumericUtils.EPSILON) &&
        (math.abs(face.d + distance) < NumericUtils.EPSILON))
     }
+  }
+
+  override def equals(obj: Any): Boolean = {
+    obj match {
+      case j: Joint =>
+        this.a == j.a && this.b == j.b && this.c == j.c &&
+        this.centerX == j.centerX && this.centerY == j.centerY && this.centerZ == j.centerZ &&
+        this.dipAngle == j.dipAngle && this.dipDirection == j.dipDirection &&
+        this.processorJoint == j.processorJoint &&
+        ((this.shape zip j.shape) forall { case ((norm1, d1), (norm2, d2)) =>
+           (norm1 sameElements norm2) && d1 == d2
+        })
+    }
+  }
+
+  override def hashCode: Int = {
+    val hcBuilder = new HashCodeBuilder()
+    hcBuilder.append(a)
+    hcBuilder.append(b)
+    hcBuilder.append(c)
+    hcBuilder.append(centerX)
+    hcBuilder.append(centerY)
+    hcBuilder.append(centerZ)
+    hcBuilder.append(dipAngle)
+    hcBuilder.append(dipDirection)
+    hcBuilder.append(processorJoint)
+
+    shape foreach { case (normVec, dist) =>
+      hcBuilder.append(normVec(0)).append(normVec(1)).append(normVec(2))
+      hcBuilder.append(dist)
+    }
+
+    hcBuilder.toHashCode
   }
 }

@@ -8,7 +8,7 @@ class JointSpec extends FunSuite {
   private def totalDifference(l1: Seq[(Array[Double], Double)],
                               l2: Seq[(Array[Double], Double)]): Double = {
     val differences = l1.zip(l2) map { case ((norm1, d1), (norm2, d2)) =>
-      math.abs(norm1(0) - norm2(0)) + math.abs(norm1(1) - norm2(1)) + math.abs(norm1(2)) + math.abs(norm2(2))
+      math.abs(norm1(0) - norm2(0)) + math.abs(norm1(1) - norm2(1)) + math.abs(norm1(2)) - math.abs(norm2(2))
     }
     differences.sum
   }
@@ -253,7 +253,7 @@ class JointSpec extends FunSuite {
                       NumericUtils.applyTolerance(jointBS._1(1)),
                       NumericUtils.applyTolerance(jointBS._1(2))),
                      jointBS._2)
-    assert(expectedBoundingSphere == cleanedBS)
+    assert((expectedBoundingSphere._1 sameElements cleanedBS._1) && expectedBoundingSphere._2 == cleanedBS._2)
   }
 
   test("Joint bounding sphere should have origin Array(0.0, 0.0, 0.0) and radius sqrt(2)") {
@@ -265,7 +265,7 @@ class JointSpec extends FunSuite {
                       NumericUtils.applyTolerance(jointBS._1(1)),
                       NumericUtils.applyTolerance(jointBS._1(2))),
                      jointBS._2)
-    assert(expectedBoundingSphere == cleanedBS)
+    assert((expectedBoundingSphere._1 sameElements cleanedBS._1) && expectedBoundingSphere._2 == cleanedBS._2)
   }
 
   test("Joint bounding sphere should have origin Array(0.5, 0.0, -0.5) and radius sqrt(0.5^2 + 0.5^2)") {
@@ -277,7 +277,7 @@ class JointSpec extends FunSuite {
                       NumericUtils.applyTolerance(jointBS._1(1)),
                       NumericUtils.applyTolerance(jointBS._1(2))),
                      jointBS._2)
-    assert(expectedBoundingSphere == cleanedBS)
+    assert((expectedBoundingSphere._1 sameElements cleanedBS._1) && expectedBoundingSphere._2 == cleanedBS._2)
   }
 
   test("Joint bounding sphere should have origin Array(1.5, 5.0, -0.5) and radius sqrt(0.5^2 + 0.5^2)") {
@@ -289,6 +289,6 @@ class JointSpec extends FunSuite {
                       NumericUtils.applyTolerance(jointBS._1(1)),
                       NumericUtils.applyTolerance(jointBS._1(2))),
                      jointBS._2)
-    assert(expectedBoundingSphere == cleanedBS)
+    assert((expectedBoundingSphere._1 sameElements cleanedBS._1) && expectedBoundingSphere._2 == cleanedBS._2)
   }
 }

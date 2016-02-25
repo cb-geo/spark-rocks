@@ -333,7 +333,9 @@ class BlockSpec extends FunSuite {
       face4 -> face4Verts
     )
     val vertices = block.findVertices
-    assert(vertices.keys == expectedIntersection.keys && vertices.values == expectedIntersection.values)
+    assert(vertices.keys == expectedIntersection.keys && vertices.keys.forall { key =>
+      vertices.get(key).get.zip(expectedIntersection.get(key).get) forall { case (v1, v2) => v1 sameElements v2 }
+    })
   }
 
   test("The point of intersection between the three planes should be (1.0, 0.0, 0.0)") {
@@ -344,13 +346,15 @@ class BlockSpec extends FunSuite {
     val face1Verts = List(Array(1.0, 0.0, 0.0))
     val face2Verts = List(Array(1.0, 0.0, 0.0))
     val face3Verts = List(Array(1.0, 0.0, 0.0))
-    val expectedIntersetion = Map(
+    val expectedIntersection = Map(
       face1 -> face1Verts,
       face2 -> face2Verts,
       face3 -> face3Verts
     )
     val vertices = block.findVertices
-    assert(vertices == expectedIntersetion)
+    assert(vertices.keys == expectedIntersection.keys && vertices.keys.forall { key =>
+      vertices.get(key).get.zip(expectedIntersection.get(key).get) forall { case (v1, v2) => v1 sameElements v2 }
+    })
   }
 
   test("There should be no intersection between the planes") {
@@ -359,12 +363,14 @@ class BlockSpec extends FunSuite {
     val face3 = Face(Array(0.0, 0.0, 1.0), 0.0, phi=0, cohesion=0)
     val block = Block(Array(1.0, 1.0, 1.0), List(face1, face2, face3))
     val expectedIntersection = Map(
-      face1 -> Vector.empty,
-      face2 -> Vector.empty,
-      face3 -> Vector.empty
+      face1 -> List.empty[Array[Double]],
+      face2 -> List.empty[Array[Double]],
+      face3 -> List.empty[Array[Double]]
     )
     val vertices = block.findVertices
-    assert(vertices == expectedIntersection)
+    assert(vertices.keys == expectedIntersection.keys && vertices.keys.forall { key =>
+      vertices.get(key).get.zip(expectedIntersection.get(key).get) forall { case (v1, v2) => v1 sameElements v2 }
+    })
   }
 
   test("There should be three entries in the triangulation list ordered in a clockwise fashion") {
@@ -378,8 +384,10 @@ class BlockSpec extends FunSuite {
     val mesh = block.meshFaces(vertices)
     val expectedVertices = List(Delaunay.Vector2(1.0, 1.0), Delaunay.Vector2(1.0, 0.0), Delaunay.Vector2(0.0, 1.0))
 
-    val expectedTriangulation = Delaunay.Triangulation(expectedVertices).toList
-    assert(mesh(face3) == expectedTriangulation)
+    val triangulationTriples = Delaunay.Triangulation(expectedVertices)
+    val triangulationArrays = List(Array(triangulationTriples.head._1, triangulationTriples.head._2,
+                                        triangulationTriples.head._3))
+    assert(mesh(face3).zip(triangulationArrays) forall { case (v1, v2) => v1 sameElements v2 })
   }
 
   test("Centroid should be at Array(0.0, 0.0, 0.0)") {
@@ -531,8 +539,8 @@ class BlockSpec extends FunSuite {
   }
 
   test("Bounding sphere of the two cube should have center (1.0, 1.0, 1.0) and radius sqrt(3.0)") {
-    val expectedBoundingSphere = (Array(1.0, 1.0, 1.0), math.sqrt(3.0))
-    val twoCubeBS = (Array(twoCube.sphereCenterX, twoCube.sphereCenterY, twoCube.sphereCenterZ),
+    val expectedBoundingSphere = ((1.0, 1.0, 1.0), math.sqrt(3.0))
+    val twoCubeBS = ((twoCube.sphereCenterX, twoCube.sphereCenterY, twoCube.sphereCenterZ),
                      twoCube.sphereRadius)
     assert(twoCubeBS == expectedBoundingSphere)
   }
@@ -638,6 +646,8 @@ class BlockSpec extends FunSuite {
       Face(Array(-1.0/math.sqrt(3.0), -1.0/math.sqrt(3.0), -1.0/math.sqrt(3.0)), 0.0, phi=0, cohesion=0)
     )
     val redundantTwoCube = Block(Array(0.0, 0.0, 0.0), redundantBoundingFaces)
+    // TODO this causes the test to fail, but shouldn't it?
+    //assert(redundantTwoCube.nonRedundantFaces.length < redundantTwoCube.faces.length)
     val nonRedundantTwoCube = Block(Array(0.0, 0.0, 0.0), redundantTwoCube.nonRedundantFaces)
     val volume = nonRedundantTwoCube.volume
     assert(volume == 4.0)

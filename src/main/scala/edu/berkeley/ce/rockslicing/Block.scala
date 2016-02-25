@@ -2,6 +2,7 @@ package edu.berkeley.ce.rockslicing
 
 import breeze.linalg
 import breeze.linalg.{DenseVector, DenseMatrix}
+import org.apache.commons.lang3.builder.HashCodeBuilder
 
 /** A simple data structure to represent the face of a rock block.
   *
@@ -39,6 +40,7 @@ case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesio
 
   /**
     * Compare this face and input face for approximate equality within specified tolerance
+    *
     * @param inputFace Input face
     * @param tolerance Tolerance for difference between face parameters. Defaults to
     *                  NumericUtils.EPSILON
@@ -56,6 +58,7 @@ case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesio
     * Compares this face with input face and determines whether faces are shared. Shared
     * faces will have equal and opposite distances from local origin as well as
     * normal vectors in opposite directions
+    *
     * @param inputFace Input face
     * @return True if faces are shared, false otherwise
     */
@@ -78,12 +81,24 @@ case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesio
       case _ => false
     }
   }
+
+  override def hashCode: Int =
+    new HashCodeBuilder()
+        .append(a)
+        .append(b)
+        .append(c)
+        .append(distance)
+        .append(phi)
+        .append(cohesion)
+        .append(processorJoint)
+        .toHashCode
 }
 
 object Block {
   /**
     * Calculates the rotation matrix to rotate the input plane (specified by its normal)
     * to the desired orientation (specified by the desired normal)
+    *
     * @param nCurrent: Current normal of plane
     * @param nDesired: Desired new normal
     * @return 3*3 rotation matrix
@@ -117,6 +132,7 @@ object Block {
 
 /**
   * A rock block.
+  *
   * @constructor Create a new rock block
   * @param center Cartesian coordinates for the center of the rock block. The individual
   * components can be accessed as 'centerX', 'centerY', and 'centerZ'.
@@ -137,6 +153,7 @@ case class Block(center: Array[Double], faces: Seq[Face]) {
 
   /**
     * Determines whether the input point is outside the input block
+    *
     * @param point The point as a tuple
     * @return True if the point is outside the block, false otherwise
     */
@@ -154,7 +171,8 @@ case class Block(center: Array[Double], faces: Seq[Face]) {
 
   /**
    * Find a bounding sphere for a rock block.
-   * @return A pair where the first element is a triple giving the center of
+    *
+    * @return A pair where the first element is a triple giving the center of
    *         the bounding sphere and the second element is the radius of the
    *         bounding sphere.
    */
@@ -232,6 +250,7 @@ case class Block(center: Array[Double], faces: Seq[Face]) {
 
   /**
     * Determine whether or not a joint intersects this rock block.
+    *
     * @param joint The joint to check for intersection.
     * @return None if the joint does not intersect this block, or Some((x,y,z))
     * where (x,y,z) is the point of intersection.
@@ -289,6 +308,7 @@ case class Block(center: Array[Double], faces: Seq[Face]) {
 
   /**
     * Divide this block into two child blocks if a joint intersects this block.
+    *
     * @param joint A joint that may or may not divide this block.
     * @param minSize The minimum radius of a sphere that can be inscribed in the child blocks.
     *                If either child block falls below this minimum, no cut is performed.
@@ -352,17 +372,18 @@ case class Block(center: Array[Double], faces: Seq[Face]) {
   }
   /**
     * Compute the faces of the rock block that are not geometrically redundant.
+    *
     * @return A list of faces that uniquely determine this rock block and are not
     * geometrically redundant.
     */
   def nonRedundantFaces: Seq[Face] =
-    faces.distinct.filter { face =>
+    faces.map(_.applyTolerance).distinct.filter { face =>
       val linProg = new LinearProgram(3)
-      val objCoeffs = NumericUtils.applyTolerance(Array(face.a, face.b, face.c))
+      val objCoeffs = Array(face.a, face.b, face.c)
       linProg.setObjFun(objCoeffs, LinearProgram.MAX)
       faces.foreach { f =>
-        val faceCoeffs = NumericUtils.applyTolerance(Array(f.a, f.b, f.c))
-        val rhs = NumericUtils.applyTolerance(f.d)
+        val faceCoeffs = Array(f.a, f.b, f.c)
+        val rhs = f.d
         linProg.addConstraint(faceCoeffs, LinearProgram.LE, rhs)
       }
       val s = linProg.solve().get._2
@@ -371,6 +392,7 @@ case class Block(center: Array[Double], faces: Seq[Face]) {
 
   /**
     * Calculate the vertices of each face of the block
+    *
     * @return A mapping from each face of the block to a Seq of vertices for that face
     * This function should only be called once all redundant faces have been removed.
     */
@@ -392,19 +414,20 @@ case class Block(center: Array[Double], faces: Seq[Face]) {
               val p_vect = A_matx \ b_vect
               // Check if point is within block, otherwise discard it
               if (!pointOutsideBlock(Array(p_vect(0), p_vect(1), p_vect(2)))) {
-                Some(Array(p_vect(0) + centerX,
+                Some((p_vect(0) + centerX,
                       p_vect(1) + centerY,
                       p_vect(2) + centerZ))
               } else None
             } else None
           }
         }
-      } map (_.distinct)
+      } map (_.distinct) map {seq => seq map { triple => Array(triple._1, triple._2, triple._3) } }
     ).toMap
 
   /**
     * Mesh the faces using Delaunay triangulation. This meshing is done
     * in order to calculate the volume and centroid of the block
+    *
     * @return A Seq of seqs that give the local to global mapping for the
     * triangulation of each of the faces.
     */
@@ -415,7 +438,7 @@ case class Block(center: Array[Double], faces: Seq[Face]) {
       faces.map { face =>
         val R = Block.rotationMatrix(face.normalVec, Array(0.0, 0.0, 1.0))
         val rotatedVertices = vertices(face).map { vertex =>
-          val rotatedVertex = R * DenseVector(vertex(0), vertex(1), vertex(2))
+          val rotatedVertex = R * DenseVector(vertex)
           Delaunay.Vector2(rotatedVertex(0), rotatedVertex(1))
         }.distinct.toList
         assert(rotatedVertices.nonEmpty)
@@ -437,6 +460,7 @@ case class Block(center: Array[Double], faces: Seq[Face]) {
   /**
     * Calculates the centroid of the block.
     * See http://wwwf.imperial.ac.uk/~rn/centroid.pdf for theoretical background.
+    *
     * @return The centroid of the block, (centerX, centerY, centerZ).
     */
   def centroid: Array[Double] = {
@@ -487,6 +511,7 @@ case class Block(center: Array[Double], faces: Seq[Face]) {
   /**
     * Calculates the volume of the block
     * See http://wwwf.imperial.ac.uk/~rn/centroid.pdf for theoretical background.
+    *
     * @return The volume of the block
     */
   def volume: Double = {
@@ -513,6 +538,7 @@ case class Block(center: Array[Double], faces: Seq[Face]) {
 
   /**
     * Calculates the distances of the joints relative to a new origin
+    *
     * @param localOrigin: new local origin
     * @return List of faces with updated distances
     */
@@ -546,6 +572,7 @@ case class Block(center: Array[Double], faces: Seq[Face]) {
 
   /**
     * Compare this block and input block for approximate equality within specified tolerance
+    *
     * @param inputBlock Input block
     * @return True if blocks are equal, otherwise false
     */
@@ -578,6 +605,19 @@ case class Block(center: Array[Double], faces: Seq[Face]) {
       case b: Block =>
         this.centerX == b.centerX && this.centerY == b.centerY &&
         this.centerZ == b.centerZ && this.faces == b.faces
+      case _ => false
     }
+  }
+
+  override def hashCode: Int = {
+    val hcBuilder = new HashCodeBuilder()
+    hcBuilder.append(centerX)
+    hcBuilder.append(centerY)
+    hcBuilder.append(centerZ)
+    faces foreach { face =>
+      hcBuilder.append(face.hashCode)
+    }
+
+    hcBuilder.toHashCode
   }
 }

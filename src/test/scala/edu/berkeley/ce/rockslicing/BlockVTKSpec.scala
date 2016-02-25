@@ -84,7 +84,16 @@ class BlockVTKSpec extends FunSuite {
       face6 -> face6Verts
     )
     val vtkBlock = BlockVTK(unitCube)
-    assert(expectedVertices == vtkBlock.orientedVertices)
+    assert(vtkBlock.orientedVertices.keys == expectedVertices.keys && vtkBlock.orientedVertices.keys.forall { key =>
+      vtkBlock.orientedVertices.get(key).get.zip(expectedVertices.get(key).get) forall { case (v1, v2) =>
+        v1 foreach println
+        println("-----------")
+        v2 foreach println
+        println("-----------")
+        println("-----------")
+        v1 sameElements v2
+      }
+    })
   }
 
   test("The vertices should be oriented counter-clockwise for each face (seven-sided block)") {

@@ -14,6 +14,7 @@ libraryDependencies += "org.scalanlp" %% "breeze" % "0.11.2"
 libraryDependencies += "org.scalanlp" %% "breeze-natives" % "0.11.2"
 libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.2.1" % "test"
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.3.0"
+libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.4"
 
 // Spark pulls in dependencies that screw up sbt-assembly
 libraryDependencies += "org.apache.spark" %% "spark-core" % "1.3.1" % "provided"
