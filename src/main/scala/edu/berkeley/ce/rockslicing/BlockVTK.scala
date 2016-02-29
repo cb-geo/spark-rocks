@@ -121,7 +121,7 @@ object BlockVTK {
   private def connectivity(faceOrientedVerts: Map[Face, Seq[Array[Double]]],
                            vertices: Seq[Array[Double]]): Map[Face, Seq[Int]] = {
     faceOrientedVerts map { case (face, orientedVertices) =>
-      (face, orientedVertices map { vertex => vertices.indexOf(vertex) })
+      (face, orientedVertices map { vertex => vertices.indexWhere(v => v sameElements vertex) })
     }
   }
 
@@ -158,6 +158,22 @@ object BlockVTK {
     }
     offsetIterator(offsets, localOffsets.toSeq)
   }
+
+  /*
+   * FIXME: This is very inefficient and we probably want to use the right data
+   * structures to deal with duplicates for us.
+   */
+  private def distinctArrays(vertices: Seq[Array[Double]], previous: Seq[Array[Double]]=Nil): Seq[Array[Double]] = {
+    vertices match {
+      case Nil => previous
+      case vert+:verts =>
+        if (previous.exists(previousVertex => previousVertex sameElements vert)) {
+          distinctArrays(verts, previous)
+        } else {
+          distinctArrays(verts, vert+:previous)
+        }
+    }
+  }
 }
 
 /**
@@ -166,12 +182,12 @@ object BlockVTK {
   */
 case class BlockVTK(block: Block) {
   val orientedVertices = BlockVTK.orientVertices(block)
-  val tupleVertices = orientedVertices.values.flatten.toSeq.distinct
-  val connectivityMap = BlockVTK.connectivity(orientedVertices, tupleVertices)
-  val vertices = tupleVertices flatMap { t =>
+  val arrayVertices = BlockVTK.distinctArrays(orientedVertices.values.flatten.toSeq)
+  val connectivityMap = BlockVTK.connectivity(orientedVertices, arrayVertices)
+  val vertices = arrayVertices flatMap { t =>
     List(t(0), t(1), t(2))
   }
-  val vertexIDs = tupleVertices.indices
+  val vertexIDs = arrayVertices.indices
   val connectivity = connectivityMap.values.flatten
   val faceCount = orientedVertices.size
   val offsets = BlockVTK.faceOffsets(connectivityMap)
