@@ -204,7 +204,7 @@ object Joint {
   *        This avoids recalculation of a known dip angle.
   * @param dipDirectionParam An optional parameter that can be used to specify the dip direction for
   *        the joint. This avoids recalculation of a known dip direction.
-  * @param artificialJoint Parameter that identifies joint as being artificial joint introduced as part
+  * @param processorJoint Parameter that identifies joint as being artificial joint introduced as part
   *                        of load balancing
   */
 case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Double, Double),
@@ -279,4 +279,26 @@ case class Joint(normalVec: (Double, Double, Double), localOrigin: (Double, Doub
   def updateJoint(blockOrigin: (Double, Double,Double)): Joint =
     Joint((a, b, c), blockOrigin, (centerX, centerY, centerZ), phi, cohesion, shape, Some(dipAngle),
           Some(dipDirection), boundingSphere, processorJoint)
+
+  /**
+    * Compare this joint and input block's faces and determines if joint is one of
+    * input block's faces.
+    * @param block Input block
+    * @return True if joint is one of blocks faces, false otherwise
+    */
+  def inBlock(block: Block): Boolean = {
+    val distance = Joint.findDistance((a, b, c), (block.centerX, block.centerY, block.centerZ),
+                                      (centerX, centerY, centerZ))
+
+    block.faces.exists{ face =>
+      ((math.abs(face.a - a) < NumericUtils.EPSILON) &&
+       (math.abs(face.b - b) < NumericUtils.EPSILON) &&
+       (math.abs(face.c - c) < NumericUtils.EPSILON) &&
+       (math.abs(face.d - distance) < NumericUtils.EPSILON)) ||
+      ((math.abs(face.a + a) < NumericUtils.EPSILON) &&
+       (math.abs(face.b + b) < NumericUtils.EPSILON) &&
+       (math.abs(face.c + c) < NumericUtils.EPSILON) &&
+       (math.abs(face.d + distance) < NumericUtils.EPSILON))
+    }
+  }
 }

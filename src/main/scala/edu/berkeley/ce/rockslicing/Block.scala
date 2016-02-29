@@ -42,7 +42,7 @@ case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double
     * @return True if faces are equal, otherwise false
     */
   def approximateEquals(inputFace: Face, tolerance: Double=NumericUtils.EPSILON):
-                   Boolean = {
+      Boolean = {
     (math.abs(a - inputFace.a) < tolerance) &&
     (math.abs(b - inputFace.b) < tolerance) &&
     (math.abs(c - inputFace.c) < tolerance) &&
@@ -56,11 +56,12 @@ case class Face(normalVec: (Double,Double,Double), distance: Double, phi: Double
     * @param inputFace Input face
     * @return True if faces are shared, false otherwise
     */
-  def isSharedWith(inputFace: Face): Boolean = {
-    (math.abs(a + inputFace.a) < NumericUtils.EPSILON) &&
-    (math.abs(b + inputFace.b) < NumericUtils.EPSILON) &&
-    (math.abs(c + inputFace.c) < NumericUtils.EPSILON) &&
-    (math.abs(d + inputFace.d) < NumericUtils.EPSILON)
+  def isSharedWith(inputFace: Face, tolerance: Double = NumericUtils.EPSILON):
+      Boolean = {
+    (math.abs(a + inputFace.a) < tolerance) &&
+    (math.abs(b + inputFace.b) < tolerance) &&
+    (math.abs(c + inputFace.c) < tolerance) &&
+    (math.abs(d + inputFace.d) < tolerance)
   }
 }
 
@@ -73,7 +74,7 @@ object Block {
     * @return 3*3 rotation matrix
     */
   def rotationMatrix(n_current: (Double, Double, Double), n_desired: (Double, Double, Double)):
-                             DenseMatrix[Double] = {
+      DenseMatrix[Double] = {
     val n_c = DenseVector[Double](n_current._1, n_current._2, n_current._3)
     val n_d = DenseVector[Double](n_desired._1, n_desired._2, n_desired._3)
     // Check if vectors are parallel
@@ -116,7 +117,6 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
   /** 
     * Determines whether the input point is outside the input block
     * @param point The point as a tuple
-    * @param block The block that the point is being checked agains
     * @return True if the point is outside the block, false otherwise
     */
   private def pointOutsideBlock(point: (Double, Double, Double)): Boolean = {
@@ -136,16 +136,20 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
    *         bounding sphere.
    */
   private def findBoundingSphere: ((Double,Double,Double), Double) = {
-    val basisVectors = Array(
+    val positiveBasisVectors = Array(
       Array[Double](1.0, 0.0, 0.0),
       Array[Double](0.0, 1.0, 0.0),
-      Array[Double](0.0, 0.0, 1.0),
+      Array[Double](0.0, 0.0, 1.0)
+    )
+
+    val negativeBasisVectors = Array(
       Array[Double](-1.0, 0.0, 0.0),
       Array[Double](0.0, -1.0, 0.0),
       Array[Double](0.0, 0.0, -1.0)
     )
 
-    val maxCoordinates = basisVectors.map { v =>
+    // Solve LP to find maximum principal coordinate values
+    val maxCoordinates = positiveBasisVectors.map { v =>
       val linProg = new LinearProgram(3)
       linProg.setObjFun(v.toArray, LinearProgram.MAX)
       faces foreach { face =>
@@ -155,13 +159,30 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
       }
       val results = linProg.solve().get._1
       val resultsSeq = Seq[Double](results(0), results(1), results(2))
-      resultsSeq.filter(math.abs(_) > NumericUtils.EPSILON) match {
+      resultsSeq match {
         case Nil => 0.0
-        case x+:xs => x
+        case x => x.max
       }
     }
 
-    val pairedCoords = maxCoordinates.take(3).zip(maxCoordinates.takeRight(3))
+    // Solve LP to find minimum principal coordinate values
+    val minCoordinates = negativeBasisVectors.map { v =>
+      val linProg = new LinearProgram(3)
+      linProg.setObjFun(v.toArray, LinearProgram.MAX)
+      faces foreach { face =>
+        val coeffs = Array[Double](face.a, face.b, face.c).map(NumericUtils.applyTolerance)
+        val rhs = NumericUtils.applyTolerance(face.d)
+        linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
+      }
+      val results = linProg.solve().get._1
+      val resultsSeq = Seq[Double](results(0), results(1), results(2))
+      resultsSeq match {
+        case Nil => 0.0
+        case x => x.min
+      }
+    }
+
+    val pairedCoords = maxCoordinates.zip(minCoordinates)
     val center = pairedCoords.map { case (x,y) => 0.5 * (x+y) }
     val diffVector = pairedCoords.map { case (x,y) => x - y }
     val radius = 0.5 * linalg.norm(DenseVector[Double](diffVector))
@@ -368,7 +389,7 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
           val rotatedVertex = R * DenseVector(vertex._1, vertex._2, vertex._3)
           Delaunay.Vector2(rotatedVertex(0), rotatedVertex(1))
         }.distinct.toList
-
+        assert(rotatedVertices.nonEmpty)
         // If normal is -z-axis, order needs to be reversed to maintain clockwise orientation since
         // rotation matrix is identity matrix in this case - vectors are parallel. Rotation matrix
         // takes care of all other cases.
@@ -494,20 +515,24 @@ case class Block(center: (Double,Double,Double), faces: Seq[Face]) {
   def approximateEquals(inputBlock: Block, tolerance: Double=NumericUtils.EPSILON):
                     Boolean = {
     if (faces.length != inputBlock.faces.length) {
-      false
+      return false
     }
     val centroid = (centerX, centerY, centerZ)
     val updatedInputBlock = Block(centroid, inputBlock.updateFaces(centroid))
-    val sortedFaces1 = faces.sortBy(face => (face.d, face.a, face.b, face.c))
-    val sortedFaces2 = updatedInputBlock.faces.sortBy(face => (face.d, face.a, face.b, face.c))
+
+    val cleanFaces = faces.map(_.applyTolerance)
+    val cleanInputFaces = updatedInputBlock.faces.map(_.applyTolerance)
+
+    val sortedFaces1 = cleanFaces.sortBy(face => (face.d, face.a, face.b, face.c))
+    val sortedFaces2 = cleanInputFaces.sortBy(face => (face.d, face.a, face.b, face.c))
 
     val zippedFaces = sortedFaces1.zip(sortedFaces2)
     val faceMatches = zippedFaces forall { case (face1, face2) =>
-      face1.approximateEquals(face2)
+      face1.approximateEquals(face2, tolerance)
     }
     (math.abs(centerX - updatedInputBlock.centerX) < tolerance) &&
     (math.abs(centerY - updatedInputBlock.centerY) < tolerance) &&
     (math.abs(centerZ - updatedInputBlock.centerZ) < tolerance) &&
-    (faceMatches)
+    faceMatches
   }
 }

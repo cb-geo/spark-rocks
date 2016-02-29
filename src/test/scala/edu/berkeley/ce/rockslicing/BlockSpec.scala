@@ -54,6 +54,14 @@ class BlockSpec extends FunSuite {
   )
   val rectPrism = Block((0.0, 0.0, 0.0), boundingFaces6)
 
+  val boundingFaces7 = List(
+    Face((1/math.sqrt(3.0), 1/math.sqrt(3.0), 1/math.sqrt(3.0)), 0.0, phi=0, cohesion=0),
+    Face((-1.0, 0.0, 0.0), 0.3, phi=0, cohesion=0),
+    Face((0.0, -1.0, 0.0), 0.3, phi=0, cohesion=0),
+    Face((0.0, 0.0, -1.0), 0.3, phi=0, cohesion=0)
+  )
+  val tetrahedralBlock = Block((0.3, 0.3, 0.3), boundingFaces7)
+
   val jointBounds = List(
     ((1.0, 0.0, 0.0), 1.0),
     ((-1.0, 0.0, 0.0), 0.0),
@@ -529,6 +537,14 @@ class BlockSpec extends FunSuite {
     val twoCubeBS = ((twoCube.sphereCenterX, twoCube.sphereCenterY, twoCube.sphereCenterZ),
                      twoCube.sphereRadius)
     assert(twoCubeBS == expectedBoundingSphere)
+  }
+
+  test("Bounding sphere and radius for tetrahedral block should be (0.45, 0.45, 0.45) and radius sqrt(0.6075)") {
+    val expectedBoundingSphere = ((0.45, 0.45, 0.45), math.sqrt(0.6075))
+    val tetBlockBS = ((tetrahedralBlock.sphereCenterX, tetrahedralBlock.sphereCenterY,
+                       tetrahedralBlock.sphereCenterZ), tetrahedralBlock.sphereRadius)
+    assert(centroidDifference(expectedBoundingSphere._1, tetBlockBS._1) < NumericUtils.EPSILON)
+    assert(expectedBoundingSphere._2 - tetBlockBS._2 < NumericUtils.EPSILON)
   }
 
   test("-z=-0.5 should intersect the two cube - negative joint distance check") {
