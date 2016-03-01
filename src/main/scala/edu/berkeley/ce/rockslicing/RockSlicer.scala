@@ -6,6 +6,7 @@ import scala.annotation.tailrec
 import scala.io.Source
 
 object RockSlicer {
+  val REDUNDANT_ELIM_FREQ = 20
 
   def main(args: Array[String]) {
     val conf = new SparkConf().setAppName("SparkRocks")
@@ -43,15 +44,23 @@ object RockSlicer {
 
     // Iterate through the discontinuities for each seed block, cutting where appropriate
     val cutBlocks = seedBlockRdd flatMap { seedBlock =>
-      broadcastJoints.value.foldLeft(Seq(seedBlock)) { (currentBlocks, joint) =>
-        currentBlocks.flatMap { block =>
-          val childBlocks = block.cut(joint)
-          childBlocks map { case childBlock @ Block(center, _) => Block(center, childBlock.nonRedundantFaces) }
+      broadcastJoints.value.zipWithIndex.foldLeft(Seq(seedBlock)) { case (currentBlocks, (joint, idx)) =>
+        if (idx % REDUNDANT_ELIM_FREQ == 0) {
+          currentBlocks.flatMap(_.cut(joint)).map { case childBlock @ Block(center, _) =>
+            Block(center, childBlock.nonRedundantFaces)
+          }
+        } else {
+          currentBlocks.flatMap(_.cut(joint))
         }
       }
     }
 
-    cutBlocks.count()
+    // Remove geometrically redundant joints
+    val nonRedundantBlocks = cutBlocks.map { case block @ Block(center, _) =>
+      Block(center, block.nonRedundantFaces)
+    }
+
+    nonRedundantBlocks.count()
     /*
     // Find all blocks that contain processor joints
     val processorBlocks = nonRedundantBlocks.filter { block =>
@@ -162,6 +171,7 @@ object RockSlicer {
     * Recursive function that merges sequence of blocks containing processor joints
     * along matching processor joints, eliminating false blocks caused by division of
     * input rock volume into equal volumes by load balancer
+    *
     * @param processorBlocks Sequence of blocks containing one or more processor joints each
     * @param mergedBlocks Sequence of blocks that have had processor joints removed. Initial
     *                     input is an empty sequence
@@ -237,6 +247,7 @@ object RockSlicer {
 
   /**
     * Compares two input blocks and find shared processor faces
+    *
     * @param block1 First input block
     * @param block2 Second input block
     * @return List of processor faces that are shared by the two blocks. Will be
