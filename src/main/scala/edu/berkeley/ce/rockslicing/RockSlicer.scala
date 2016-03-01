@@ -47,7 +47,7 @@ object RockSlicer {
       broadcastJoints.value.zipWithIndex.foldLeft(Seq(seedBlock)) { case (currentBlocks, (joint, idx)) =>
         if (idx % REDUNDANT_ELIM_FREQ == 0) {
           currentBlocks.flatMap(_.cut(joint, generation=idx)).map { case block @ Block(center, _, generation) =>
-            if (generation == idx) {
+            if (generation > idx - REDUNDANT_ELIM_FREQ) {
               Block(center, block.nonRedundantFaces, generation)
             } else {
               block
