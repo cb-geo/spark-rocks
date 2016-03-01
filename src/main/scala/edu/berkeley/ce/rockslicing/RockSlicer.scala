@@ -46,17 +46,21 @@ object RockSlicer {
     val cutBlocks = seedBlockRdd flatMap { seedBlock =>
       broadcastJoints.value.zipWithIndex.foldLeft(Seq(seedBlock)) { case (currentBlocks, (joint, idx)) =>
         if (idx % REDUNDANT_ELIM_FREQ == 0) {
-          currentBlocks.flatMap(_.cut(joint)).map { case childBlock @ Block(center, _) =>
-            Block(center, childBlock.nonRedundantFaces)
+          currentBlocks.flatMap(_.cut(joint, generation=idx)).map { case block @ Block(center, _, generation) =>
+            if (generation == idx) {
+              Block(center, block.nonRedundantFaces, generation)
+            } else {
+              block
+            }
           }
         } else {
-          currentBlocks.flatMap(_.cut(joint))
+          currentBlocks.flatMap(_.cut(joint, generation=idx))
         }
       }
     }
 
     // Remove geometrically redundant joints
-    val nonRedundantBlocks = cutBlocks.map { case block @ Block(center, _) =>
+    val nonRedundantBlocks = cutBlocks.map { case block @ Block(center, _, _) =>
       Block(center, block.nonRedundantFaces)
     }
 

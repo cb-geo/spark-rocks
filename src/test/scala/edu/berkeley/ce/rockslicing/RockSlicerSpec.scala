@@ -369,8 +369,8 @@ class RockSlicerSpec extends FunSuite {
       blocks = blocks.flatMap(_.cut(joint))
     }
 
-    val nonRedundantBlocks = blocks.map { case block @ Block(center, _) =>
-        Block(center, block.nonRedundantFaces)
+    val nonRedundantBlocks = blocks map { case block @ Block(center, _, _) =>
+      Block(center, block.nonRedundantFaces)
     }
 
     val processorBlocks = nonRedundantBlocks.filter { block =>
@@ -399,8 +399,41 @@ class RockSlicerSpec extends FunSuite {
     assert(blockCheck)
   }
 
+<<<<<<< HEAD
  test("Orphan blocks should be initial input list") {
    val processorBlocks = Seq(leftQuarterUnitCube, rightQuarterUnitCube)
+=======
+  test("Oblique processor joints should be removed and actual blocks restored") {
+    val globalOrigin = Array(0.0, 0.0, 0.0)
+    val processorJoint1 = Joint(Array(1.0/sqrt(3.0), 1.0/sqrt(3.0), 1.0/sqrt(3.0)), Array(0.0, 0.0, 0.0),
+                                Array(0.3, 0.3, 0.3), phi = 0.0, cohesion = 0.0, shape = Vector.empty,
+                                 processorJoint = true)
+    val processorJoint2 = Joint(Array(1.0/sqrt(3.0), 1.0/sqrt(3.0), 1.0/sqrt(3.0)), Array(0.0, 0.0, 0.0),
+                                Array(0.7, 0.7, 0.7), phi = 0.0, cohesion = 0.0, shape = Vector.empty,
+                                 processorJoint = true)
+    val actualJoint1 = Joint(Array(0.0, 1.0, 0.0), Array(0.0, 0.0, 0.0), Array(0.0, 0.25, 0.0), phi = 0.0,
+                             cohesion = 0.0, shape = Vector.empty)
+    val actualJoint2 = Joint(Array(0.0, 1.0, 0.0), Array(0.0, 0.0, 0.0), Array(0.0, 0.75, 0.0), phi = 0.0,
+                             cohesion = 0.0, shape = Vector.empty)
+    val joints = Seq(processorJoint1, processorJoint2, actualJoint1, actualJoint2)
+    var blocks = Seq(unitCube)
+    for (joint <- joints) {
+      blocks = blocks.flatMap(_.cut(joint))
+    }
+
+    val nonRedundantBlocks = blocks map { case block @ Block(center, _, _) =>
+      Block(center, block.nonRedundantFaces)
+    }
+    val processorBlocks = blocks.filter { block =>
+      block.faces.exists { face => face.processorJoint }
+    }
+
+    val mergedBlocks = RockSlicer.mergeBlocks(processorBlocks, Seq[Block](), globalOrigin)
+    val mergedBlocksCentroid = mergedBlocks map { block =>
+      val centroid = block.centroid
+      Block(centroid, block.updateFaces(centroid))
+    }
+>>>>>>> Add notion of Block generation to speed up face redundancy checks
 
    val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
                                                              Seq.empty[Block])

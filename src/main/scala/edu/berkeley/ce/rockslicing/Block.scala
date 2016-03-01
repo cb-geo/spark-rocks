@@ -138,7 +138,7 @@ object Block {
   * components can be accessed as 'centerX', 'centerY', and 'centerZ'.
   * @param faces: The faces that define the boundaries of the rock block.
   */
-case class Block(center: Array[Double], faces: Seq[Face]) {
+case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) {
   assert(center.length == 3)
   val centerX = center(0)
   val centerY = center(1)
@@ -320,7 +320,8 @@ case class Block(center: Array[Double], faces: Seq[Face]) {
     * or aspect ratio are met. Otherwise, returns a one-item Seq containing
     * only this block.
     */
-  def cut(joint: Joint, minSize: Double=0.0, maxAspectRatio: Double=Double.PositiveInfinity): Seq[Block] = {
+  def cut(joint: Joint, minSize: Double=0.0, maxAspectRatio: Double=Double.PositiveInfinity,
+          generation: Int=0): Seq[Block] = {
     val translatedJoint = joint.updateJoint(Array(centerX, centerY, centerZ))
     this.intersects(translatedJoint) match {
       case None => Vector(this)
@@ -336,17 +337,17 @@ case class Block(center: Array[Double], faces: Seq[Face]) {
         // New origin is guaranteed to lie within joint, so initial d = 0 for all child blocks
         val childBlockA = if (translatedJoint.d < 0.0) {
           Block(Array(newX,newY,newZ), Face(Array(-translatedJoint.a, -translatedJoint.b, -translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces)
+            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces, generation)
         } else {
           Block(Array(newX,newY,newZ), Face(Array(translatedJoint.a, translatedJoint.b, translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces)
+            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces, generation)
         }
         val childBlockB = if (translatedJoint.d < 0.0) {
           Block(Array(newX,newY,newZ), Face(Array(translatedJoint.a,translatedJoint.b,translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces)
+            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces, generation)
         } else {
           Block(Array(newX,newY,newZ), Face(Array(-translatedJoint.a,-translatedJoint.b,-translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces)
+            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces, generation)
         }
 
         var childBlocks = Vector(childBlockA, childBlockB)

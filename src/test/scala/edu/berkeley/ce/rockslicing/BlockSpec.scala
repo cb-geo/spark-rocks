@@ -475,18 +475,18 @@ class BlockSpec extends FunSuite {
     val xBlocks = twoCube.cut(xPlane)
     val xzBlocks = xBlocks.flatMap(_.cut(zPlane))
 
-    val nonRedundantBlocks = xzBlocks.map { case block @ Block(center, faces) =>
+    val nonRedundantBlocks = xzBlocks.map { case block @ Block(center, faces, _) =>
       val nonRedundantFaces = block.nonRedundantFaces
       Block(center, nonRedundantFaces)
     }
 
-    val centroidBlocks = nonRedundantBlocks.map { case block @ Block(center, _) =>
+    val centroidBlocks = nonRedundantBlocks.map { case block @ Block(center, _, _) =>
       val centroid = block.centroid
       val updatedFaces = block.updateFaces(centroid)
       Block(centroid, updatedFaces)
     }
 
-    val cleanedBlocks = centroidBlocks.map { case Block(center, faces) =>
+    val cleanedBlocks = centroidBlocks.map { case Block(center, faces, _) =>
       Block(center, faces.map(_.applyTolerance))
     }
 

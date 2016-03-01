@@ -30,7 +30,7 @@ class EndToEndSpec extends FunSuite {
     }
 
     // Remove geometrically redundant joints
-    val nonRedundantBlocks = cutBlocks.map { case block @ Block(center, _) =>
+    val nonRedundantBlocks = cutBlocks.map { case block @ Block(center, _, _) =>
       Block(center, block.nonRedundantFaces)
     }
 
@@ -74,7 +74,7 @@ class EndToEndSpec extends FunSuite {
     val allBlocks = centroidBlocks ++ reconCentroidBlocks
 
     // Clean up double values arbitrarily close to 0.0
-    val cleanedBlocks = allBlocks.map { case Block(center, faces) =>
+    val cleanedBlocks = allBlocks.map { case Block(center, faces, _) =>
       Block(center, faces.map(_.applyTolerance))
     }
 

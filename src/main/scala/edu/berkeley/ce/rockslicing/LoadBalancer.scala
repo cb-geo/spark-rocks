@@ -77,7 +77,7 @@ object LoadBalancer {
     val joint = Joint(Array(normal(0), normal(1), normal(2)), origin, center, phi = 0.0, cohesion = 0.0,
                       shape = Vector.empty, processorJoint = true)
     val blocks = initialVolume.cut(joint)
-    val nonRedundantBlocks = blocks.map { case block @ Block(blockCenter, _) =>
+    val nonRedundantBlocks = blocks.map { case block @ Block(blockCenter, _, _) =>
       Block(blockCenter, block.nonRedundantFaces)
     }
     val sortedBlocks = nonRedundantBlocks.sortWith{ (left, right) =>
@@ -164,10 +164,10 @@ object LoadBalancer {
                        shape = Vector.empty, processorJoint = true)
     val blocks_0 = block.cut(joint0)
     val blocks_1 = block.cut(joint1)
-    val blocks0 = blocks_0.map { case block @ Block(center, _) =>
+    val blocks0 = blocks_0.map { case block @ Block(center, _, _) =>
       Block(center, block.nonRedundantFaces)
     }
-    val blocks1 = blocks_1.map { case block @ Block(center, _) =>
+    val blocks1 = blocks_1.map { case block @ Block(center, _, _) =>
       Block(center, block.nonRedundantFaces)
     }
 
@@ -204,7 +204,7 @@ object LoadBalancer {
     val newJoint = Joint(Array(normal(0), normal(1), normal(2)), origin, newCenter, phi = 0.0,
                          cohesion = 0.0, shape = Vector.empty, processorJoint = true)
     val new_Blocks = block.cut(newJoint)
-    val nonRedundantNew = new_Blocks.map { case block @ Block(center, _) =>
+    val nonRedundantNew = new_Blocks.map { case block @ Block(center, _, _) =>
       Block(center, block.nonRedundantFaces)
     }
     val newBlocks = nonRedundantNew.sortWith { (left, right) =>
