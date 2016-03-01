@@ -44,16 +44,14 @@ object RockSlicer {
     // Iterate through the discontinuities for each seed block, cutting where appropriate
     val cutBlocks = seedBlockRdd flatMap { seedBlock =>
       broadcastJoints.value.foldLeft(Seq(seedBlock)) { (currentBlocks, joint) =>
-        currentBlocks.flatMap(_.cut(joint))
+        currentBlocks.flatMap { block =>
+          val childBlocks = block.cut(joint)
+          childBlocks map { case childBlock @ Block(center, _) => Block(center, childBlock.nonRedundantFaces) }
+        }
       }
     }
 
-    // Remove geometrically redundant joints
-    val nonRedundantBlocks = cutBlocks.map { case block @ Block(center, _) =>
-      Block(center, block.nonRedundantFaces)
-    }
-
-    nonRedundantBlocks.count()
+    cutBlocks.count()
     /*
     // Find all blocks that contain processor joints
     val processorBlocks = nonRedundantBlocks.filter { block =>
