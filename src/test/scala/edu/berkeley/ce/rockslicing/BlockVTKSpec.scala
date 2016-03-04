@@ -127,7 +127,6 @@ class BlockVTKSpec extends FunSuite {
     assert(vtkBlock.arrayVertices.forall { v1 => expectedVertices.exists(v2 => v1 sameElements v2) })
   }
 
-  // FIXME: Remove the dependency on order in this unit test
   test("List of tuple vertices should flatten into list of doubles") {
     val vtkBlock = BlockVTK(unitCube)
     val expectedVertices = Seq(1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0,
@@ -137,7 +136,6 @@ class BlockVTKSpec extends FunSuite {
     assert(verticesDiff forall (_ < NumericUtils.EPSILON))
   }
 
-  // FIXME: Remove the dependency on order in this unit test
   test("List of tuple vertices should flatten into list of doubles (seven-sided block)") {
     val vtkBlock = BlockVTK(sevenSidedBlock)
     val expectedVertices = Seq(1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
@@ -162,36 +160,45 @@ class BlockVTKSpec extends FunSuite {
     assert(idsDiff forall (_ < NumericUtils.EPSILON))
   }
 
-  /*
   test("Connectivities for each face should be in terms of vertex ID's") {
     val vtkBlock = BlockVTK(unitCube)
     val faceConnectivities = Map(
-      face1 -> Seq[Int](0, 1, 2, 3),
-      face2 -> Seq[Int](4, 5, 6, 7),
-      face3 -> Seq[Int](2, 1, 6, 5),
-      face4 -> Seq[Int](0, 3, 4, 7),
-      face5 -> Seq[Int](7, 6, 1, 0),
-      face6 -> Seq[Int](3, 2, 5, 4)
+      face1 -> Seq[Int](7, 6, 5, 4),
+      face2 -> Seq[Int](3, 1, 0, 2),
+      face3 -> Seq[Int](5, 6, 0, 1),
+      face4 -> Seq[Int](7, 4, 3, 2),
+      face5 -> Seq[Int](2, 0, 6, 7),
+      face6 -> Seq[Int](4, 5, 1, 3)
     )
 
     val connMap = vtkBlock.connectivityMap
-    assert(connMap == faceConnectivities)
+    connMap foreach { case (face, vertices) =>
+        println(s"(${face.a}, ${face.b}, ${face.c})")
+        println(vertices)
+    }
+    assert(connMap.keySet == faceConnectivities.keySet && connMap.keys.forall { face =>
+      connMap.get(face).get == faceConnectivities.get(face).get
+    })
   }
 
   test("Connectivities for each face should be in terms of vertex ID's (seven-sided block)") {
     val vtkBlock = BlockVTK(sevenSidedBlock)
     val faceConnectivities = Map(
-      face1_s7 -> Seq[Int](0, 1, 2, 3),
-      face2_s7 -> Seq[Int](4, 5, 6, 7),
-      face3_s7 -> Seq[Int](2, 1, 6, 5),
-      face4_s7 -> Seq[Int](0, 3, 8, 9),
-      face5_s7 -> Seq[Int](7, 6, 1, 0, 9),
-      face6_s7 -> Seq[Int](8, 3, 2, 5, 4),
-      face7_s7 -> Seq[Int](8, 4, 7, 9)
+      face1_s7 -> Seq[Int](5, 4, 3, 2),
+      face2_s7 -> Seq[Int](8, 1, 0, 7),
+      face3_s7 -> Seq[Int](3, 4, 0, 1),
+      face4_s7 -> Seq[Int](5, 2, 9, 6),
+      face5_s7 -> Seq[Int](7, 0, 4, 5, 6),
+      face6_s7 -> Seq[Int](9, 2, 3, 1, 8),
+      face7_s7 -> Seq[Int](9, 8, 7, 6)
     )
+    val connMap = vtkBlock.connectivityMap
+    connMap foreach { case (face, vertices) =>
+        println(s"(${face.a}, ${face.b}, ${face.c})")
+        println(vertices)
+    }
     assert(faceConnectivities == vtkBlock.connectivityMap)
   }
-  */
 
   test("Connectivity map should flatten into list of integers") {
     val vtkBlock = BlockVTK(unitCube)
@@ -235,7 +242,6 @@ class BlockVTKSpec extends FunSuite {
     assert(offsetDiff forall (_ < NumericUtils.EPSILON))
   }
 
-  // FIXME: Remove the dependency on order in this unit test
   test("Normals tuples should flatten into list of integers") {
     val vtkBlock = BlockVTK(unitCube)
     val expectedNormals = Seq[Double](
@@ -250,7 +256,6 @@ class BlockVTKSpec extends FunSuite {
     assert(normalsDiff forall (_ < NumericUtils.EPSILON))
   }
 
-  // FIXME: Remove the dependency on order in this unit test
   test("Normals tuples should flatten into list of integers (seven-sided block)") {
     val vtkBlock = BlockVTK(sevenSidedBlock)
     val expectedNormals = Seq[Double](
