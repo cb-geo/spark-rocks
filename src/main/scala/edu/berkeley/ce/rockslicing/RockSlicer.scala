@@ -61,6 +61,8 @@ object RockSlicer {
       }
     }
 
+    println(s"Finished cutting, now have ${cutBlocks.count()}")
+
     // Remove geometrically redundant joints
     val nonRedundantBlocks = cutBlocks.map { case block @ Block(center, _, generation) =>
       Block(center, block.nonRedundantFaces, generation)
@@ -71,10 +73,14 @@ object RockSlicer {
       block.faces.exists(_.processorJoint)
     }
 
+    println(s"Identified ${processorBlocks.count()} blocks with processor joints")
+
     // Find blocks that do not contain processor joints
     val realBlocks = nonRedundantBlocks.filter { block =>
       !block.faces.exists(_.processorJoint)
     }
+
+    println(s"Identified ${realBlocks.count()} without processor joints")
 
     // Process processor blocks before continuing with remaining blocks
     // Search blocks for matching processor joints
