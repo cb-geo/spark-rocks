@@ -8,7 +8,7 @@ import scala.annotation.tailrec
 import scala.io.Source
 
 object RockSlicer {
-  val REDUNDANT_ELIM_FREQ = 20
+  val REDUNDANT_ELIM_FREQ = 200
 
   def main(args: Array[String]) {
     val conf = new SparkConf().setAppName("SparkRocks")
@@ -61,11 +61,13 @@ object RockSlicer {
       }
     }
 
-    println(s"Finished cutting, now have ${cutBlocks.count()}")
-
     // Remove geometrically redundant joints
     val nonRedundantBlocks = cutBlocks.map { case block @ Block(center, _, generation) =>
-      Block(center, block.nonRedundantFaces, generation)
+      if (generation > broadcastJoints.value.length - REDUNDANT_ELIM_FREQ) {
+        Block(center, block.nonRedundantFaces, generation)
+      } else {
+        block
+      }
     }
 
     // Find all blocks that contain processor joints
@@ -73,14 +75,10 @@ object RockSlicer {
       block.faces.exists(_.processorJoint)
     }
 
-    println(s"Identified ${processorBlocks.count()} blocks with processor joints")
-
     // Find blocks that do not contain processor joints
     val realBlocks = nonRedundantBlocks.filter { block =>
       !block.faces.exists(_.processorJoint)
     }
-
-    println(s"Identified ${realBlocks.count()} without processor joints")
 
     // Process processor blocks before continuing with remaining blocks
     // Search blocks for matching processor joints
