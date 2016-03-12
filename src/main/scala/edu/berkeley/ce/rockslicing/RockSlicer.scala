@@ -8,7 +8,7 @@ import scala.annotation.tailrec
 import scala.io.Source
 
 object RockSlicer {
-  val REDUNDANT_ELIM_FREQ = 200
+  val REDUNDANT_ELIM_PERIOD = 200
 
   def main(args: Array[String]) {
     val conf = new SparkConf().setAppName("SparkRocks")
@@ -47,23 +47,27 @@ object RockSlicer {
     // Iterate through the discontinuities for each seed block, cutting where appropriate
     val cutBlocks = seedBlockRdd flatMap { seedBlock =>
       broadcastJoints.value.zipWithIndex.foldLeft(Seq(seedBlock)) { case (currentBlocks, (joint, idx)) =>
-        if (idx % REDUNDANT_ELIM_FREQ == 0) {
+        if (idx % REDUNDANT_ELIM_PERIOD == 0) {
+          // When idx is a multiple of REDUNDANT_ELIM_PERIOD, check for geometrically redundant faces
           currentBlocks.flatMap(_.cut(joint, generation=idx)).map { case block @ Block(center, _, generation) =>
-            if (generation > idx - REDUNDANT_ELIM_FREQ) {
+            if (generation > idx - REDUNDANT_ELIM_PERIOD) {
+              // We only perform the check if the block has been newly added since the last round of checks
               Block(center, block.nonRedundantFaces, generation)
             } else {
               block
             }
           }
         } else {
+          // Otherwise, just cut new blocks without checking for redundant faces
           currentBlocks.flatMap(_.cut(joint, generation=idx))
         }
       }
     }
 
-    // Remove geometrically redundant joints
+    // We need to do one last round of checking for redundant faces at the end
     val nonRedundantBlocks = cutBlocks.map { case block @ Block(center, _, generation) =>
-      if (generation > broadcastJoints.value.length - REDUNDANT_ELIM_FREQ) {
+      if (generation > broadcastJoints.value.length - REDUNDANT_ELIM_PERIOD) {
+        // Again, we only perform the check on blocks created since the previous round of checks
         Block(center, block.nonRedundantFaces, generation)
       } else {
         block

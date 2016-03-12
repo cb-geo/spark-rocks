@@ -172,10 +172,6 @@ class BlockVTKSpec extends FunSuite {
     )
 
     val connMap = vtkBlock.connectivityMap
-    connMap foreach { case (face, vertices) =>
-        println(s"(${face.a}, ${face.b}, ${face.c})")
-        println(vertices)
-    }
     assert(connMap.keySet == faceConnectivities.keySet && connMap.keys.forall { face =>
       connMap.get(face).get == faceConnectivities.get(face).get
     })
@@ -193,10 +189,6 @@ class BlockVTKSpec extends FunSuite {
       face7_s7 -> Seq[Int](9, 8, 7, 6)
     )
     val connMap = vtkBlock.connectivityMap
-    connMap foreach { case (face, vertices) =>
-        println(s"(${face.a}, ${face.b}, ${face.c})")
-        println(vertices)
-    }
     assert(faceConnectivities == vtkBlock.connectivityMap)
   }
 

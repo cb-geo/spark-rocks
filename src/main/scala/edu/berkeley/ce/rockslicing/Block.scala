@@ -136,7 +136,11 @@ object Block {
   * @constructor Create a new rock block
   * @param center Cartesian coordinates for the center of the rock block. The individual
   * components can be accessed as 'centerX', 'centerY', and 'centerZ'.
-  * @param faces: The faces that define the boundaries of the rock block.
+  * @param faces The faces that define the boundaries of the rock block.
+  * @param generation An integer identifying the joint that caused this rock block to be cut
+  *                   from its parent. The generation is used to avoid unnecessary checks
+  *                   for geometrically redundant faces, but it can be safely left as its
+  *                   default value of 0.
   */
 case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) {
   assert(center.length == 3)
@@ -315,6 +319,8 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) {
     * @param maxAspectRatio The maximum ratio of a child block's bounding sphere to the radius
     *                       of the largest sphere that can be inscribed in the block. If either
     *                       child falls above this minimum, no cut is performed.
+    * @param generation The generation of any child blocks cut from this joint (see Block constructor
+    *                   documentation for a description of the generation field).
     * @return A Seq of Block objects, containing the two child blocks divided by
     * the joint if it intersects this block and any minimum requirements for radius
     * or aspect ratio are met. Otherwise, returns a one-item Seq containing

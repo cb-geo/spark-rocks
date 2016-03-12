@@ -640,36 +640,4 @@ class BlockSpec extends FunSuite {
     val volume = twoCube.volume
     assert(volume == 8.0)
   }
-
-  test("Volume of two cube with extra plane should should be 4.0") {
-    val redundantBoundingFaces = boundingFaces3 ++ List(
-      Face(Array(-1.0/math.sqrt(3.0), -1.0/math.sqrt(3.0), -1.0/math.sqrt(3.0)), 0.0, phi=0, cohesion=0)
-    )
-    val redundantTwoCube = Block(Array(0.0, 0.0, 0.0), redundantBoundingFaces)
-    // TODO this causes the test to fail, but shouldn't it?
-    //assert(redundantTwoCube.nonRedundantFaces.length < redundantTwoCube.faces.length)
-    val nonRedundantTwoCube = Block(Array(0.0, 0.0, 0.0), redundantTwoCube.nonRedundantFaces)
-    val volume = nonRedundantTwoCube.volume
-    assert(volume == 4.0)
-  }
-
-  test("Volume of unit cube with extra plane should should be 0.5") {
-    val redundantBoundingFaces = boundingFaces4 ++ List(
-      Face(Array(1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)), 0.0, phi=0, cohesion=0)
-    )
-    val redundantUnitCube = Block(Array(0.5, 0.5, 0.5), redundantBoundingFaces)
-    val nonRedundantUnitCube = Block(Array(0.5, 0.5, 0.5), redundantUnitCube.nonRedundantFaces)
-    val volume = nonRedundantUnitCube.volume
-    assert(volume == 0.5)
-  }
-
-  test("Volume of unit cube with extra plane with negative z-component should be 0.5") {
-    val redundantBoundingFaces = boundingFaces4 ++ List(
-      Face(Array(-1.0/math.sqrt(3.0), -1.0/math.sqrt(3.0), -1.0/math.sqrt(3.0)), 0.0, phi=0, cohesion=0)
-    )
-    val redundantUnitCube = Block(Array(0.5, 0.5, 0.5), redundantBoundingFaces)
-    val nonRedundantUnitCube = Block(Array(0.5, 0.5, 0.5), redundantUnitCube.nonRedundantFaces)
-    val volume = nonRedundantUnitCube.volume
-    assert(volume == 0.5)
-  }
 }
