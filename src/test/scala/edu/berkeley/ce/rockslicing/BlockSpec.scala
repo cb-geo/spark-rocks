@@ -88,7 +88,7 @@ class BlockSpec extends FunSuite {
     Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face(Array(1.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
+    Face(Array(1 / sqrt(2.0), 0.0, 1 / sqrt(2.0)), 1 / sqrt(2.0), phi=0, cohesion=0)
   )
 
   val halfUnitCube = Block(Array(0.0, 0.0, 0.0), halfUnitCubeFaces)
