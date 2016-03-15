@@ -1,7 +1,6 @@
 package edu.berkeley.ce.rockslicing
 
-import breeze.linalg
-import breeze.linalg.{DenseVector, DenseMatrix}
+import breeze.linalg.DenseVector
 
 object BlockVTK {
 
@@ -10,10 +9,10 @@ object BlockVTK {
     * @param vertices List of vertices
     * @return Coordinate of center of vertices
     */
-  private def findCenter(vertices: Seq[(Double, Double, Double)]): (Double, Double, Double) = {
-    (vertices.map(_._1).sum / vertices.length.toDouble,
-     vertices.map(_._2).sum / vertices.length.toDouble,
-     vertices.map(_._3).sum / vertices.length.toDouble)
+  private def findCenter(vertices: Seq[Array[Double]]): Array[Double] = {
+    Array(vertices.map(_(0)).sum / vertices.length.toDouble,
+     vertices.map(_(1)).sum / vertices.length.toDouble,
+     vertices.map(_(2)).sum / vertices.length.toDouble)
   }
 
   /**
@@ -24,11 +23,11 @@ object BlockVTK {
     * @param center Reference point for comparison
     * @return Returns TRUE if pointA is first relative to pointB, FALSE otherwise
     */
-  private def ccwCompare(pointA: (Double, Double, Double), pointB: (Double, Double, Double),
-                         center: (Double, Double, Double)): Boolean = {
+  private def ccwCompare(pointA: Array[Double], pointB: Array[Double],
+                         center: Array[Double]): Boolean = {
     // Check that points are in the same x-y plane
-    if (math.abs(NumericUtils.roundToTolerance(pointA._3, 5) -
-        NumericUtils.roundToTolerance(pointB._3, 5)) > NumericUtils.EPSILON) {
+    if (math.abs(NumericUtils.roundToTolerance(pointA(2), 5) -
+        NumericUtils.roundToTolerance(pointB(2), 5)) > NumericUtils.EPSILON) {
       throw new IllegalArgumentException("ERROR: Input to BlockVTK.ccwCompare: "+
                                          "Input points are not in the same plane")
     }
@@ -37,38 +36,38 @@ object BlockVTK {
     // vertical line running through this center.
     // Check if points are on opposite sides of the center. Points left of center will be before points
     // right of the center
-    if ((pointA._1 - center._1 < -NumericUtils.EPSILON) && (pointB._1 - center._1 >= NumericUtils.EPSILON)) {
+    if ((pointA(0) - center(0) < -NumericUtils.EPSILON) && (pointB(0) - center(0) >= NumericUtils.EPSILON)) {
       return true
     }
-    else if ((pointA._1 - center._1 >= NumericUtils.EPSILON) && (pointB._1 - center._1 < -NumericUtils.EPSILON)) {
+    else if ((pointA(0) - center(0) >= NumericUtils.EPSILON) && (pointB(0) - center(0) < -NumericUtils.EPSILON)) {
       return false
     }
 
     // Compares points that fall on the x = center._1 line.
-    if ((math.abs(pointA._1 - center._1) < NumericUtils.EPSILON) &&
-        (math.abs(pointB._1 - center._1) < NumericUtils.EPSILON)) {
+    if ((math.abs(pointA(0) - center(0)) < NumericUtils.EPSILON) &&
+        (math.abs(pointB(0) - center(0)) < NumericUtils.EPSILON)) {
       // Points furthest away from the center will be before points that are closer to the center
-      if ((pointA._2 - center._2 >= NumericUtils.EPSILON) || (pointB._2 - center._2 >= NumericUtils.EPSILON)) {
-        return pointA._2 > pointB._2
+      if ((pointA(1) - center(1) >= NumericUtils.EPSILON) || (pointB(1) - center(1) >= NumericUtils.EPSILON)) {
+        return pointA(1) > pointB(1)
       } else {
-        return pointB._2 > pointA._2
+        return pointB(1) > pointA(1)
       }      
     }
 
     // The cross product of vectors (pointA - center) and (pointB - center) in determinant form. Since it's
     // in 2-D we're only interested in the sign of the resulting z-vector.
-    val det = (pointA._1 - center._1) * (pointB._2 - center._2) -
-      (pointB._1 - center._1) * (pointA._2 - center._2)
+    val det = (pointA(0) - center(0)) * (pointB(1) - center(1)) -
+      (pointB(0) - center(0)) * (pointA(1) - center(1))
     // If resulting vector points in positive z-direction, pointA is before pointB
     if (det > NumericUtils.EPSILON) {
-      return true
+      true
     } else if (det < -NumericUtils.EPSILON) {
-      return false
+      false
     } else {
       // pointA and pointB are on the same line from the center, so check which one is closer to the center
-      val d1 = (pointA._1 - center._1) * (pointA._1 - center._1) + (pointA._2 - center._2) * (pointA._2 - center._2)
-      val d2 = (pointB._1 - center._1) * (pointB._1 - center._1) + (pointB._2 - center._2) * (pointB._2 - center._2)
-      return d1 > d2
+      val d1 = (pointA(0) - center(0)) * (pointA(0) - center(0)) + (pointA(1) - center(1)) * (pointA(1) - center(1))
+      val d2 = (pointB(0) - center(0)) * (pointB(0) - center(0)) + (pointB(1) - center(1)) * (pointB(1) - center(1))
+      d1 > d2
     }
   }
 
@@ -79,20 +78,20 @@ object BlockVTK {
     * @return A mapping from each face of the block to a Seq of vertices for that face arranged in counter-
     *         clockwise order relative to its unit normal
     */
-  private def orientVertices(block: Block): Map[Face, Seq[(Double, Double, Double)]] = {
+  private def orientVertices(block: Block): Map[Face, Seq[Array[Double]]] = {
     val faceVertices = block.findVertices
     faceVertices.keys.zip(
       faceVertices.map { case (face, vertices) =>
         // Rotate vertices to all be in x-y plane
-        val R = Block.rotationMatrix(face.normalVec, (0.0, 0.0, 1.0))
+        val R = Block.rotationMatrix(face.normalVec, Array(0.0, 0.0, 1.0))
         val rotatedVerts = vertices map { vertex =>
-          val rotatedVertex = R * DenseVector[Double](vertex._1, vertex._2, vertex._3)
-          (rotatedVertex(0), rotatedVertex(1), rotatedVertex(2))
+          val rotatedVertex = R * DenseVector[Double](vertex)
+          Array(rotatedVertex(0), rotatedVertex(1), rotatedVertex(2))
         }
         // Order vertices in counter-clockwise orientation
         val center = BlockVTK.findCenter(rotatedVerts)
         val orderedVerts = {
-          if (face.normalVec._3 < -NumericUtils.EPSILON) {
+          if (face.normalVec(2) < -NumericUtils.EPSILON) {
             // If z-component of normal vector points in negative z-direction, orientation
             // needs to be reversed otherwise points will be ordered clockwise
             rotatedVerts.sortWith(BlockVTK.ccwCompare(_, _, center)).reverse
@@ -104,9 +103,9 @@ object BlockVTK {
         // Rotate vertices back to original orientation
         val invR = R.t // Inverse of rotation matrix is equal to its transpose
         orderedVerts map { vertex =>
-          val orderedVertex = (invR * DenseVector[Double](vertex._1, vertex._2, vertex._3)).map {
+          val orderedVertex = (invR * DenseVector[Double](vertex)).map {
             NumericUtils.roundToTolerance(_) }
-          (orderedVertex(0), orderedVertex(1), orderedVertex(2))
+          Array(orderedVertex(0), orderedVertex(1), orderedVertex(2))
         }
       }
     ).toMap
@@ -119,10 +118,10 @@ object BlockVTK {
     * @return A mapping from each face of the block to a Seq of integers that represent
     *         the indices of the vertices in the global vertex list
     */
-  private def connectivity(faceOrientedVerts: Map[Face, Seq[(Double, Double, Double)]],
-                           vertices: Seq[(Double, Double, Double)]): Map[Face, Seq[Int]] = {
+  private def connectivity(faceOrientedVerts: Map[Face, Seq[Array[Double]]],
+                           vertices: Seq[Array[Double]]): Map[Face, Seq[Int]] = {
     faceOrientedVerts map { case (face, orientedVertices) =>
-      (face, orientedVertices map { vertex => vertices.indexOf(vertex) })
+      (face, orientedVertices map { vertex => vertices.indexWhere(v => v sameElements vertex) })
     }
   }
 
@@ -159,21 +158,33 @@ object BlockVTK {
     }
     offsetIterator(offsets, localOffsets.toSeq)
   }
+
+  private def distinctArrays(vertices: Seq[Array[Double]], previous: Seq[Array[Double]]=Nil): Seq[Array[Double]] = {
+    // Use a naive n^2 algorithm to avoid boxing. We may need to revisit this later.
+    vertices match {
+      case Nil => previous
+      case vert+:verts =>
+        if (previous.exists(previousVertex => previousVertex sameElements vert)) {
+          distinctArrays(verts, previous)
+        } else {
+          distinctArrays(verts, vert+:previous)
+        }
+    }
+  }
 }
 
 /**
   * Simple data structure to contain data that represents a rock block that can be turned into vtk format
-  * @param Rock block 
   * @constructor Create a new rock block in format that can be turned into vtk by rockProcessor
   */
 case class BlockVTK(block: Block) {
   val orientedVertices = BlockVTK.orientVertices(block)
-  val tupleVertices = orientedVertices.values.flatten.toSeq.distinct
-  val connectivityMap = BlockVTK.connectivity(orientedVertices, tupleVertices)
-  val vertices = tupleVertices flatMap { t =>
-    List(t._1, t._2, t._3)
+  val arrayVertices = BlockVTK.distinctArrays(orientedVertices.values.flatten.toSeq)
+  val connectivityMap = BlockVTK.connectivity(orientedVertices, arrayVertices)
+  val vertices = arrayVertices flatMap { t =>
+    List(t(0), t(1), t(2))
   }
-  val vertexIDs = tupleVertices.indices
+  val vertexIDs = arrayVertices.indices
   val connectivity = connectivityMap.values.flatten
   val faceCount = orientedVertices.size
   val offsets = BlockVTK.faceOffsets(connectivityMap)

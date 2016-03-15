@@ -151,23 +151,23 @@ class InputProcessingSpec extends FunSuite {
     val inputSrc = Source.fromString(inputStr)
     val (globalOrigin, rockVolume, joints) = InputProcessor.readInput(inputSrc).get
 
-    val expectedOrigin = (4.0, 8.0, 15.0)
+    val expectedOrigin = Array(4.0, 8.0, 15.0)
 
     val expectedFaces = List[Face](
-      Face((-1.0, 0.0, 0.0), 0.0, 0.0, 0.0),
-      Face((1.0, 0.0, 0.0), 2.0, 0.0, 0.0),
-      Face((0.0, -1.0, 0.0), 0.0, 0.0, 0.0),
-      Face((0.0, 1.0, 0.0), 2.0, 0.0, 0.0),
-      Face((0.0, 0.0, -1.0), 0.0, 0.0, 0.0),
-      Face((0.0, 0.0, 1.0), 2.0, 0.0, 0.0)
+      Face(Array(-1.0, 0.0, 0.0), 0.0, 0.0, 0.0),
+      Face(Array(1.0, 0.0, 0.0), 2.0, 0.0, 0.0),
+      Face(Array(0.0, -1.0, 0.0), 0.0, 0.0, 0.0),
+      Face(Array(0.0, 1.0, 0.0), 2.0, 0.0, 0.0),
+      Face(Array(0.0, 0.0, -1.0), 0.0, 0.0, 0.0),
+      Face(Array(0.0, 0.0, 1.0), 2.0, 0.0, 0.0)
     )
 
     val expectedJoints = List[Joint](
-      Joint((1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), 0.0, 0.0, Nil, processorJoint = false),
-      Joint((0.0, 0.0, 1.0), (0.0, 0.0, 0.0), (0.0, 0.0, 1.0), 0.0, 0.0, shape = List(
-        ((0.0, 1.0, 0.0), 0.0), ((0.0, -1.0, 0.0), 0.5), ((-1.0, 0.0, 0.0), 0.0), ((1.0, 0.0, 0.0), 0.5)),
+      Joint(Array(1.0, 0.0, 0.0), Array(0.0, 0.0, 0.0), Array(1.0, 0.0, 0.0), 0.0, 0.0, Vector.empty, processorJoint = false),
+      Joint(Array(0.0, 0.0, 1.0), Array(0.0, 0.0, 0.0), Array(0.0, 0.0, 1.0), 0.0, 0.0, shape = Vector(
+        (Array(0.0, 1.0, 0.0), 0.0), (Array(0.0, -1.0, 0.0), 0.5), (Array(-1.0, 0.0, 0.0), 0.0), (Array(1.0, 0.0, 0.0), 0.5)),
         processorJoint = false)
       )
-    assert(globalOrigin == expectedOrigin && rockVolume == expectedFaces && joints == expectedJoints)
+    assert((globalOrigin sameElements expectedOrigin) && rockVolume == expectedFaces && joints == expectedJoints)
   }
 }

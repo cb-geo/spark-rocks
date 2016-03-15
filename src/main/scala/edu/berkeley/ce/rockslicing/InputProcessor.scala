@@ -7,7 +7,7 @@ import scala.util.Try
 
 object InputProcessor {
   // Processes input file: Add rock volume faces and joints to respective input list
-  def readInput(inputSource: Source): Option[((Double, Double, Double),
+  def readInput(inputSource: Source): Option[(Array[Double],
                                              Seq[Face], Seq[Joint])] = {
     val lines = inputSource.getLines().zipWithIndex.toVector
     val globalOriginLine = lines.head._1
@@ -22,7 +22,7 @@ object InputProcessor {
       return None
     }
     val globalOrigin = globalOriginTokens map(_.get)
-    val globalOriginTuple = (globalOrigin(0), globalOrigin(1), globalOrigin(2))
+    val globalOriginArr = Array(globalOrigin(0), globalOrigin(1), globalOrigin(2))
 
     val remainingLines = lines.tail
     val transitionIndex = remainingLines.indexWhere(_._1 == "%")
@@ -63,11 +63,11 @@ object InputProcessor {
 
       // Eliminate any inward-pointing normals, and round extremely small distances to 0
       if (math.abs(d) >= NumericUtils.EPSILON) {
-        Face((aPrime, bPrime, cPrime), d, phi, cohesion)
+        Face(Array(aPrime, bPrime, cPrime), d, phi, cohesion)
       } else if (d < -NumericUtils.EPSILON) {
-        Face((-aPrime, -bPrime, -cPrime), -d, phi, cohesion)
+        Face(Array(-aPrime, -bPrime, -cPrime), -d, phi, cohesion)
       } else {
-        Face((aPrime, bPrime, cPrime), 0, phi, cohesion)
+        Face(Array(aPrime, bPrime, cPrime), 0, phi, cohesion)
       }
     }
 
@@ -102,8 +102,8 @@ object InputProcessor {
       val normVec = DenseVector[Double](mandatoryValues(0), mandatoryValues(1), mandatoryValues(2))
       val unitNormVec = breeze.linalg.normalize(normVec)
 
-      val localOrigin = (mandatoryValues(3), mandatoryValues(4), mandatoryValues(5))
-      val center = (mandatoryValues(6), mandatoryValues(7), mandatoryValues(8))
+      val localOrigin = Array(mandatoryValues(3), mandatoryValues(4), mandatoryValues(5))
+      val center = Array(mandatoryValues(6), mandatoryValues(7), mandatoryValues(8))
       val phi = mandatoryValues(9)
       val cohesion = mandatoryValues(10)
 
@@ -112,12 +112,12 @@ object InputProcessor {
         val normVec = DenseVector[Double](group(0), group(1), group(2))
         val unitNormVec = breeze.linalg.normalize(normVec)
         val d = group(3)
-        ((unitNormVec(0), unitNormVec(1), unitNormVec(2)), d)
+        (Array(unitNormVec(0), unitNormVec(1), unitNormVec(2)), d)
       }
 
-      Joint((unitNormVec(0), unitNormVec(1), unitNormVec(2)), localOrigin, center, phi, cohesion, shape.toList)
+      Joint(Array(unitNormVec(0), unitNormVec(1), unitNormVec(2)), localOrigin, center, phi, cohesion, shape.toVector)
     }
 
-    Some((globalOriginTuple, rockVolume, joints))
+    Some((globalOriginArr, rockVolume, joints))
   }
 }
