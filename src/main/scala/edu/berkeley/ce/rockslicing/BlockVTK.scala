@@ -159,11 +159,8 @@ object BlockVTK {
     offsetIterator(offsets, localOffsets.toSeq)
   }
 
-  /*
-   * FIXME: This is very inefficient and we probably want to use the right data
-   * structures to deal with duplicates for us.
-   */
   private def distinctArrays(vertices: Seq[Array[Double]], previous: Seq[Array[Double]]=Nil): Seq[Array[Double]] = {
+    // Use a naive n^2 algorithm to avoid boxing. We may need to revisit this later.
     vertices match {
       case Nil => previous
       case vert+:verts =>
