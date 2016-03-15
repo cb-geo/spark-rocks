@@ -83,6 +83,16 @@ class BlockSpec extends FunSuite {
     (Array(1.0/sqrt(2.0), -1.0/sqrt(2.0), 0.0), 1.0)
   )
 
+  val halfUnitCubeFaces = List(
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
+    Face(Array(0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),
+    Face(Array(1.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
+  )
+
+  val halfUnitCube = Block(Array(0.0, 0.0, 0.0), halfUnitCubeFaces)
+
   def centroidDifference(c1: Array[Double], c2: Array[Double]): Double = {
     assert(c1.length == 3 && c2.length == 3)
     math.abs(c1(0) - c2(0)) + math.abs(c1(1) - c2(1)) + math.abs(c1(2) - c2(2))
@@ -633,11 +643,16 @@ class BlockSpec extends FunSuite {
 
   test("Volume of unit cube should be 1.0") {
     val volume = unitCube.volume
-    assert(volume == 1.0)
+    assert(math.abs(volume - 1.0) <= NumericUtils.EPSILON)
   }
 
   test("Volume of two cube should be 8.0") {
     val volume = twoCube.volume
-    assert(volume == 8.0)
+    assert(math.abs(volume - 8.0) <= NumericUtils.EPSILON)
+  }
+
+  test("Volume of half unit cube should be 0.5") {
+    val volume = halfUnitCube.volume
+    assert(math.abs(volume - 0.5) <= NumericUtils.EPSILON)
   }
 }
