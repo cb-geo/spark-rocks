@@ -12,6 +12,13 @@ object RockSlicer {
 
   def main(args: Array[String]) {
     val conf = new SparkConf().setAppName("SparkRocks")
+      // Use Kryo serialization
+      .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+      // Require all classes to be registered
+//      .set("spark.kryo.registrationRequired", "true")
+    // Register classes with Kryo using ClassRegistrator
+    conf.set("spark.kryo.registrator", "edu.berkeley.ce.rockslicing.ClassRegistrator")
+
     val sc = new SparkContext(conf)
     val parsedArgs = CommandReader.parseArguments(args)
     if (parsedArgs.isEmpty) {

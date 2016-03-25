@@ -177,7 +177,8 @@ object BlockVTK {
   * Simple data structure to contain data that represents a rock block that can be turned into vtk format
   * @constructor Create a new rock block in format that can be turned into vtk by rockProcessor
   */
-case class BlockVTK(block: Block) {
+@SerialVersionUID(1L)
+case class BlockVTK(block: Block) extends Serializable {
   val orientedVertices = BlockVTK.orientVertices(block)
   val arrayVertices = BlockVTK.distinctArrays(orientedVertices.values.flatten.toSeq)
   val connectivityMap = BlockVTK.connectivity(orientedVertices, arrayVertices)

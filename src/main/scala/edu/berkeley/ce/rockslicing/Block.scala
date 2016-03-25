@@ -16,8 +16,10 @@ import org.apache.commons.lang3.builder.HashCodeBuilder
   * @param processorJoint Parameter that identifies joint as being artificial joint introduced as part
   *                        of load balancing
   */
+@SerialVersionUID(1L)
 case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesion: Double,
-                processorJoint: Boolean=false) {
+                processorJoint: Boolean=false)
+extends Serializable {
   assert(normalVec.length == 3)
   val a = normalVec(0)
   val b = normalVec(1)
@@ -142,7 +144,9 @@ object Block {
   *                   for geometrically redundant faces, but it can be safely left as its
   *                   default value of 0.
   */
-case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) {
+@SerialVersionUID(1L)
+case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0)
+extends Serializable {
   assert(center.length == 3)
   val centerX = center(0)
   val centerY = center(1)
@@ -448,7 +452,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) {
           val rotatedVertex = R * DenseVector(vertex)
           Delaunay.Vector2(rotatedVertex(0), rotatedVertex(1))
         }.distinct.toList
-        assert(rotatedVertices.nonEmpty)
+//        assert(rotatedVertices.nonEmpty)
         // If normal is -z-axis, order needs to be reversed to maintain clockwise orientation since
         // rotation matrix is identity matrix in this case - vectors are parallel. Rotation matrix
         // takes care of all other cases.

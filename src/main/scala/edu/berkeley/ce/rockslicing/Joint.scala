@@ -227,12 +227,14 @@ object Joint {
   * @param processorJoint Parameter that identifies joint as being artificial joint introduced as part
   *                        of load balancing
   */
+@SerialVersionUID(1L)
 case class Joint(normalVec: Array[Double], localOrigin: Array[Double],
                  center: Array[Double], phi: Double, cohesion: Double,
                  shape: Vector[(Array[Double],Double)], dipAngleParam: Option[Double]=None,
                  dipDirectionParam: Option[Double]=None,
                  boundingSphereParam: Option[(Array[Double],Double)]=null,
-                 processorJoint: Boolean=false) {
+                 processorJoint: Boolean=false)
+extends Serializable {
   assert(normalVec.length == 3 && localOrigin.length == 3 && center.length == 3)
 
   val a = normalVec(0)
