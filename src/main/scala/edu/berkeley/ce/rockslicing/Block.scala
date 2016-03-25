@@ -452,7 +452,16 @@ extends Serializable {
           val rotatedVertex = R * DenseVector(vertex)
           Delaunay.Vector2(rotatedVertex(0), rotatedVertex(1))
         }.distinct.toList
-//        assert(rotatedVertices.nonEmpty)
+        if (rotatedVertices.isEmpty) {
+          println("This is the block with empty vertices")
+          println(this)
+          println("And these are the vertices")
+          vertices.foreach{ case (currentFace, faceVertices) =>
+              println("\n"+currentFace)
+              println(faceVertices)
+          }
+        }
+        assert(rotatedVertices.nonEmpty)
         // If normal is -z-axis, order needs to be reversed to maintain clockwise orientation since
         // rotation matrix is identity matrix in this case - vectors are parallel. Rotation matrix
         // takes care of all other cases.
