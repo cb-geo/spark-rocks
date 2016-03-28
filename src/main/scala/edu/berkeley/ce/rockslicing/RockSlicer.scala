@@ -15,7 +15,7 @@ object RockSlicer {
       // Use Kryo serialization
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       // Require all classes to be registered
-//      .set("spark.kryo.registrationRequired", "true")
+      .set("spark.kryo.registrationRequired", "true")
     // Register classes with Kryo using ClassRegistrator
     conf.set("spark.kryo.registrator", "edu.berkeley.ce.rockslicing.ClassRegistrator")
 
