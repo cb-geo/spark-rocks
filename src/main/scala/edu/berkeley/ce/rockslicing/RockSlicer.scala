@@ -119,8 +119,12 @@ object RockSlicer {
       }, math.ceil(math.log(arguments.numProcessors)/math.log(2)).toInt)
 
       if (allOrphanBlocks.nonEmpty) {
+        val newOrigin = allOrphanBlocks.head.center
+        val updatedBlocks = allOrphanBlocks.map { case block =>
+            Block(newOrigin, block.updateFaces(newOrigin))
+        }
         println("\nThese are the orphan blocks:")
-        allOrphanBlocks.foreach { case Block(center, faces, _) =>
+        updatedBlocks.foreach { case Block(center, faces, _) =>
           println("Block Center "+center(0)+" "+center(1)+" "+center(2))
           faces.foreach { case Face(faceCenter, distance, _, _, _) =>
             println("Face Normal: " + faceCenter(0)+" "+faceCenter(1)+" "+faceCenter(2))
