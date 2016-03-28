@@ -454,11 +454,13 @@ extends Serializable {
         }.distinct.toList
         if (rotatedVertices.isEmpty) {
           println("This is the block with empty vertices")
-          println(this)
+          println(face.normalVec(0)+" "+face.normalVec(1)+" "+face.normalVec(2))
           println("And these are the vertices")
           vertices.foreach{ case (currentFace, faceVertices) =>
               println("\n"+currentFace)
-              println(faceVertices)
+              faceVertices.foreach { vertex =>
+                println(vertex(0)+" "+vertex(1)+" "+vertex(2))
+              }
           }
         }
         assert(rotatedVertices.nonEmpty)
