@@ -407,8 +407,8 @@ extends Serializable {
     * @return A mapping from each face of the block to a Seq of vertices for that face
     * This function should only be called once all redundant faces have been removed.
     */
-  def findVertices: Map[Face, Seq[Array[Double]]] =
-    faces.zip (
+  def findVertices: Map[Face, Seq[Array[Double]]] = {
+    val faceMap = faces.zip (
       faces map { f1 =>
         val n1 = DenseVector[Double](f1.a, f1.b, f1.c)
         faces flatMap { f2 =>
@@ -434,6 +434,16 @@ extends Serializable {
         }
       } map (_.distinct) map {seq => seq map { triple => Array(triple._1, triple._2, triple._3) } }
     ).toMap
+    faceMap.foreach { case (face, vertices) =>
+      if (vertices.isEmpty) {
+        println("No vertices for face:")
+        println("Center: "+face.normalVec(0)+" "+face.normalVec(1)+" "+face.normalVec(2))
+        println("Distance: "+face.distance)
+      }
+      assert(vertices.nonEmpty)
+    }
+    faceMap
+  }
 
   /**
     * Mesh the faces using Delaunay triangulation. This meshing is done
@@ -448,6 +458,10 @@ extends Serializable {
     faces.zip (
       faces.map { face =>
         val R = Block.rotationMatrix(face.normalVec, Array(0.0, 0.0, 1.0))
+        if (vertices(face).isEmpty) {
+          println("Pre-rotation vertices are empty!!!!!!!!!!!!!!!!")
+        }
+        assert(vertices(face).nonEmpty)
         val rotatedVertices = vertices(face).map { vertex =>
           val rotatedVertex = R * DenseVector(vertex)
           Delaunay.Vector2(rotatedVertex(0), rotatedVertex(1))
@@ -456,11 +470,8 @@ extends Serializable {
           println("This is the block with empty vertices")
           println(face.normalVec(0)+" "+face.normalVec(1)+" "+face.normalVec(2))
           println("And these are the vertices")
-          vertices.foreach{ case (currentFace, faceVertices) =>
-              println("\n"+currentFace)
-              faceVertices.foreach { vertex =>
-                println(vertex(0)+" "+vertex(1)+" "+vertex(2))
-              }
+          vertices(face).foreach { faceVertex =>
+            println(faceVertex(0)+" "+faceVertex(1)+" "+faceVertex(2))
           }
         }
         assert(rotatedVertices.nonEmpty)

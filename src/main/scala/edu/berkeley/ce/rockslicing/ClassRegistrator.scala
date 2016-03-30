@@ -11,7 +11,6 @@ import org.apache.spark.serializer.KryoRegistrator
   */
 class ClassRegistrator extends KryoRegistrator {
   override def registerClasses(kryo: Kryo) {
-//    kryo.register(Class.forName("scala.None$"), new NoneSerializer())
     kryo.register(None.getClass, new SingletonSerializer[AnyRef](None))
     kryo.register(Nil.getClass, new SingletonSerializer[AnyRef](Nil))
     kryo.register(classOf[Some[_]], new SomeSerializer(kryo))
@@ -24,15 +23,6 @@ class ClassRegistrator extends KryoRegistrator {
     kryo.register(classOf[Face])
   }
 }
-
-///**
-//  * Serializes None types using Kryo. See https://github.com/EsotericSoftware/kryo
-//  * for detailed documentation on using Kryo.
-//  */
-//class NoneSerializer extends Serializer[None.type] {
-//  override def write(kryo: Kryo, output: Output, `object`: None.type): Unit = ()
-//  override def read(kryo: Kryo, input: Input, `type`: Class[None.type]): None.type = None
-//}
 
 /**
   * Serializes Some types using Kryo. See https://github.com/EsotericSoftware/kryo

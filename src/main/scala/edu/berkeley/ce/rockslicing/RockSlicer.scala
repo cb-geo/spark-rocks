@@ -198,7 +198,6 @@ object RockSlicer {
     sc.stop()
   }
 
-
   /**
     * Recursive function that merges sequence of blocks containing processor joints
     * along matching processor joints, eliminating false blocks caused by division of
