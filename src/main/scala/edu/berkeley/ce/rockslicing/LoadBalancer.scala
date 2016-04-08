@@ -23,23 +23,18 @@ object LoadBalancer {
                          Seq[Joint] = {
     // Calculate bounding box
     val vertices = rockVolume.findVertices.values.flatten
-    val x_max = vertices.map(_(0)).max
-    val x_min = vertices.map(_(0)).min
-    val y_max = vertices.map(_(1)).max
-    val y_min = vertices.map(_(1)).min
-    val z_max = vertices.map(_(2)).max
-    val z_min = vertices.map(_(2)).min
+    val xMin = vertices.map(_(0)).min
+    val yMin = vertices.map(_(1)).min
+    val zMin = vertices.map(_(2)).min
 
     // Diagonal vector from lower left to upper right corner of bounding box
-    val diagonalVector = breeze.linalg.normalize(DenseVector[Double](x_max - x_min, y_max - y_min, z_max - z_min))
     val volumePerPart = rockVolume.volume/numProcessors
     val centroid = rockVolume.centroid
     val centroidVolume = Block(centroid, rockVolume.updateFaces(centroid))
     val processorJoints =
       findProcessorJoints(Seq.empty[Joint], Array(centroidVolume.centerX, centroidVolume.centerY, centroidVolume.centerZ),
-                          Array(x_min, y_min, z_min),
+                          Array(xMin, yMin, zMin),
                           centroidVolume, volumePerPart)
-
 
     assert(processorJoints.length + 1 == numProcessors)
     processorJoints
@@ -68,11 +63,11 @@ object LoadBalancer {
     val boundingBox = (xMin, yMin, zMin, xMax, yMax, zMax)
 
     // Calculate diagonal length
-    val x_diff = boundingBox._4 - boundingBox._1
-    val y_diff = boundingBox._5 - boundingBox._2
-    val z_diff = boundingBox._6 - boundingBox._3
-    val diagonalLength = math.sqrt(x_diff*x_diff + y_diff*y_diff + z_diff*z_diff)
-    val normal = linalg.normalize(DenseVector[Double](x_diff, y_diff, z_diff))
+    val xDiff = boundingBox._4 - boundingBox._1
+    val yDiff = boundingBox._5 - boundingBox._2
+    val zDiff = boundingBox._6 - boundingBox._3
+    val diagonalLength = math.sqrt(xDiff*xDiff + yDiff*yDiff + zDiff*zDiff)
+    val normal = linalg.normalize(DenseVector[Double](xDiff, yDiff, zDiff))
 
     val joint = Joint(Array(normal(0), normal(1), normal(2)), origin, center, phi = 0.0, cohesion = 0.0,
                       shape = Vector.empty, processorJoint = true)
@@ -88,7 +83,7 @@ object LoadBalancer {
         (sortedBlocks.head.volume > (1.0 - VOLUME_TOLERANCE)*desiredVolume) &&
         (sortedBlocks.length == 2)) {
       if (sortedBlocks.tail.head.volume <= (1.0 + VOLUME_TOLERANCE)*desiredVolume) {
-        // If both blocks have satifactory volumes, prepend joint to joints
+        // If both blocks have satisfactory volumes, prepend joint to joints
         joint +: joints
       } else {
         // If last block isn't small enough
@@ -104,10 +99,10 @@ object LoadBalancer {
       val centerVec0 = DenseVector[Double](center)
       val centerVec1 = DenseVector[Double](xMax, yMax, zMax)
       // First distance guess
-      val x_diff0 = centerVec0(0) - xMin
-      val y_diff0 = centerVec0(1) - yMin
-      val z_diff0 = centerVec0(2) - zMin
-      val dist0 = math.sqrt(x_diff0*x_diff0 + y_diff0*y_diff0 + z_diff0*z_diff0)
+      val xDiff0 = centerVec0(0) - xMin
+      val yDiff0 = centerVec0(1) - yMin
+      val zDiff0 = centerVec0(2) - zMin
+      val dist0 = math.sqrt(xDiff0*xDiff0 + yDiff0*yDiff0 + zDiff0*zDiff0)
       // Second distance guess
       val dist1 = diagonalLength
       val boundingBox = Array(xMin, yMin, zMin, xMax, yMax, zMax)
@@ -143,13 +138,13 @@ object LoadBalancer {
                                     iterations: Int): Array[Double] = {
     val iterationLimit = 100
     // Calculate diagonal length
-    val x_diff = boundingBox(3) - boundingBox(0)
-    val y_diff = boundingBox(4) - boundingBox(1)
-    val z_diff = boundingBox(5) - boundingBox(2)
-    val diagonalLength = math.sqrt(x_diff*x_diff + y_diff*y_diff + z_diff*z_diff)
+    val xDiff = boundingBox(3) - boundingBox(0)
+    val yDiff = boundingBox(4) - boundingBox(1)
+    val zDiff = boundingBox(5) - boundingBox(2)
+    val diagonalLength = math.sqrt(xDiff*xDiff + yDiff*yDiff + zDiff*zDiff)
 
     // Normal vector for processor joints
-    val normal = breeze.linalg.normalize(DenseVector[Double](x_diff, y_diff, z_diff))
+    val normal = breeze.linalg.normalize(DenseVector[Double](xDiff, yDiff, zDiff))
     val lowerLeft = DenseVector[Double](boundingBox(0), boundingBox(1), boundingBox(2))
     // Centers for initial joint guesses
     val center0Vec = lowerLeft + initialDist0*normal

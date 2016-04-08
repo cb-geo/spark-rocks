@@ -62,6 +62,8 @@ extends Serializable {
     * normal vectors in opposite directions
     *
     * @param inputFace Input face
+    * @param tolerance Tolerance for difference between compared values. Defaults to
+    *                  EPSILON.
     * @return True if faces are shared, false otherwise
     */
   def isSharedWith(inputFace: Face, tolerance: Double = NumericUtils.EPSILON):
