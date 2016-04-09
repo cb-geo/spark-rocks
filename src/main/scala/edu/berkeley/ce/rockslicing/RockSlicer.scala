@@ -87,6 +87,15 @@ object RockSlicer {
       }
     }
 
+    println("\nAll blocks: "+nonRedundantBlocks.count())
+    val allBlocks = nonRedundantBlocks.collect()
+    allBlocks.foreach { case Block(center, faces, _) =>
+      println("Block Center " + center(0) + " " + center(1) + " " + center(2))
+      faces.foreach { case Face(faceCenter, distance, _, _, _) =>
+        println("Face Normal: " + faceCenter(0) + " " + faceCenter(1) + " " + faceCenter(2))
+        println("Face Distance: " + distance + "\n")
+      }
+    }
     // Find all blocks that contain processor joints
     val processorBlocks = nonRedundantBlocks.filter { block =>
       block.faces.exists(_.processorJoint)
@@ -131,27 +140,39 @@ object RockSlicer {
          }
         println("\nThese are the orphan blocks:")
         updatedBlocks.foreach { case Block(center, faces, _) =>
-          println("Block Center "+center(0)+" "+center(1)+" "+center(2))
-          faces.foreach { case Face(faceCenter, distance, _, _, _) =>
-            println("Face Normal: " + faceCenter(0)+" "+faceCenter(1)+" "+faceCenter(2))
-            println("Face Distance: " + distance+"\n")
+          print("Block Center ")
+          center.foreach{ component =>
+            print(f"$component%1.9f ")
+          }
+          faces.foreach { case Face(faceNormal, distance, _, _, _) =>
+            print("\nFace Normal: ")
+            faceNormal.foreach{ component =>
+              print(f"$component%1.9f ")
+            }
+            println("\nFace Distance: " + f"$distance%1.9f\n")
           }
         }
-        val foundFaces = findSharedProcessorFaces(updatedBlocks(0), updatedBlocks(1))
-        println("\nShared processor faces: ")
-        foundFaces.foreach{ case Face(faceNormal, distance, _, _, _) =>
-          println("Face Normal: " + faceNormal(0)+" "+faceNormal(1)+" "+faceNormal(2))
-          println("Face Distance: " + distance+"\n")
-        }
+//        val foundFaces = findSharedProcessorFaces(updatedBlocks(0), updatedBlocks(1))
+//        println("\nShared processor faces: ")
+//        foundFaces.foreach{ case Face(faceNormal, distance, _, _, _) =>
+//          println("Face Normal: " + faceNormal(0)+" "+faceNormal(1)+" "+faceNormal(2))
+//          println("Face Distance: " + distance+"\n")
+//        }
         val mateCheck = findMates(allOrphanBlocks)
         println("\nResults of mate check: ")
         mateCheck.foreach(println)
         println("\nThese are the reconstructed blocks:")
         allReconstructedBlocks.foreach { case Block(center, faces, _) =>
-          println("Block Center "+center(0)+" "+center(1)+" "+center(2))
+          println("Block Center ")
+          center.foreach{ component =>
+            print(f"$component%1.9f ")
+          }
           faces.foreach { case Face(faceNormal, distance, _, _, _) =>
-            println("Face Normal: " + faceNormal(0)+" "+faceNormal(1)+" "+faceNormal(2))
-            println("Face Distance: " + distance+"\n")
+            print("Face Normal: ")
+            faceNormal.foreach{ component =>
+              print(f"$component%1.9f ")
+            }
+            println("\nFace Distance: " + f"$distance%1.9f\n")
           }
         }
       }
