@@ -41,12 +41,12 @@ object RockSlicer {
     // Generate a list of initial blocks before RDD-ifying it
     val seedBlocks = if (arguments.numProcessors > 1) {
       val processorJoints = LoadBalancer.generateProcessorJoints(starterBlocks.head, arguments.numProcessors)
-      println("\nProcessor Joints:")
-      processorJoints.foreach { joint =>
-        println("Normal: "+joint.normalVec(0)+" "+joint.normalVec(1)+" "+joint.normalVec(2))
-        println("Center: "+joint.centerX+" "+joint.centerY+" "+joint.centerZ)
-        println("Origin: "+joint.localX+" "+joint.localY+" "+joint.localZ+"\n")
-      }
+//      println("\nProcessor Joints:")
+//      processorJoints.foreach { joint =>
+//        println("Normal: "+joint.normalVec(0)+" "+joint.normalVec(1)+" "+joint.normalVec(2))
+//        println("Center: "+joint.centerX+" "+joint.centerY+" "+joint.centerZ)
+//        println("Origin: "+joint.localX+" "+joint.localY+" "+joint.localZ+"\n")
+//      }
       processorJoints.foldLeft(starterBlocks) { (currentBlocks, joint) =>
         currentBlocks.flatMap(_.cut(joint))
       }
@@ -115,6 +115,22 @@ object RockSlicer {
       val treeReduceBlockPairsRDD = processorBlocks.map{ blocks => (Seq(blocks), Seq.empty[Block])}
       val (allOrphanBlocks, allReconstructedBlocks) = treeReduceBlockPairsRDD.treeReduce({
         case ((toMerge1, merged1), (toMerge2, merged2)) =>
+//          println("\nTO MERGE 1:")
+//          toMerge1.foreach { case Block(center, faces, _) =>
+//            println("Block Center " + center(0) + " " + center(1) + " " + center(2))
+//            faces.foreach { case Face(faceCenter, distance, _, _, _) =>
+//              println("Face Normal: " + faceCenter(0) + " " + faceCenter(1) + " " + faceCenter(2))
+//              println("Face Distance: " + distance + "\n")
+//            }
+//          }
+//          println("\nTO MERGE 2:")
+//          toMerge2.foreach { case Block(center, faces, _) =>
+//            println("Block Center " + center(0) + " " + center(1) + " " + center(2))
+//            faces.foreach { case Face(faceCenter, distance, _, _, _) =>
+//              println("Face Normal: " + faceCenter(0) + " " + faceCenter(1) + " " + faceCenter(2))
+//              println("Face Distance: " + distance + "\n")
+//            }
+//          }
           // All blocks that share a processor joint are merged/reconstructed. Blocks that do not share
           // a processor joint with any of the blocks that are to be merged are "orphan" blocks.
           val (treeReconBlocks, treeOrphanBlocks) = mergeBlocks(toMerge1 ++ toMerge2, Seq.empty[Block],
@@ -133,49 +149,49 @@ object RockSlicer {
         // merged during each reduction.
       }, math.ceil(math.log(arguments.numProcessors)/math.log(2)).toInt)
 
-      if (allOrphanBlocks.nonEmpty) {
-         val newOrigin = allOrphanBlocks.head.center
-         val updatedBlocks = allOrphanBlocks.map { case block =>
-             Block(newOrigin, block.updateFaces(newOrigin))
-         }
-        println("\nThese are the orphan blocks:")
-        updatedBlocks.foreach { case Block(center, faces, _) =>
-          print("Block Center ")
-          center.foreach{ component =>
-            print(f"$component%1.9f ")
-          }
-          faces.foreach { case Face(faceNormal, distance, _, _, _) =>
-            print("\nFace Normal: ")
-            faceNormal.foreach{ component =>
-              print(f"$component%1.9f ")
-            }
-            println("\nFace Distance: " + f"$distance%1.9f\n")
-          }
-        }
+//      if (allOrphanBlocks.nonEmpty) {
+//         val newOrigin = allOrphanBlocks.head.center
+//         val updatedBlocks = allOrphanBlocks.map { case block =>
+//             Block(newOrigin, block.updateFaces(newOrigin))
+//         }
+//        println("\nThese are the orphan blocks:")
+//        updatedBlocks.foreach { case Block(center, faces, _) =>
+//          print("Block Center ")
+//          center.foreach{ component =>
+//            print(f"$component%1.9f ")
+//          }
+//          faces.foreach { case Face(faceNormal, distance, _, _, _) =>
+//            print("\nFace Normal: ")
+//            faceNormal.foreach{ component =>
+//              print(f"$component%1.9f ")
+//            }
+//            println("\nFace Distance: " + f"$distance%1.9f\n")
+//          }
+//        }
 //        val foundFaces = findSharedProcessorFaces(updatedBlocks(0), updatedBlocks(1))
 //        println("\nShared processor faces: ")
 //        foundFaces.foreach{ case Face(faceNormal, distance, _, _, _) =>
 //          println("Face Normal: " + faceNormal(0)+" "+faceNormal(1)+" "+faceNormal(2))
 //          println("Face Distance: " + distance+"\n")
 //        }
-        val mateCheck = findMates(allOrphanBlocks)
-        println("\nResults of mate check: ")
-        mateCheck.foreach(println)
-        println("\nThese are the reconstructed blocks:")
-        allReconstructedBlocks.foreach { case Block(center, faces, _) =>
-          println("Block Center ")
-          center.foreach{ component =>
-            print(f"$component%1.9f ")
-          }
-          faces.foreach { case Face(faceNormal, distance, _, _, _) =>
-            print("Face Normal: ")
-            faceNormal.foreach{ component =>
-              print(f"$component%1.9f ")
-            }
-            println("\nFace Distance: " + f"$distance%1.9f\n")
-          }
-        }
-      }
+//        val mateCheck = findMates(allOrphanBlocks)
+//        println("\nResults of mate check: ")
+//        mateCheck.foreach(println)
+//        println("\nThese are the reconstructed blocks:")
+//        allReconstructedBlocks.foreach { case Block(center, faces, _) =>
+//          println("Block Center ")
+//          center.foreach{ component =>
+//            print(f"$component%1.9f ")
+//          }
+//          faces.foreach { case Face(faceNormal, distance, _, _, _) =>
+//            print("Face Normal: ")
+//            faceNormal.foreach{ component =>
+//              print(f"$component%1.9f ")
+//            }
+//            println("\nFace Distance: " + f"$distance%1.9f\n")
+//          }
+//        }
+//      }
       assert(allOrphanBlocks.isEmpty)
 
       // Update centroids of reconstructed processor blocks and remove duplicates
@@ -280,6 +296,16 @@ object RockSlicer {
 
     // Check if more than one match was found. If so, merge all matches into one block
     val mergedJoinedBlock = if (joinedBlocks.length > 1) {
+      println("MORE THAN ONE MATCH! MORE THAN ONE MATCH! MORE THAN ONE MATCH!")
+      println("JOINED BLOCKS LENGTH: "+joinedBlocks.length)
+      println("Joined Blocks:")
+      joinedBlocks.foreach { case Block(center, faces, _) =>
+        println("Block Center " + center(0) + " " + center(1) + " " + center(2))
+        faces.foreach { case Face(faceCenter, distance, _, _, _) =>
+          println("Face Normal: " + faceCenter(0) + " " + faceCenter(1) + " " + faceCenter(2))
+          println("Face Distance: " + distance + "\n")
+        }
+      }
       // Note: originalPairedBlocks.head will be equal to processorBlocks.head
       val temporaryOrigin = Array(originalPairedBlocks.head.centerX,
                                   originalPairedBlocks.head.centerY,
@@ -376,8 +402,21 @@ object RockSlicer {
           if (allFaces.diff(nonSharedFaces).isEmpty) {
             val mergedBlock = Block(localCenter, nonSharedFaces)
             val nonRedundantNonSharedFaces = mergedBlock.nonRedundantFaces
+            val faceCheck = nonRedundantNonSharedFaces.map { currentFace =>
+              nonRedundantNonSharedFaces.exists { checkFace =>
+                currentFace.isSharedWith(checkFace)
+              }
+            }
+            println("FACE CHECK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            faceCheck.foreach(println)
+            assert(!faceCheck.contains(true))
             // Filter blocks that actually aren't adjacent at all,
             // but share a processor joint
+//            println("\nNon-redundant Shared Faces:")
+//            nonRedundantNonSharedFaces.foreach { case Face(faceCenter, distance, _, _, _) =>
+//              println("Face Normal: " + faceCenter(0) + " " + faceCenter(1) + " " + faceCenter(2))
+//              println("Face Distance: " + distance + "\n")
+//            }
             nonRedundantNonSharedFaces match {
               case Nil => None
               case x => Some(Block(localCenter, nonRedundantNonSharedFaces),

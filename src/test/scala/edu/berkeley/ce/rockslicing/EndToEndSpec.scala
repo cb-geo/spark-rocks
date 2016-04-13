@@ -39,7 +39,7 @@ class EndToEndSpec extends FunSuite {
     //       The two filter operations are left here to mimic what is done in the actual Spark code
 
     // Find all blocks that contain processor joints
-    val processorBlocks = nonRedundantBlocks.filter { block => 
+    val processorBlocks = nonRedundantBlocks.filter { block =>
       block.faces.exists(_.processorJoint)
     }
 

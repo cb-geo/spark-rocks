@@ -407,4 +407,3 @@ class RockSlicerSpec extends FunSuite {
    assert(processorBlocks.diff(orphanBlocks).isEmpty)
  }
 }
-
