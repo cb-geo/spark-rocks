@@ -315,7 +315,7 @@ object RockSlicer {
       }
 
       val sharedProcessorFaces = temporaryBlocks.flatMap { block =>
-        findSharedProcessorFaces(originalPairedBlocks.head, block)
+        findSharedProcessorFaces(originalPairedBlocks.head, block, tolerance = 1e-5)
       }
       val allFaces = temporaryBlocks.flatMap { block =>
         block.faces
@@ -351,15 +351,18 @@ object RockSlicer {
     *
     * @param block1 First input block
     * @param block2 Second input block
+    * @param tolerance Tolerance for difference between compared values. Defaults to
+    *                  EPSILON
     * @return List of processor faces that are shared by the two blocks. Will be
     *         empty if they share no faces
     */
-  def findSharedProcessorFaces(block1: Block, block2: Block): Seq[Face] = {
+  def findSharedProcessorFaces(block1: Block, block2: Block, tolerance: Double = NumericUtils.EPSILON):
+  Seq[Face] = {
     val processorFaces1 = block1.faces.filter(_.processorJoint)
     val processorFaces2 = block2.faces.filter(_.processorJoint)
     (processorFaces1 flatMap { face1 =>
       processorFaces2 flatMap { face2 =>
-        if (face1.isSharedWith(face2, tolerance = 1.0e-5)) {
+        if (face1.isSharedWith(face2, tolerance)) {
           Seq[Face](face1, face2)
         } else {
           Seq.empty[Face]
@@ -382,7 +385,7 @@ object RockSlicer {
         val currentBlock = processorBlocks.head
         val localCenter = currentBlock.center
         val comparisonBlock = Block(localCenter, block.updateFaces(localCenter))
-        val sharedProcFaces = findSharedProcessorFaces(currentBlock, comparisonBlock)
+        val sharedProcFaces = findSharedProcessorFaces(currentBlock, comparisonBlock, tolerance = 1e-5)
 
         if (sharedProcFaces.nonEmpty) {
           val currentFaces = currentBlock.faces.diff(sharedProcFaces)
@@ -402,21 +405,29 @@ object RockSlicer {
           if (allFaces.diff(nonSharedFaces).isEmpty) {
             val mergedBlock = Block(localCenter, nonSharedFaces)
             val nonRedundantNonSharedFaces = mergedBlock.nonRedundantFaces
+
             val faceCheck = nonRedundantNonSharedFaces.map { currentFace =>
               nonRedundantNonSharedFaces.exists { checkFace =>
                 currentFace.isSharedWith(checkFace)
               }
             }
-            println("FACE CHECK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            val faceCheck2 = nonSharedFaces.map { currentFace =>
+              nonSharedFaces.exists { checkFace =>
+                currentFace.isSharedWith(checkFace)
+              }
+            }
+            println("\nFACE CHECK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             faceCheck.foreach(println)
-            assert(!faceCheck.contains(true))
-            // Filter blocks that actually aren't adjacent at all,
-            // but share a processor joint
+            println("Face Check2")
+            faceCheck2.foreach(println)
 //            println("\nNon-redundant Shared Faces:")
 //            nonRedundantNonSharedFaces.foreach { case Face(faceCenter, distance, _, _, _) =>
 //              println("Face Normal: " + faceCenter(0) + " " + faceCenter(1) + " " + faceCenter(2))
 //              println("Face Distance: " + distance + "\n")
 //            }
+
+            // Filter blocks that actually aren't adjacent at all,
+            // but share a processor joint
             nonRedundantNonSharedFaces match {
               case Nil => None
               case x => Some(Block(localCenter, nonRedundantNonSharedFaces),
