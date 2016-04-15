@@ -1,15 +1,18 @@
 package edu.berkeley.ce.rockslicing
 
+import java.lang.NumberFormatException
+
 import scala.math.BigDecimal
 /**
  * Numerical utilities for implementation and test cases.
  */
 object NumericUtils {
-  val EPSILON = 1.0e-6
+  val EPSILON = 1.0e-5
 
   /**
    * Converts a value to 0.0 if it is arbitrarily close to it.
-   * @param d A double value.
+    *
+    * @param d A double value.
    * @return If the value is within EPSILON of 0.0, then 0.0. Otherwise, the
    *         value is returned unchanged.
    */
@@ -19,7 +22,8 @@ object NumericUtils {
   /**
    * Checks if each double in a sequence is arbitrarily close to 0.0 and if so,
    * converts it to 0.0.
-   * @param values A sequence of double values.
+    *
+    * @param values A sequence of double values.
    * @return A new sequence of doubles where any element in the original sequence
    *         that is within ESPILON of 0.0 is converted to 0.0. All other elements
    *         of the sequence are unchanged.
@@ -39,11 +43,18 @@ object NumericUtils {
   /**
     * Rounds to the specified number of decimal places. If not specified, default
     * is 6 decimal places
+    *
     * @param d A Double value
     * @param decimals Number of decimal places to round to.
     * @return Value with specified number of decimal places. Default is 6 decimal places.
     */
   def roundToTolerance(d: Double, decimals: Int=6): Double = {
-    BigDecimal(d).setScale(decimals, BigDecimal.RoundingMode.HALF_UP).toDouble
+    try {
+      BigDecimal(d).setScale(decimals, BigDecimal.RoundingMode.HALF_UP).toDouble
+    } catch {
+      case e: NumberFormatException =>
+        println(d)
+        throw e
+    }
   }
 }

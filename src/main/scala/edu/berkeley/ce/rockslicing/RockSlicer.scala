@@ -195,7 +195,11 @@ object RockSlicer {
       assert(allOrphanBlocks.isEmpty)
 
       // Update centroids of reconstructed processor blocks and remove duplicates
-      val reconCentroidBlocks = allReconstructedBlocks.map {block =>
+      val reconCentroidNonRedundantBlocks = allReconstructedBlocks.map { case block @ Block(center, faces, generation) =>
+          Block(center, block.nonRedundantFaces, generation)
+      }
+
+      val reconCentroidBlocks = reconCentroidNonRedundantBlocks.map {block =>
         val centroid = block.centroid
         Block(centroid, block.updateFaces(centroid))
       }
@@ -395,7 +399,7 @@ object RockSlicer {
           // should not be merged since there is a real joint separating the blocks
           val nonSharedFaces =
             allFaces.foldLeft(Seq.empty[Face]) { (unique, current) =>
-              if (!unique.exists(current.isSharedWith(_, tolerance = 1.0e-6))) {
+              if (!unique.exists(current.isSharedWith(_))) {
                 current +: unique
               } else {
                 unique
@@ -416,16 +420,16 @@ object RockSlicer {
                 currentFace.isSharedWith(checkFace)
               }
             }
-            println("\nFACE CHECK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            faceCheck.foreach(println)
-            println("Face Check2")
-            faceCheck2.foreach(println)
+//            println("\nFACE CHECK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+//            faceCheck.foreach(println)
+//            println("Face Check2")
+//            faceCheck2.foreach(println)
 //            println("\nNon-redundant Shared Faces:")
 //            nonRedundantNonSharedFaces.foreach { case Face(faceCenter, distance, _, _, _) =>
 //              println("Face Normal: " + faceCenter(0) + " " + faceCenter(1) + " " + faceCenter(2))
 //              println("Face Distance: " + distance + "\n")
 //            }
-
+            assert(!faceCheck.contains(true))
             // Filter blocks that actually aren't adjacent at all,
             // but share a processor joint
             nonRedundantNonSharedFaces match {

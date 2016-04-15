@@ -4,6 +4,8 @@ import breeze.linalg
 import breeze.linalg.{DenseVector, DenseMatrix}
 import org.apache.commons.lang3.builder.HashCodeBuilder
 
+import scala.math.sqrt
+
 /** A simple data structure to represent the face of a rock block.
   *
   * @constructor Create a new rock face.
@@ -68,10 +70,17 @@ extends Serializable {
     */
   def isSharedWith(inputFace: Face, tolerance: Double = NumericUtils.EPSILON):
       Boolean = {
-    (math.abs(a + inputFace.a) < tolerance) &&
+    val ret = (math.abs(a + inputFace.a) < tolerance) &&
     (math.abs(b + inputFace.b) < tolerance) &&
     (math.abs(c + inputFace.c) < tolerance) &&
     (math.abs(d + inputFace.d) < tolerance)
+
+    if (!ret && math.abs(math.abs(a) - 1/sqrt(2)) < NumericUtils.EPSILON &&
+        math.abs(math.abs(inputFace.a)  - 1/sqrt(2)) < NumericUtils.EPSILON) {
+      println(s"This Face: a = $a, b = $b, c = $c, d = $d")
+      println(s"Input Face: a = ${inputFace.a}, b = ${inputFace.b}, c = ${inputFace.c}, d = ${inputFace.d}")
+    }
+    ret
   }
 
   override def equals(obj: Any): Boolean = {
@@ -147,8 +156,7 @@ object Block {
   *                   default value of 0.
   */
 @SerialVersionUID(1L)
-case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0)
-extends Serializable {
+case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) extends Serializable {
   assert(center.length == 3)
   val centerX = center(0)
   val centerY = center(1)
@@ -599,6 +607,14 @@ extends Serializable {
         w(1) = localOrigin(1) - centerY
         w(2) = localOrigin(2) - centerZ
       }
+      w foreach { entry =>
+        if (entry.isNaN) {
+          println("w is: " + w)
+          println(s"local origin is: ${localOrigin(0)}, ${localOrigin(1)}, ${localOrigin(2)}")
+          println(s"center is: ${center(0)}, ${center(1)}, ${center(2)}")
+        }
+      }
+
       val n = DenseVector[Double](a, b, c)
       val new_d = NumericUtils.roundToTolerance(-(n dot w) / linalg.norm(n))
       Face(Array(a, b, c), new_d, phi, cohesion, processorJoint)
