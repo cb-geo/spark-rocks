@@ -452,6 +452,14 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
       }
       assert(vertices.nonEmpty)
     }
+    faceMap foreach { case (face, vertices) =>
+      vertices foreach { vertex =>
+        if (vertex.contains(Double.NaN)) {
+          println(s"Vertex: ${vertex(0)}, ${vertex(1)}, ${vertex(2)}")
+        }
+        assert(!vertex.contains(Double.NaN))
+      }
+    }
     faceMap
   }
 
@@ -543,12 +551,28 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
       case ((volInc1, (centX1, centY1, centZ1)),  (volInc2, (centX2, centY2, centZ2))) =>
         (volInc1 + volInc2, (centX1 + centX2, centY1 + centY2, centZ1 + centZ2))
     }
-    Array(
+
+    if (totalVolume.isNaN) {
+      println(s"Total Volume: $totalVolume")
+    }
+    if (centroidX.isNaN || centroidY.isNaN || centroidZ.isNaN) {
+      println(s"Centroid Increments: $centroidX, $centroidY, $centroidZ")
+    }
+    val ret =
+      Array(
       // Factor of 3 comes from: centroid / (2.0 * (volume/6.0))
       3.0 * centroidX / totalVolume,
       3.0 * centroidY / totalVolume,
       3.0 * centroidZ / totalVolume
     )
+    ret foreach { entry =>
+      if (entry.isNaN) {
+        println(s"Centroid: ${ret(0)}, ${ret(1)}, ${ret(2)}")
+        println(s"Centroid Increments: $centroidX, $centroidY, $centroidZ")
+        println(s"Total Volume: $totalVolume")
+      }
+    }
+    ret
   }
 
   /**

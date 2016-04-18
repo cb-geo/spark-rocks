@@ -1,7 +1,5 @@
 package edu.berkeley.ce.rockslicing
 
-import java.lang.NumberFormatException
-
 import scala.math.BigDecimal
 /**
  * Numerical utilities for implementation and test cases.

@@ -408,12 +408,12 @@ class RockSlicerSpec extends FunSuite {
 // }
 
   test("Check ordering sensitivity in findSharedFaces") {
-    val face1 = Face(Array(0.0, 0.0, -1.0), 6.5e-5, 0.0, 0.0, false)
-    val face2 = Face(Array(0.0, 1.0, 0.0), 2.5e-5, 0.0, 0.0, false)
-    val face3 = Face(Array(1.0, 0.0, 0.0), 4.3e-5, 0.0, 0.0, false)
-    val face4 = Face(Array(0.0, 0.0, 1.0), 2.5e-5, 0.0, 0.0, false)
-    val face5 = Face(Array(-1.0/math.sqrt(2.0), -1.0/math.sqrt(2.0), 0.0), 0.0, 0.0, 0.0, false)
-    val face6 = Face(Array(1.0/math.sqrt(2.0), 1.0/math.sqrt(2.0), 0.0), 0.0, 0.0, 0.0, false)
+    val face1 = Face(Array(0.0, 0.0, -1.0), 6.5e-5, 0.0, 0.0, processorJoint = false)
+    val face2 = Face(Array(0.0, 1.0, 0.0), 2.5e-5, 0.0, 0.0, processorJoint = false)
+    val face3 = Face(Array(1.0, 0.0, 0.0), 4.3e-5, 0.0, 0.0, processorJoint = false)
+    val face4 = Face(Array(0.0, 0.0, 1.0), 2.5e-5, 0.0, 0.0, processorJoint = false)
+    val face5 = Face(Array(-1.0/math.sqrt(2.0), -1.0/math.sqrt(2.0), 0.0), 0.0, 0.0, 0.0, processorJoint = false)
+    val face6 = Face(Array(1.0/math.sqrt(2.0), 1.0/math.sqrt(2.0), 0.0), 0.0, 0.0, 0.0, processorJoint = false)
 
     val failedFaces = Seq(face4, face1, face2, face3, face6, face5)
     val firstFaces = Seq(face1, face2, face3, face5, face4)
