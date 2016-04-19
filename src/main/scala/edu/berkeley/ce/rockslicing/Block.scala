@@ -558,21 +558,38 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     if (centroidX.isNaN || centroidY.isNaN || centroidZ.isNaN) {
       println(s"Centroid Increments: $centroidX, $centroidY, $centroidZ")
     }
-    val ret =
-      Array(
-      // Factor of 3 comes from: centroid / (2.0 * (volume/6.0))
-      3.0 * centroidX / totalVolume,
-      3.0 * centroidY / totalVolume,
-      3.0 * centroidZ / totalVolume
-    )
-    ret foreach { entry =>
-      if (entry.isNaN) {
-        println(s"Centroid: ${ret(0)}, ${ret(1)}, ${ret(2)}")
-        println(s"Centroid Increments: $centroidX, $centroidY, $centroidZ")
-        println(s"Total Volume: $totalVolume")
+
+    // Check if block is extremely small
+    if (totalVolume <= NumericUtils.EPSILON) {
+      // If volume is essentially 0.0, return average of all vertices as centroid
+      val numberOfVertices = vertices.values.flatten.size
+      val averageVertices =  vertices.values.flatten.foldLeft(Array(0.0, 0.0, 0.0)) { (vertex1, vertex2) =>
+        Array(vertex1(0) + vertex2(0), vertex1(1) + vertex2(1), vertex1(2) + vertex2(2))
       }
+      Array(averageVertices(0)/numberOfVertices, averageVertices(1)/numberOfVertices, averageVertices(2)/numberOfVertices)
+    } else {
+      Array(
+        // Factor of 3 comes from: centroid / (2.0 * (volume/6.0))
+        3.0 * centroidX / totalVolume,
+        3.0 * centroidY / totalVolume,
+        3.0 * centroidZ / totalVolume
+      )
     }
-    ret
+//    val ret =
+//      Array(
+//      // Factor of 3 comes from: centroid / (2.0 * (volume/6.0))
+//      3.0 * centroidX / totalVolume,
+//      3.0 * centroidY / totalVolume,
+//      3.0 * centroidZ / totalVolume
+//    )
+//    ret foreach { entry =>
+//      if (entry.isNaN) {
+//        println(s"Centroid: ${ret(0)}, ${ret(1)}, ${ret(2)}")
+//        println(s"Centroid Increments: $centroidX, $centroidY, $centroidZ")
+//        println(s"Total Volume: $totalVolume")
+//      }
+//    }
+//    ret
   }
 
   /**
