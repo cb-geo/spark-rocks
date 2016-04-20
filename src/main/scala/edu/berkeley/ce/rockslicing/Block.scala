@@ -70,17 +70,10 @@ extends Serializable {
     */
   def isSharedWith(inputFace: Face, tolerance: Double = NumericUtils.EPSILON):
       Boolean = {
-    val ret = (math.abs(a + inputFace.a) < tolerance) &&
-    (math.abs(b + inputFace.b) < tolerance) &&
-    (math.abs(c + inputFace.c) < tolerance) &&
-    (math.abs(d + inputFace.d) < tolerance)
-
-    if (!ret && math.abs(math.abs(a) - 1/sqrt(2)) < NumericUtils.EPSILON &&
-        math.abs(math.abs(inputFace.a)  - 1/sqrt(2)) < NumericUtils.EPSILON) {
-      println(s"This Face: a = $a, b = $b, c = $c, d = $d")
-      println(s"Input Face: a = ${inputFace.a}, b = ${inputFace.b}, c = ${inputFace.c}, d = ${inputFace.d}")
-    }
-    ret
+    (math.abs(a + inputFace.a) <= tolerance) &&
+    (math.abs(b + inputFace.b) <= tolerance) &&
+    (math.abs(c + inputFace.c) <= tolerance) &&
+    (math.abs(d + inputFace.d) <= tolerance)
   }
 
   override def equals(obj: Any): Boolean = {
@@ -418,7 +411,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     * This function should only be called once all redundant faces have been removed.
     */
   def findVertices: Map[Face, Seq[Array[Double]]] = {
-    val faceMap = faces.zip (
+    faces.zip (
       faces map { f1 =>
         val n1 = DenseVector[Double](f1.a, f1.b, f1.c)
         faces flatMap { f2 =>
@@ -444,23 +437,6 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
         }
       } map (_.distinct) map {seq => seq map { triple => Array(triple._1, triple._2, triple._3) } }
     ).toMap
-    faceMap.foreach { case (face, vertices) =>
-      if (vertices.isEmpty) {
-        println("No vertices for face:")
-        println("Center: "+face.normalVec(0)+" "+face.normalVec(1)+" "+face.normalVec(2))
-        println("Distance: "+face.distance)
-      }
-      assert(vertices.nonEmpty)
-    }
-    faceMap foreach { case (face, vertices) =>
-      vertices foreach { vertex =>
-        if (vertex.contains(Double.NaN)) {
-          println(s"Vertex: ${vertex(0)}, ${vertex(1)}, ${vertex(2)}")
-        }
-        assert(!vertex.contains(Double.NaN))
-      }
-    }
-    faceMap
   }
 
   /**
@@ -476,22 +452,10 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     faces.zip (
       faces.map { face =>
         val R = Block.rotationMatrix(face.normalVec, Array(0.0, 0.0, 1.0))
-        if (vertices(face).isEmpty) {
-          println("Pre-rotation vertices are empty!!!!!!!!!!!!!!!!")
-        }
-        assert(vertices(face).nonEmpty)
         val rotatedVertices = vertices(face).map { vertex =>
           val rotatedVertex = R * DenseVector(vertex)
           Delaunay.Vector2(rotatedVertex(0), rotatedVertex(1))
         }.distinct.toList
-        if (rotatedVertices.isEmpty) {
-          println("This is the block with empty vertices")
-          println(face.normalVec(0)+" "+face.normalVec(1)+" "+face.normalVec(2))
-          println("And these are the vertices")
-          vertices(face).foreach { faceVertex =>
-            println(faceVertex(0)+" "+faceVertex(1)+" "+faceVertex(2))
-          }
-        }
         assert(rotatedVertices.nonEmpty)
         // If normal is -z-axis, order needs to be reversed to maintain clockwise orientation since
         // rotation matrix is identity matrix in this case - vectors are parallel. Rotation matrix
@@ -552,13 +516,6 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
         (volInc1 + volInc2, (centX1 + centX2, centY1 + centY2, centZ1 + centZ2))
     }
 
-    if (totalVolume.isNaN) {
-      println(s"Total Volume: $totalVolume")
-    }
-    if (centroidX.isNaN || centroidY.isNaN || centroidZ.isNaN) {
-      println(s"Centroid Increments: $centroidX, $centroidY, $centroidZ")
-    }
-
     // Check if block is extremely small
     if (totalVolume <= NumericUtils.EPSILON) {
       // If volume is essentially 0.0, return average of all vertices as centroid
@@ -575,21 +532,6 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
         3.0 * centroidZ / totalVolume
       )
     }
-//    val ret =
-//      Array(
-//      // Factor of 3 comes from: centroid / (2.0 * (volume/6.0))
-//      3.0 * centroidX / totalVolume,
-//      3.0 * centroidY / totalVolume,
-//      3.0 * centroidZ / totalVolume
-//    )
-//    ret foreach { entry =>
-//      if (entry.isNaN) {
-//        println(s"Centroid: ${ret(0)}, ${ret(1)}, ${ret(2)}")
-//        println(s"Centroid Increments: $centroidX, $centroidY, $centroidZ")
-//        println(s"Total Volume: $totalVolume")
-//      }
-//    }
-//    ret
   }
 
   /**
@@ -647,13 +589,6 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
         w(0) = localOrigin(0) - (d/a + centerX)
         w(1) = localOrigin(1) - centerY
         w(2) = localOrigin(2) - centerZ
-      }
-      w foreach { entry =>
-        if (entry.isNaN) {
-          println("w is: " + w)
-          println(s"local origin is: ${localOrigin(0)}, ${localOrigin(1)}, ${localOrigin(2)}")
-          println(s"center is: ${center(0)}, ${center(1)}, ${center(2)}")
-        }
       }
 
       val n = DenseVector[Double](a, b, c)
