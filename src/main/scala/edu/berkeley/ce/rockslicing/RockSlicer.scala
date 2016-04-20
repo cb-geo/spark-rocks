@@ -121,13 +121,18 @@ object RockSlicer {
       assert(allOrphanBlocks.isEmpty)
 
       // Update centroids of reconstructed processor blocks and remove duplicates
-      val reconCentroidNonRedundantBlocks = allReconstructedBlocks.map { case block @ Block(center, faces, generation) =>
-          Block(center, block.nonRedundantFaces, generation)
-      }
-
-      val reconCentroidBlocks = reconCentroidNonRedundantBlocks.map {block =>
-        val centroid = block.centroid
-        Block(centroid, block.updateFaces(centroid))
+//      val reconCentroidBlocks = allReconstructedBlocks.flatMap { block =>
+//        block.volume match {
+//          case vol if vol > NumericUtils.EPSILON => {
+//            val centroid = block.centroid
+//            Some(Block(centroid, block.updateFaces(centroid)))
+//          }
+//          case vol => None
+//        }
+//      }
+      val reconCentroidBlocks = allReconstructedBlocks.map {block =>
+          val centroid = block.centroid
+          Block(centroid, block.updateFaces(centroid))
       }
 
       // Clean up faces of reconstructed blocks with values that should be zero, but have
@@ -235,7 +240,7 @@ object RockSlicer {
       }
 
       val sharedProcessorFaces = temporaryBlocks.flatMap { block =>
-        findSharedProcessorFaces(originalPairedBlocks.head, block, tolerance = 1e-5)
+        findSharedProcessorFaces(originalPairedBlocks.head, block)
       }
       val allFaces = temporaryBlocks.flatMap { block =>
         block.faces
@@ -305,7 +310,7 @@ object RockSlicer {
         val currentBlock = processorBlocks.head
         val localCenter = currentBlock.center
         val comparisonBlock = Block(localCenter, block.updateFaces(localCenter))
-        val sharedProcFaces = findSharedProcessorFaces(currentBlock, comparisonBlock, tolerance = 1e-5)
+        val sharedProcFaces = findSharedProcessorFaces(currentBlock, comparisonBlock)
 
         if (sharedProcFaces.nonEmpty) {
           val currentFaces = currentBlock.faces.diff(sharedProcFaces)

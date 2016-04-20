@@ -5,7 +5,7 @@ import scala.math.BigDecimal
  * Numerical utilities for implementation and test cases.
  */
 object NumericUtils {
-  val EPSILON = 1.0e-5
+  val EPSILON = 1.0e-6
 
   /**
    * Converts a value to 0.0 if it is arbitrarily close to it.
@@ -46,7 +46,7 @@ object NumericUtils {
     * @param decimals Number of decimal places to round to.
     * @return Value with specified number of decimal places. Default is 6 decimal places.
     */
-  def roundToTolerance(d: Double, decimals: Int=6): Double = {
+  def roundToTolerance(d: Double, decimals: Int=7): Double = {
       BigDecimal(d).setScale(decimals, BigDecimal.RoundingMode.HALF_DOWN).toDouble
   }
 }
