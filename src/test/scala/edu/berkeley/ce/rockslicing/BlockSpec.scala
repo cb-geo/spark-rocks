@@ -62,6 +62,26 @@ class BlockSpec extends FunSuite {
   )
   val tetrahedralBlock = Block(Array(0.3, 0.3, 0.3), boundingFaces7)
 
+  val boundingFaces8 = List(
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi = 0.0, cohesion = 0.0),
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi = 0.0, cohesion = 0.0),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi = 0.0, cohesion = 0.0),
+    Face(Array(1.0, 0.0, 0.0), 1e-6, phi = 0.0, cohesion = 0.0),
+    Face(Array(0.0, 1.0, 0.0), 1e-6, phi = 0.0, cohesion = 0.0),
+    Face(Array(0.0, 0.0, 1.0), 1e-6, phi = 0.0, cohesion = 0.0)
+  )
+  val tinyBlock = Block(Array(0.0, 0.0, 0.0), boundingFaces8)
+
+  val boundingFaces9 = List(
+    Face(Array(-1.0, 0.0, 0.0), 0.0, phi = 0.0, cohesion = 0.0),
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi = 0.0, cohesion = 0.0),
+    Face(Array(0.0, 0.0, -1.0), 0.0, phi = 0.0, cohesion = 0.0),
+    Face(Array(1.0, 0.0, 0.0), 0.009, phi = 0.0, cohesion = 0.0),
+    Face(Array(0.0, 1.0, 0.0), 0.009, phi = 0.0, cohesion = 0.0),
+    Face(Array(0.0, 0.0, 1.0), 0.009, phi = 0.0, cohesion = 0.0)
+  )
+  val lessTinyBlock = Block(Array(0.0, 0.0, 0.0), boundingFaces9)
+
   val jointBounds = Vector(
     (Array(1.0, 0.0, 0.0), 1.0),
     (Array(-1.0, 0.0, 0.0), 0.0),
@@ -654,5 +674,25 @@ class BlockSpec extends FunSuite {
   test("Volume of half unit cube should be 0.5") {
     val volume = halfUnitCube.volume
     assert(math.abs(volume - 0.5) <= NumericUtils.EPSILON)
+  }
+
+  test("Centroid of very small block should the average of vertices") {
+    val calculatedCentroid = tinyBlock.centroid
+    val expectedCentroid = Array(1e-6/2.0, 1e-6/2.0, 1e-6/2.0)
+    val centroidComparison = (calculatedCentroid.zip(expectedCentroid) map { case (entry1, entry2) =>
+      math.abs(entry1 - entry2)
+    }).max
+    println(s"Calculated Centroid: ${calculatedCentroid(0)}, ${calculatedCentroid(1)}, ${calculatedCentroid(2)}")
+    assert(centroidComparison < NumericUtils.EPSILON)
+  }
+
+  test("Centroid of less small block should the average of vertices") {
+    val calculatedCentroid = lessTinyBlock.centroid
+    val expectedCentroid = Array(0.009/2.0, 0.009/2.0, 0.009/2.0)
+    val centroidComparison = (calculatedCentroid.zip(expectedCentroid) map { case (entry1, entry2) =>
+      math.abs(entry1 - entry2)
+    }).max
+    println(s"Less Tiny Calculated Centroid: ${calculatedCentroid(0)}, ${calculatedCentroid(1)}, ${calculatedCentroid(2)}")
+    assert(centroidComparison < NumericUtils.EPSILON)
   }
 }
