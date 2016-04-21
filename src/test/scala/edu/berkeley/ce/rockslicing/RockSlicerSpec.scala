@@ -207,14 +207,14 @@ class RockSlicerSpec extends FunSuite {
  test("The two cubes should share one processor face") {
    val updatedRightCube = Block(leftCube.center, rightCube.updateFaces(leftCube.center))
 
-   val sharedFaces = RockSlicer.findSharedProcessorFaces(leftCube, updatedRightCube, tolerance = 1e-5)
+   val sharedFaces = RockSlicer.findSharedProcessorFaces(leftCube, updatedRightCube)
    assert(!sharedFaces.exists( face => math.abs(face.d) != 1.0))
    assert(sharedFaces.length == 2)
  }
 
  test("The two blocks should share one processor face, but with distances reversed") {
    val updatedLeftCube = Block(rightCube.center, leftCube.updateFaces(rightCube.center))
-   val sharedFaces = RockSlicer.findSharedProcessorFaces(rightCube, updatedLeftCube, tolerance = 1e-5)
+   val sharedFaces = RockSlicer.findSharedProcessorFaces(rightCube, updatedLeftCube)
    assert(sharedFaces.forall(_.d == 0.0))
    assert(sharedFaces.length == 2)
  }
@@ -406,41 +406,4 @@ class RockSlicerSpec extends FunSuite {
    assert(mergedBlocks.isEmpty)
    assert(processorBlocks.diff(orphanBlocks).isEmpty)
  }
-//
-//  test("Check ordering sensitivity in findSharedFaces") {
-//    val face1 = Face(Array(0.0, 0.0, -1.0), 6.5e-5, 0.0, 0.0, processorJoint = false)
-//    val face2 = Face(Array(0.0, 1.0, 0.0), 2.5e-5, 0.0, 0.0, processorJoint = false)
-//    val face3 = Face(Array(1.0, 0.0, 0.0), 4.3e-5, 0.0, 0.0, processorJoint = false)
-//    val face4 = Face(Array(0.0, 0.0, 1.0), 2.5e-5, 0.0, 0.0, processorJoint = false)
-//    val face5 = Face(Array(-1.0/math.sqrt(2.0), -1.0/math.sqrt(2.0), 0.0), 0.0, 0.0, 0.0, processorJoint = false)
-//    val face6 = Face(Array(1.0/math.sqrt(2.0), 1.0/math.sqrt(2.0), 0.0), 0.0, 0.0, 0.0, processorJoint = false)
-//
-//    val failedFaces = Seq(face4, face1, face2, face3, face6, face5)
-//    val firstFaces = Seq(face1, face2, face3, face5, face4)
-//
-//    val nonSharedFaces =
-//      failedFaces.foldLeft(Seq.empty[Face]) { (unique, current) =>
-//        if (!unique.exists(current.isSharedWith(_))) {
-//          current +: unique
-//        } else {
-//          unique
-//        }
-//      }
-//    val faceCheck = failedFaces.map { currentFace =>
-//      failedFaces.exists { checkFace =>
-//        currentFace.isSharedWith(checkFace)
-//      }
-//    }
-//    val faceCheck1 = nonSharedFaces.map { currentFace =>
-//      nonSharedFaces.exists { checkFace =>
-//        currentFace.isSharedWith(checkFace)
-//      }
-//    }
-//    println("Failed Faces Check: Should yield some true")
-//    faceCheck.foreach(println)
-//    println("Non shared faces check: Should yield ALL false")
-//    faceCheck1.foreach(println)
-//    println("Failed Faces length: "+failedFaces.length)
-//    println("nonSharedFaces length: "+nonSharedFaces.length)
-//  }
 }
