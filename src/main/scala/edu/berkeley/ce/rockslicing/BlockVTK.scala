@@ -61,7 +61,7 @@ object BlockVTK {
     // If resulting vector points in positive z-direction, pointA is before pointB
     if (det > 0.0) {
       true
-    } else if (det < 0.0) {
+    } else if (det <= 0.0) {
       false
     } else {
       // pointA and pointB are on the same line from the center, so check which one is closer to the center
