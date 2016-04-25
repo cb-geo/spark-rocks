@@ -120,16 +120,6 @@ object RockSlicer {
 
       assert(allOrphanBlocks.isEmpty)
 
-      // Update centroids of reconstructed processor blocks and remove duplicates
-//      val reconCentroidBlocks = allReconstructedBlocks.flatMap { block =>
-//        block.volume match {
-//          case vol if vol > NumericUtils.EPSILON => {
-//            val centroid = block.centroid
-//            Some(Block(centroid, block.updateFaces(centroid)))
-//          }
-//          case vol => None
-//        }
-//      }
       val reconCentroidBlocks = allReconstructedBlocks.map {block =>
           val centroid = block.centroid
           Block(centroid, block.updateFaces(centroid))

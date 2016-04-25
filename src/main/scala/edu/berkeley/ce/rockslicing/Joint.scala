@@ -233,8 +233,7 @@ case class Joint(normalVec: Array[Double], localOrigin: Array[Double],
                  shape: Vector[(Array[Double],Double)], dipAngleParam: Option[Double]=None,
                  dipDirectionParam: Option[Double]=None,
                  boundingSphereParam: Option[(Array[Double],Double)]=null,
-                 processorJoint: Boolean=false)
-extends Serializable {
+                 processorJoint: Boolean=false) extends Serializable {
   assert(normalVec.length == 3 && localOrigin.length == 3 && center.length == 3)
 
   val a = normalVec(0)

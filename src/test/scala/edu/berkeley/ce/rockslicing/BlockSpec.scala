@@ -676,13 +676,12 @@ class BlockSpec extends FunSuite {
     assert(math.abs(volume - 0.5) <= NumericUtils.EPSILON)
   }
 
-  test("Centroid of very small block should the average of vertices") {
+  test("Centroid of very small block should be the average of vertices") {
     val calculatedCentroid = tinyBlock.centroid
     val expectedCentroid = Array(1e-6/2.0, 1e-6/2.0, 1e-6/2.0)
     val centroidComparison = (calculatedCentroid.zip(expectedCentroid) map { case (entry1, entry2) =>
       math.abs(entry1 - entry2)
     }).max
-    println(s"Calculated Centroid: ${calculatedCentroid(0)}, ${calculatedCentroid(1)}, ${calculatedCentroid(2)}")
     assert(centroidComparison < NumericUtils.EPSILON)
   }
 
@@ -692,7 +691,6 @@ class BlockSpec extends FunSuite {
     val centroidComparison = (calculatedCentroid.zip(expectedCentroid) map { case (entry1, entry2) =>
       math.abs(entry1 - entry2)
     }).max
-    println(s"Less Tiny Calculated Centroid: ${calculatedCentroid(0)}, ${calculatedCentroid(1)}, ${calculatedCentroid(2)}")
     assert(centroidComparison < NumericUtils.EPSILON)
   }
 }

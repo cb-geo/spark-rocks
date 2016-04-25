@@ -18,8 +18,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder
   */
 @SerialVersionUID(1L)
 case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesion: Double,
-                processorJoint: Boolean=false)
-extends Serializable {
+                processorJoint: Boolean=false) extends Serializable {
   assert(normalVec.length == 3)
   val a = normalVec(0)
   val b = normalVec(1)
@@ -517,11 +516,12 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     // Check if block is extremely small
     if (totalVolume <= NumericUtils.EPSILON) {
       // If volume is essentially 0.0, return average of all vertices as centroid
-      val numberOfVertices = vertices.values.flatten.size
-      val sumVertices =  vertices.values.flatten.foldLeft(Array(0.0, 0.0, 0.0)) { (vertex1, vertex2) =>
-        Array(vertex1(0) + vertex2(0), vertex1(1) + vertex2(1), vertex1(2) + vertex2(2))
-      }
-      Array(sumVertices(0)/numberOfVertices, sumVertices(1)/numberOfVertices, sumVertices(2)/numberOfVertices)
+      val allVertices = vertices.values.flatten
+      Array[Double](
+        allVertices.map { v => v(0) }.sum / allVertices.size,
+        allVertices.map { v => v(1) }.sum / allVertices.size,
+        allVertices.map { v => v(2) }.sum / allVertices.size
+      )
     } else {
       Array(
         // Factor of 3 comes from: centroid / (2.0 * (volume/6.0))

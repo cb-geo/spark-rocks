@@ -23,6 +23,7 @@ object BlockVTK {
     * @param center Reference point for comparison
     * @return Returns TRUE if pointA is first relative to pointB, FALSE otherwise
     */
+  // TODO: Ordering becomes an issues when vertices are extremely close to each other. See Issue #31 on github.
   private def ccwCompare(pointA: Array[Double], pointB: Array[Double],
                          center: Array[Double]): Boolean = {
     // Check that points are in the same x-y plane
@@ -36,18 +37,18 @@ object BlockVTK {
     // vertical line running through this center.
     // Check if points are on opposite sides of the center. Points left of center will be before points
     // right of the center
-    if ((pointA(0) - center(0) < 0.0) && (pointB(0) - center(0) >= 0.0)) {
+    if ((pointA(0) - center(0) < -NumericUtils.EPSILON) && (pointB(0) - center(0) >= NumericUtils.EPSILON)) {
       return true
     }
-    else if ((pointA(0) - center(0) >= 0.0) && (pointB(0) - center(0) < 0.0)) {
+    else if ((pointA(0) - center(0) >= NumericUtils.EPSILON) && (pointB(0) - center(0) < -NumericUtils.EPSILON)) {
       return false
     }
 
     // Compares points that fall on the x = center._1 line.
-    if ((math.abs(pointA(0) - center(0)) < 0.0) &&
-        (math.abs(pointB(0) - center(0)) < 0.0)) {
+    if ((math.abs(pointA(0) - center(0)) < NumericUtils.EPSILON) &&
+        (math.abs(pointB(0) - center(0)) < NumericUtils.EPSILON)) {
       // Points furthest away from the center will be before points that are closer to the center
-      if ((pointA(1) - center(1) >= 0.0) || (pointB(1) - center(1) >= 0.0)) {
+      if ((pointA(1) - center(1) >= NumericUtils.EPSILON) || (pointB(1) - center(1) >= NumericUtils.EPSILON)) {
         return pointA(1) > pointB(1)
       } else {
         return pointB(1) > pointA(1)
@@ -59,9 +60,9 @@ object BlockVTK {
     val det = (pointA(0) - center(0)) * (pointB(1) - center(1)) -
       (pointB(0) - center(0)) * (pointA(1) - center(1))
     // If resulting vector points in positive z-direction, pointA is before pointB
-    if (det > 0.0) {
+    if (det > NumericUtils.EPSILON) {
       true
-    } else if (det <= 0.0) {
+    } else if (det < -NumericUtils.EPSILON) {
       false
     } else {
       // pointA and pointB are on the same line from the center, so check which one is closer to the center
