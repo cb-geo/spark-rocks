@@ -272,7 +272,7 @@ object RockSlicer {
     *         empty if they share no faces
     */
   def findSharedProcessorFaces(block1: Block, block2: Block, tolerance: Double = NumericUtils.EPSILON):
-  Seq[Face] = {
+      Seq[Face] = {
     val processorFaces1 = block1.faces.filter(_.processorJoint)
     val processorFaces2 = block2.faces.filter(_.processorJoint)
     (processorFaces1 flatMap { face1 =>
