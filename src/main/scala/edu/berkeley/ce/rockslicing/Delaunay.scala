@@ -23,7 +23,7 @@ object Delaunay {
     case class EdgeAnihilationSet(s: Set[IEDGE]) {
       def add(e: IEDGE): EdgeAnihilationSet = {
         if( s.contains(e) ) {
-          printf(s"FOUND ${e} NOT REVERSED *********************\n")
+//          printf(s"FOUND ${e} NOT REVERSED *********************\n")
           new EdgeAnihilationSet(s - e)
         }
         else {
@@ -69,8 +69,8 @@ object Delaunay {
     //  NOTE: A point on the edge is inside the circumcircle
     def CircumCircle( q:Vector2, p1:Vector2, p2:Vector2, p3:Vector2) : (/*inside :*/Boolean, /*center:*/Vector2, /*radius:*/Double) = {
       if ( Math.abs(p1.y-p2.y) < NumericUtils.EPSILON && Math.abs(p2.y-p3.y) < NumericUtils.EPSILON ) {
-        System.err.println("CircumCircle: Points are colinear");
-        println("CircumCircle: Points are colinear *****************************")
+//        System.err.println("CircumCircle: Points are colinear")
+//        println("CircumCircle: Points are colinear *****************************")
         (false, new Vector2(0,0), 0)
       }
       else {

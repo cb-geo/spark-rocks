@@ -1,7 +1,7 @@
 package edu.berkeley.ce.rockslicing
 
 import breeze.linalg
-import breeze.linalg.{DenseVector, DenseMatrix}
+import breeze.linalg.{DenseMatrix, DenseVector}
 import org.apache.commons.lang3.builder.HashCodeBuilder
 
 /** A simple data structure to represent the face of a rock block.
@@ -16,8 +16,9 @@ import org.apache.commons.lang3.builder.HashCodeBuilder
   * @param processorJoint Parameter that identifies joint as being artificial joint introduced as part
   *                        of load balancing
   */
+@SerialVersionUID(1L)
 case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesion: Double,
-                processorJoint: Boolean=false) {
+                processorJoint: Boolean=false) extends Serializable {
   assert(normalVec.length == 3)
   val a = normalVec(0)
   val b = normalVec(1)
@@ -60,14 +61,16 @@ case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesio
     * normal vectors in opposite directions
     *
     * @param inputFace Input face
+    * @param tolerance Tolerance for difference between compared values. Defaults to
+    *                  EPSILON.
     * @return True if faces are shared, false otherwise
     */
   def isSharedWith(inputFace: Face, tolerance: Double = NumericUtils.EPSILON):
       Boolean = {
-    (math.abs(a + inputFace.a) < tolerance) &&
-    (math.abs(b + inputFace.b) < tolerance) &&
-    (math.abs(c + inputFace.c) < tolerance) &&
-    (math.abs(d + inputFace.d) < tolerance)
+    (math.abs(a + inputFace.a) <= tolerance) &&
+    (math.abs(b + inputFace.b) <= tolerance) &&
+    (math.abs(c + inputFace.c) <= tolerance) &&
+    (math.abs(d + inputFace.d) <= tolerance)
   }
 
   override def equals(obj: Any): Boolean = {
@@ -142,7 +145,8 @@ object Block {
   *                   for geometrically redundant faces, but it can be safely left as its
   *                   default value of 0.
   */
-case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) {
+@SerialVersionUID(1L)
+case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) extends Serializable {
   assert(center.length == 3)
   val centerX = center(0)
   val centerY = center(1)
@@ -403,7 +407,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) {
     * @return A mapping from each face of the block to a Seq of vertices for that face
     * This function should only be called once all redundant faces have been removed.
     */
-  def findVertices: Map[Face, Seq[Array[Double]]] =
+  def findVertices: Map[Face, Seq[Array[Double]]] = {
     faces.zip (
       faces map { f1 =>
         val n1 = DenseVector[Double](f1.a, f1.b, f1.c)
@@ -430,6 +434,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) {
         }
       } map (_.distinct) map {seq => seq map { triple => Array(triple._1, triple._2, triple._3) } }
     ).toMap
+  }
 
   /**
     * Mesh the faces using Delaunay triangulation. This meshing is done
@@ -507,12 +512,24 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) {
       case ((volInc1, (centX1, centY1, centZ1)),  (volInc2, (centX2, centY2, centZ2))) =>
         (volInc1 + volInc2, (centX1 + centX2, centY1 + centY2, centZ1 + centZ2))
     }
-    Array(
-      // Factor of 3 comes from: centroid / (2.0 * (volume/6.0))
-      3.0 * centroidX / totalVolume,
-      3.0 * centroidY / totalVolume,
-      3.0 * centroidZ / totalVolume
-    )
+
+    // Check if block is extremely small
+    if (totalVolume <= NumericUtils.EPSILON) {
+      // If volume is essentially 0.0, return average of all vertices as centroid
+      val allVertices = vertices.values.flatten
+      Array[Double](
+        allVertices.map { v => v(0) }.sum / allVertices.size,
+        allVertices.map { v => v(1) }.sum / allVertices.size,
+        allVertices.map { v => v(2) }.sum / allVertices.size
+      )
+    } else {
+      Array(
+        // Factor of 3 comes from: centroid / (2.0 * (volume/6.0))
+        3.0 * centroidX / totalVolume,
+        3.0 * centroidY / totalVolume,
+        3.0 * centroidZ / totalVolume
+      )
+    }
   }
 
   /**
@@ -571,6 +588,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) {
         w(1) = localOrigin(1) - centerY
         w(2) = localOrigin(2) - centerZ
       }
+
       val n = DenseVector[Double](a, b, c)
       val new_d = NumericUtils.roundToTolerance(-(n dot w) / linalg.norm(n))
       Face(Array(a, b, c), new_d, phi, cohesion, processorJoint)

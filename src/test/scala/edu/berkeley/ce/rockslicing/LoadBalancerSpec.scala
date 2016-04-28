@@ -33,8 +33,8 @@ class LoadBalancerSpec extends FunSuite {
   )
   val twoCube = Block(Array(0.0, 0.0, 0.0), boundingFaces3)
 
-  test("Twenty seed joints should be generated for unit cube") {
-    val numProcessors = 21
+  test("18 seed joints should be generated for unit cube") {
+    val numProcessors = 19
     val seedJoints =
       LoadBalancer.generateProcessorJoints(unitCube, numProcessors)
     assert(seedJoints.length + 1 == numProcessors)
