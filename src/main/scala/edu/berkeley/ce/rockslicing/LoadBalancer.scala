@@ -97,7 +97,6 @@ object LoadBalancer {
     // Block volumes not satisfactory, need to iterate to find processor joint
     } else {
       val centerVec0 = DenseVector[Double](center)
-      val centerVec1 = DenseVector[Double](xMax, yMax, zMax)
       // First distance guess
       val xDiff0 = centerVec0(0) - xMin
       val yDiff0 = centerVec0(1) - yMin

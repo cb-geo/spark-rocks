@@ -1,14 +1,13 @@
 package edu.berkeley.ce.rockslicing
 
-import com.esotericsoftware.kryo.io.{Input, Output}
-import com.esotericsoftware.kryo.{Kryo, Serializer}
+import com.esotericsoftware.kryo.Kryo
 import com.twitter.chill.SingletonSerializer
 import org.apache.spark.serializer.KryoRegistrator
 
 /**
   * Kryo serializer registrator for all classes that are to be serialized.
   */
-class ClassRegistrator extends KryoRegistrator {
+object ClassRegistrator extends KryoRegistrator {
   override def registerClasses(kryo: Kryo) {
     kryo.register(None.getClass, new SingletonSerializer[AnyRef](None))
     kryo.register(Nil.getClass, new SingletonSerializer[AnyRef](Nil))

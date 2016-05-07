@@ -200,7 +200,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     // Solve LP to find maximum principal coordinate values
     val maxCoordinates = positiveBasisVectors.map { v =>
       val linProg = new LinearProgram(3)
-      linProg.setObjFun(v.toArray, LinearProgram.MAX)
+      linProg.setObjFun(v, LinearProgram.MAX)
       faces foreach { face =>
         val coeffs = Array[Double](face.a, face.b, face.c).map(NumericUtils.applyTolerance)
         val rhs = NumericUtils.applyTolerance(face.d)

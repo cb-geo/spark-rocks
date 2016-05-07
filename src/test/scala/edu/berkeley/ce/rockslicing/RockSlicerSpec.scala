@@ -390,13 +390,15 @@ class RockSlicerSpec extends FunSuite {
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
     }
-    val blockCheck = centroidMergedBlocks.zip(expectedBlocksCentroid) forall { case (calc, expected) =>
-      calc.approximateEquals(expected)
-    }
+
+    assert (
+      centroidMergedBlocks.zip(expectedBlocksCentroid) forall { case (calc, expected) =>
+        calc.approximateEquals(expected)
+      }
+    )
 
     assert(orphanBlocks.isEmpty)
     assert(centroidMergedBlocks.length == 3)
-    assert(blockCheck)
   }
 
  test("Orphan blocks should be initial input list") {

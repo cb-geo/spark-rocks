@@ -95,7 +95,7 @@ class LinearProgramSpec extends FunSuite {
     solver.addConstraint(Array(0.0, 0.0, 1.0), LinearProgram.LE, 2.0)
     solver.addConstraint(Array(-1.0, 0.0, 1.0), LinearProgram.EQ, 1.0)
 
-    val (varSettings, opt) = solver.solve().get
+    val (varSettings, _) = solver.solve().get
     assert(varSettings.length == 3)
     assert(math.abs(varSettings(0)) <= NumericUtils.EPSILON)
     assert(math.abs(varSettings(1)) <= NumericUtils.EPSILON)
