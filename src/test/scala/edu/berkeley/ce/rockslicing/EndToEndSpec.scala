@@ -40,53 +40,79 @@ class EndToEndSpec extends FunSuite {
 
     // Find all blocks that contain processor joints
     val processorBlocks = nonRedundantBlocks.filter { block =>
-      block.faces.exists(_.processorJoint)
+      block.faces.exists(_.isProcessorFace)
     }
 
     // Find blocks that do not contain processor joints
     val realBlocks = nonRedundantBlocks.filter { block =>
-      val faceTests = block.faces.exists(_.processorJoint)
+      val faceTests = block.faces.exists(_.isProcessorFace)
       !faceTests
     }
 
-    // Search blocks for matching processor joints
-    val updatedProcessorBlocks = processorBlocks.map { block =>
-      Block(globalOrigin, block.updateFaces(globalOrigin))
-    }
-    val (reconBlocks, orphanBlocks) = RockSlicer.mergeBlocks(updatedProcessorBlocks, Seq.empty[Block],
-                                                             Seq.empty[Block])
+    val finalBlocks = if (processorBlocks.isEmpty) {
+      realBlocks
+    } else {
+      val globalOriginBlocks = processorBlocks.map { block =>
+          val globalOrigin = Array[Double](0.0, 0.0, 0.0)
+          Block(globalOrigin, block.updateFaces(globalOrigin))
+      }
 
-    // Update centroids of reconstructed processor blocks and remove duplicates
-    val reconCentroidBlocks = reconBlocks.map { block =>
-      val centroid = block.centroid
-      Block(centroid, block.updateFaces(centroid))
+      /*
+       * Don't forget that normal vectors for same joint could be equal and opposite
+       * TODO: Okay to Assume that each block only has one processor face?
+       * TODO: This could be very expensive...
+       */
+      val normVecBlocks = globalOriginBlocks.groupBy { block =>
+        val processorFace = block.faces.filter(_.isProcessorFace).head
+        ((math.abs(processorFace.a), math.abs(processorFace.b), math.abs(processorFace.c)),
+          math.abs(processorFace.d))
+      }
+
+      val mergedBlocks = normVecBlocks.flatMap { case (_, blks) => removeProcessorJoints(blks) }
+
+      realBlocks ++ mergedBlocks
     }
 
     // Calculate the centroid of each real block
-    val centroidBlocks = realBlocks.map { block =>
+    val centroidBlocks = finalBlocks.map { block =>
       val centroid = block.centroid
       val updatedFaces = block.updateFaces(centroid)
       Block(centroid, updatedFaces)
     }
 
-    // Merge real blocks and reconstructed blocks - this won't happen on Spark since collect will
-    // be called and all reconstructed blocks will be on one node
-    val allBlocks = centroidBlocks ++ reconCentroidBlocks
-
     // Clean up double values arbitrarily close to 0.0
-    val cleanedBlocks = allBlocks.map { case Block(center, faces, _) =>
+    val cleanedBlocks = centroidBlocks.map { case Block(center, faces, _) =>
       Block(center, faces.map(_.applyTolerance))
     }
 
     val blockJson = Json.blockSeqToReadableJson(cleanedBlocks)
     val expectedJsonSource = Source.fromURL(getClass.getResource(s"/$OUTPUT_FILE_NAME"))
 
-    assert(orphanBlocks.isEmpty)
     try {
       val expectedJson = expectedJsonSource.mkString
       assert(blockJson.trim == expectedJson.trim)
     } finally {
       expectedJsonSource.close()
+    }
+  }
+
+   private def removeProcessorJoints(blocks: Seq[Block]): Seq[Block] = {
+    val (left, right) = blocks.partition { block =>
+      val processorFace = block.faces.filter(_.isProcessorFace).head
+      processorFace.a >= 0
+    }
+
+    left.map { leftBlock =>
+      // Use 'view' for lazy evaluation, avoids unnecessary calculations
+      val mergedFaces = right.view.map { rightBlock =>
+          val mergedBlock = Block(leftBlock.center, (leftBlock.faces ++ rightBlock.faces).filter(!_.isProcessorFace))
+          mergedBlock.nonRedundantFaces
+      }
+
+      // TODO: Okay to assume that exactly one mate will be found?
+      val newFaces = mergedFaces.find(_.nonEmpty)
+      assert(newFaces.isDefined)
+      Block(leftBlock.center, newFaces.get)
     }
   }
 }

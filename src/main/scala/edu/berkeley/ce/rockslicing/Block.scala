@@ -13,12 +13,12 @@ import org.apache.commons.lang3.builder.HashCodeBuilder
   * Accessed as 'd'.
   * @param phi The friction angle (phi) of the face.
   * @param cohesion The cohesion of the face.
-  * @param processorJoint Parameter that identifies joint as being artificial joint introduced as part
+  * @param isProcessorFace Parameter that identifies joint as being artificial joint introduced as part
   *                        of load balancing
   */
 @SerialVersionUID(1L)
 case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesion: Double,
-                processorJoint: Boolean=false) extends Serializable {
+                isProcessorFace: Boolean=false) extends Serializable {
   assert(normalVec.length == 3)
   val a = normalVec(0)
   val b = normalVec(1)
@@ -36,7 +36,7 @@ case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesio
     val newD = if (math.abs(d) > NumericUtils.EPSILON) d else 0.0
     val newPhi = if (math.abs(phi) > NumericUtils.EPSILON) phi else 0.0
     val newCohesion = if (math.abs(cohesion) > NumericUtils.EPSILON) cohesion else 0.0
-    Face(Array(newA, newB, newC), newD, newPhi, newCohesion, processorJoint)
+    Face(Array(newA, newB, newC), newD, newPhi, newCohesion, isProcessorFace)
   }
 
   /**
@@ -79,7 +79,7 @@ case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesio
         this.a == f.a && this.b == f.b && this.c == f.c &&
         this.distance == f.distance && this.phi == f.phi &&
         this.cohesion == f.cohesion &&
-        this.processorJoint == f.processorJoint
+        this.isProcessorFace == f.isProcessorFace
 
       case _ => false
     }
@@ -93,7 +93,7 @@ case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesio
         .append(distance)
         .append(phi)
         .append(cohesion)
-        .append(processorJoint)
+        .append(isProcessorFace)
         .toHashCode
 }
 

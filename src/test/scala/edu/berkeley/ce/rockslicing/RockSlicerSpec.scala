@@ -7,7 +7,7 @@ class RockSlicerSpec extends FunSuite {
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0),
     Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face(Array(0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0, isProcessorFace = true),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0)
   )
@@ -16,7 +16,7 @@ class RockSlicerSpec extends FunSuite {
   val boundingFaces2 = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0),
-    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, isProcessorFace = true),
     Face(Array(0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0)
@@ -37,7 +37,7 @@ class RockSlicerSpec extends FunSuite {
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
     Face(Array(0.0, -1.0, 0.0), 0.5, phi=0, cohesion=0),
-    Face(Array(0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0, isProcessorFace = true),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
   )
@@ -46,7 +46,7 @@ class RockSlicerSpec extends FunSuite {
   val boundingFaces5 = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, isProcessorFace = true),
     Face(Array(0.0, 1.0, 0.0), 0.5, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
@@ -57,7 +57,7 @@ class RockSlicerSpec extends FunSuite {
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
     Face(Array(0.0, -1.0, 0.0), 0.5, phi=0, cohesion=0),
-    Face(Array(0.0, 1.0, 0.0), -0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 1.0, 0.0), -0.25, phi=0, cohesion=0, isProcessorFace = true),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
   )
@@ -66,8 +66,8 @@ class RockSlicerSpec extends FunSuite {
   val boundingFaces7 = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face(Array(0.0, -1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
-    Face(Array(0.0, 1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, -1.0, 0.0), 0.25, phi=0, cohesion=0, isProcessorFace = true),
+    Face(Array(0.0, 1.0, 0.0), 0.25, phi=0, cohesion=0, isProcessorFace = true),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
   )
@@ -76,7 +76,7 @@ class RockSlicerSpec extends FunSuite {
   val boundingFaces8 = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face(Array(0.0, -1.0, 0.0), -0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, -1.0, 0.0), -0.25, phi=0, cohesion=0, isProcessorFace = true),
     Face(Array(0.0, 1.0, 0.0), 0.5, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
@@ -86,8 +86,8 @@ class RockSlicerSpec extends FunSuite {
   val boundingFaces9 = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face(Array(0.0, -1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
-    Face(Array(0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, -1.0, 0.0), 0.25, phi=0, cohesion=0, isProcessorFace = true),
+    Face(Array(0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0, isProcessorFace = true),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
   )
@@ -96,8 +96,8 @@ class RockSlicerSpec extends FunSuite {
   val boundingFaces10 = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
-    Face(Array(0.0, 1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, isProcessorFace = true),
+    Face(Array(0.0, 1.0, 0.0), 0.25, phi=0, cohesion=0, isProcessorFace = true),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
   )
@@ -128,7 +128,7 @@ class RockSlicerSpec extends FunSuite {
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
     Face(Array(0.0, -1.0, 0.0), 0.5, phi=0, cohesion=0),
-    Face(Array(0.0, 1.0, 0.0), -0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 1.0, 0.0), -0.25, phi=0, cohesion=0, isProcessorFace = true),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
@@ -137,8 +137,8 @@ class RockSlicerSpec extends FunSuite {
   val boundingFaces14 = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face(Array(0.0, -1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
-    Face(Array(0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, -1.0, 0.0), 0.25, phi=0, cohesion=0, isProcessorFace = true),
+    Face(Array(0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0, isProcessorFace = true),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
@@ -147,8 +147,8 @@ class RockSlicerSpec extends FunSuite {
   val boundingFaces15 = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
-    Face(Array(0.0, 1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, isProcessorFace = true),
+    Face(Array(0.0, 1.0, 0.0), 0.25, phi=0, cohesion=0, isProcessorFace = true),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
@@ -157,7 +157,7 @@ class RockSlicerSpec extends FunSuite {
   val boundingFaces16 = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face(Array(0.0, -1.0, 0.0), -0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, -1.0, 0.0), -0.25, phi=0, cohesion=0, isProcessorFace = true),
     Face(Array(0.0, 1.0, 0.0), 0.5, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
@@ -168,7 +168,7 @@ class RockSlicerSpec extends FunSuite {
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
     Face(Array(0.0, -1.0, 0.0), 0.5, phi=0, cohesion=0),
-    Face(Array(0.0, 1.0, 0.0), -0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, 1.0, 0.0), -0.25, phi=0, cohesion=0, isProcessorFace = true),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
@@ -177,8 +177,8 @@ class RockSlicerSpec extends FunSuite {
   val boundingFaces18 = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face(Array(0.0, -1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
-    Face(Array(0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, -1.0, 0.0), 0.25, phi=0, cohesion=0, isProcessorFace = true),
+    Face(Array(0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0, isProcessorFace = true),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
@@ -187,8 +187,8 @@ class RockSlicerSpec extends FunSuite {
   val boundingFaces19 = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, processorJoint = true),
-    Face(Array(0.0, 1.0, 0.0), 0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, isProcessorFace = true),
+    Face(Array(0.0, 1.0, 0.0), 0.25, phi=0, cohesion=0, isProcessorFace = true),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
@@ -197,27 +197,12 @@ class RockSlicerSpec extends FunSuite {
   val boundingFaces20 = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face(Array(0.0, -1.0, 0.0), -0.25, phi=0, cohesion=0, processorJoint = true),
+    Face(Array(0.0, -1.0, 0.0), -0.25, phi=0, cohesion=0, isProcessorFace = true),
     Face(Array(0.0, 1.0, 0.0), 0.5, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
   val topRightEighthUnitCube = Block(Array(0.0, 0.5, 0.5), boundingFaces20)
-
- test("The two cubes should share one processor face") {
-   val updatedRightCube = Block(leftCube.center, rightCube.updateFaces(leftCube.center))
-
-   val sharedFaces = RockSlicer.findSharedProcessorFaces(leftCube, updatedRightCube)
-   assert(!sharedFaces.exists( face => math.abs(face.d) != 1.0))
-   assert(sharedFaces.length == 2)
- }
-
- test("The two blocks should share one processor face, but with distances reversed") {
-   val updatedLeftCube = Block(rightCube.center, leftCube.updateFaces(rightCube.center))
-   val sharedFaces = RockSlicer.findSharedProcessorFaces(rightCube, updatedLeftCube)
-   assert(sharedFaces.forall(_.d == 0.0))
-   assert(sharedFaces.length == 2)
- }
 
  test("Two blocks should be merged into unit cube") {
    val processorBlocks = Seq(leftHalfUnitCube, rightHalfUnitCube)
@@ -318,7 +303,7 @@ class RockSlicerSpec extends FunSuite {
    }
 
    val processorBlocks = nonRedundantBlocks.filter { block =>
-     block.faces.exists { face => face.processorJoint }
+     block.faces.exists { face => face.isProcessorFace }
    }
    val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
                                                              Seq.empty[Block])
@@ -374,7 +359,7 @@ class RockSlicerSpec extends FunSuite {
     }
 
     val processorBlocks = nonRedundantBlocks.filter { block =>
-      block.faces.exists { face => face.processorJoint }
+      block.faces.exists { face => face.isProcessorFace }
     }
 
     val (mergedBlocks, orphanBlocks) = RockSlicer.mergeBlocks(processorBlocks, Seq.empty[Block],
