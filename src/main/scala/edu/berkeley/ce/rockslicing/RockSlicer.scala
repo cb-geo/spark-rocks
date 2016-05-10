@@ -107,8 +107,9 @@ object RockSlicer {
           math.abs(processorFace.d))
       }
 
-      val mergedBlocks = normVecBlocks.flatMap { case (_, blocks) => removeProcessorJoints(blocks.toSeq) }
-
+      val mergedBlocks = normVecBlocks.flatMap { case (_, blocks) =>
+        Block.removeProcessorJoints(blocks.toSeq)
+      }
       realBlocks ++ mergedBlocks
     }
 
@@ -140,25 +141,5 @@ object RockSlicer {
     }
 
     sc.stop()
-  }
-
-  private def removeProcessorJoints(blocks: Seq[Block]): Seq[Block] = {
-    val (left, right) = blocks.partition { block =>
-      val processorFace = block.faces.filter(_.isProcessorFace).head
-      processorFace.a >= 0
-    }
-
-    left.map { leftBlock =>
-      // Use 'view' for lazy evaluation, avoids unnecessary calculations
-      val mergedFaces = right.view.map { rightBlock =>
-          val mergedBlock = Block(leftBlock.center, (leftBlock.faces ++ rightBlock.faces).filter(!_.isProcessorFace))
-          mergedBlock.nonRedundantFaces
-      }
-
-      // TODO: Okay to assume that exactly one mate will be found?
-      val newFaces = mergedFaces.find(_.nonEmpty)
-      assert(newFaces.isDefined)
-      Block(leftBlock.center, newFaces.get)
-    }
   }
 }
