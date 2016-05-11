@@ -131,32 +131,6 @@ object Block {
       DenseMatrix.eye[Double](3)
     }
   }
-
-  def removeProcessorJoints(blocks: Seq[Block]): Seq[Block] = {
-    val (left, right) = blocks.partition { block =>
-      val processorFace = block.faces.filter(_.isProcessorFace).head
-      if (math.abs(processorFace.a) > NumericUtils.EPSILON) {
-        processorFace.a >= 0.0
-      } else if (math.abs(processorFace.b) > NumericUtils.EPSILON) {
-        processorFace.b >= 0.0
-      } else {
-        processorFace.c >= 0.0
-      }
-    }
-
-    left.map { leftBlock =>
-      // Use 'view' for lazy evaluation, avoids unnecessary calculations
-      val mergedFaces = right.view.map { rightBlock =>
-        val mergedBlock = Block(leftBlock.center, (leftBlock.faces ++ rightBlock.faces).filter(!_.isProcessorFace))
-        mergedBlock.nonRedundantFaces
-      }
-
-      // TODO: Okay to assume that exactly one mate will be found?
-      val newFaces = mergedFaces.find(_.nonEmpty)
-      assert(newFaces.isDefined)
-      Block(leftBlock.center, newFaces.get)
-    }
-  }
 }
 
 /**

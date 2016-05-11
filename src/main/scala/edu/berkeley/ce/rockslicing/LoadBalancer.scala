@@ -19,8 +19,7 @@ object LoadBalancer {
     * @param numProcessors Number of processors used in analysis.
     * @return Set of processor joints that will be used to seed the initial RDD
     */
-  def generateProcessorJoints(rockVolume: Block, numProcessors: Integer):
-                         Seq[Joint] = {
+  def generateProcessorJoints(rockVolume: Block, numProcessors: Integer): Seq[Joint] = {
     // Calculate bounding box
     val vertices = rockVolume.findVertices.values.flatten
     val xMin = vertices.map(_(0)).min
@@ -309,5 +308,31 @@ object LoadBalancer {
   private def centroidCompare(centroid1: Array[Double], centroid2:Array[Double]): Boolean = {
     assert(centroid1.length == 3 && centroid2.length == 3)
     (centroid1(0) < centroid2(0)) && (centroid1(1) < centroid2(1)) && (centroid1(2) < centroid2(2))
+  }
+
+  def removeCommonProcessorJoint(blocks: Seq[Block]): Seq[Block] = {
+    val (left, right) = blocks.partition { block =>
+      val processorFace = block.faces.filter(_.isProcessorFace).head
+      if (math.abs(processorFace.a) > NumericUtils.EPSILON) {
+        processorFace.a >= 0.0
+      } else if (math.abs(processorFace.b) > NumericUtils.EPSILON) {
+        processorFace.b >= 0.0
+      } else {
+        processorFace.c >= 0.0
+      }
+    }
+
+    left.map { leftBlock =>
+      // Use 'view' for lazy evaluation, avoids unnecessary calculations
+      val mergedFaces = right.view.map { rightBlock =>
+        val mergedBlock = Block(leftBlock.center, (leftBlock.faces ++ rightBlock.faces).filter(!_.isProcessorFace))
+        mergedBlock.nonRedundantFaces
+      }
+
+      // TODO: Deal with case where block has more than one mate on opposite side of processor joint
+      val newFaces = mergedFaces.find(_.nonEmpty)
+      assert(newFaces.isDefined)
+      Block(leftBlock.center, newFaces.get)
+    }
   }
 }

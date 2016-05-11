@@ -108,7 +108,7 @@ object RockSlicer {
       }
 
       val mergedBlocks = normVecBlocks.flatMap { case (_, blocks) =>
-        Block.removeProcessorJoints(blocks.toSeq)
+        LoadBalancer.removeCommonProcessorJoint(blocks.toSeq)
       }
       realBlocks ++ mergedBlocks
     }
