@@ -1,5 +1,6 @@
 package edu.berkeley.ce.rockslicing
 
+import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.io.Source
@@ -83,7 +84,7 @@ object RockSlicer {
       block.faces.exists(_.isProcessorFace)
     }
 
-    val finalBlocks = if (processorBlocks.isEmpty) {
+    val mergedBlocks = if (processorBlocks.isEmpty) {
       nonRedundantBlocks
     } else {
       // Find blocks that do not contain processor joints
@@ -91,29 +92,35 @@ object RockSlicer {
         !block.faces.exists(_.isProcessorFace)
       }
 
-      val globalOriginBlocks = processorBlocks.map { block =>
-          val globalOrigin = Array[Double](0.0, 0.0, 0.0)
-          Block(globalOrigin, block.updateFaces(globalOrigin))
+      var orphanBlocks = processorBlocks.map { block =>
+        val globalOrigin = Array(0.0, 0.0, 0.0)
+        Block(globalOrigin, block.updateFaces(globalOrigin))
       }
+      var matchedBlocks: RDD[Block] = sc.emptyRDD[Block]
 
       /*
-       * Don't forget that normal vectors for same joint could be equal and opposite
-       * TODO: Okay to Assume that each block only has one processor face?
-       * TODO: This could be very expensive...
+       * We should iterate more than once only in the unlikely event that some
+       * blocks are adjacent to multiple processor joints
        */
-      val normVecBlocks = globalOriginBlocks.groupBy { block =>
-        val processorFace = block.faces.filter(_.isProcessorFace).head
-        ((math.abs(processorFace.a), math.abs(processorFace.b), math.abs(processorFace.c)),
-          math.abs(processorFace.d))
+      while (!orphanBlocks.isEmpty()) {
+        val normVecBlocks = orphanBlocks.groupBy { block =>
+          val processorFace = block.faces.filter(_.isProcessorFace).head
+          // Normal vectors for same joint could be equal and opposite, so use abs
+          ((math.abs(processorFace.a), math.abs(processorFace.b), math.abs(processorFace.c)),
+            math.abs(processorFace.d))
+        }
+
+        val mergeResults = normVecBlocks.map { case (_, blocks) =>
+          LoadBalancer.removeCommonProcessorJoint(blocks.toSeq)
+        }
+        orphanBlocks = mergeResults.keys.flatMap(identity[Seq[Block]])
+        matchedBlocks = matchedBlocks ++ mergeResults.values.flatMap(identity[Seq[Block]])
       }
 
-      val mergedBlocks = normVecBlocks.flatMap { case (_, blocks) =>
-        LoadBalancer.removeCommonProcessorJoint(blocks.toSeq)
-      }
-      realBlocks ++ mergedBlocks
+      realBlocks ++ matchedBlocks
     }
 
-    val centroidBlocks = finalBlocks.map { block =>
+    val centroidBlocks = mergedBlocks.map { block =>
       val centroid = block.centroid
       val updatedFaces = block.updateFaces(centroid)
       Block(centroid, updatedFaces)

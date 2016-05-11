@@ -4,6 +4,7 @@ import breeze.linalg
 import breeze.linalg.DenseVector
 
 import scala.annotation.tailrec
+import scala.collection.mutable
 
 /** 
   * Manages initial partitioning of rock volume to maintain load balance among partitions
@@ -15,6 +16,7 @@ object LoadBalancer {
     * These joints will be used to seed the initial Block RDD such that the volume or rock
     * provided to each process is approximately equal. This function should only be called when
     * using more than 1 processor.
+    *
     * @param rockVolume Initial block defining the entire rock volume of interest
     * @param numProcessors Number of processors used in analysis.
     * @return Set of processor joints that will be used to seed the initial RDD
@@ -41,6 +43,7 @@ object LoadBalancer {
 
   /**
     * Finds the best set of processor joints to divide initial volume into approximately equal volumes
+    *
     * @param joints List to prepend processor joints to during each recursion
     * @param origin Origin which the joint is in reference to
     * @param center Center of the joint plane - start with lower left corner of bounding box
@@ -119,7 +122,8 @@ object LoadBalancer {
     * The function implements a combined bisection-secant solver that finds roots to
     * equation: V_current/V_desired - 1.0
     * V_current is the volume of the lower left block cut by the current joint and
-    * V_desired is the desired volume of the lower left block. 
+    * V_desired is the desired volume of the lower left block.
+    *
     * @param initialDist0 First guess for distance of joint from lower left corner of bounding
     *                     box along diagonal of bounding box
     * @param block Block that is to be subdivided
@@ -301,6 +305,7 @@ object LoadBalancer {
 
   /**
     * Compares the relative location of two input centroids
+    *
     * @param centroid1 First centroid, input as a tuple
     * @param centroid2 Second centroid, input as a tuple
     * @return True if centroid1 is less positive than centroid2, false otherwise
@@ -310,8 +315,18 @@ object LoadBalancer {
     (centroid1(0) < centroid2(0)) && (centroid1(1) < centroid2(1)) && (centroid1(2) < centroid2(2))
   }
 
-  def removeCommonProcessorJoint(blocks: Seq[Block]): Seq[Block] = {
-    val (left, right) = blocks.partition { block =>
+  /**
+    * Merge all blocks that are adjacent and separated only by a processor face.
+    * All of the blocks should share a common processor face, i.e. this should
+    * be called after the blocks have been grouped by their processor faces.
+    *
+    * @param blocks The blocks to merge.
+    * @return A pair of block Seqs. The first item in the pair is the merged
+    *         blocks, and the second item in the pair is any blocks that were
+    *         left unmatched at the end of the merging process.
+    */
+  def removeCommonProcessorJoint(blocks: Seq[Block]): (Seq[Block], Seq[Block]) = {
+    val (leftBlocks, rightBlocks) = blocks.partition { block =>
       val processorFace = block.faces.filter(_.isProcessorFace).head
       if (math.abs(processorFace.a) > NumericUtils.EPSILON) {
         processorFace.a >= 0.0
@@ -322,17 +337,39 @@ object LoadBalancer {
       }
     }
 
-    left.map { leftBlock =>
-      // Use 'view' for lazy evaluation, avoids unnecessary calculations
-      val mergedFaces = right.view.map { rightBlock =>
-        val mergedBlock = Block(leftBlock.center, (leftBlock.faces ++ rightBlock.faces).filter(!_.isProcessorFace))
-        mergedBlock.nonRedundantFaces
+    // Keep track of unmatched blocks, not easy to do in functional style
+    val remainingRightBlocks = rightBlocks.to[mutable.Set]
+    val mergedBlocks = mutable.Set.empty[Block]
+    val orphanBlocks = mutable.Set.empty[Block]
+
+    for (leftBlock <- leftBlocks) {
+      // If bounding spheres don't intersect, blocks can't be mates
+      val mateCandidates = remainingRightBlocks filter { rightBlock =>
+        val sphereDistance = math.sqrt(math.pow(leftBlock.sphereCenterX - rightBlock.sphereCenterX, 2) +
+                                       math.pow(leftBlock.sphereCenterY - rightBlock.sphereCenterY, 2) +
+                                       math.pow(leftBlock.sphereCenterZ - rightBlock.sphereCenterZ, 2))
+        sphereDistance < (leftBlock.sphereRadius + rightBlock.sphereRadius)
       }
 
-      // TODO: Deal with case where block has more than one mate on opposite side of processor joint
-      val newFaces = mergedFaces.find(_.nonEmpty)
-      assert(newFaces.isDefined)
-      Block(leftBlock.center, newFaces.get)
+      // Use a 'view' to avoid unnecessary computation
+      val candidateBlocks = mateCandidates.view.map { rightBlock =>
+        val newFaces = (leftBlock.faces ++ rightBlock.faces).filter(!_.isProcessorFace)
+        val globalOrigin = Array(0.0, 0.0, 0.0)
+        val newBlock = Block(globalOrigin, newFaces)
+        (rightBlock, Block(globalOrigin, newBlock.nonRedundantFaces))
+      }
+
+      val matchOpt = candidateBlocks.find(_._2.faces.nonEmpty)
+      if (matchOpt.isDefined) {
+        val (rightMate, mergedBlock) = matchOpt.get
+        remainingRightBlocks.remove(rightMate)
+        mergedBlocks.add(mergedBlock)
+      } else {
+        orphanBlocks.add(leftBlock)
+      }
     }
+
+    orphanBlocks.union(remainingRightBlocks)
+    (mergedBlocks.toSeq, orphanBlocks.toSeq)
   }
 }

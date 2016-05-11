@@ -179,8 +179,8 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
 
   /**
    * Find a bounding sphere for a rock block.
-    *
-    * @return A pair where the first element is a triple giving the center of
+   *
+   * @return A pair where the first element is a triple giving the center of
    *         the bounding sphere and the second element is the radius of the
    *         bounding sphere.
    */
