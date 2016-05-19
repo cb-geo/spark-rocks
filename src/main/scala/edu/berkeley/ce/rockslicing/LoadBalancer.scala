@@ -372,4 +372,33 @@ object LoadBalancer {
     orphanBlocks.union(remainingRightBlocks)
     (mergedBlocks.toSeq, orphanBlocks.toSeq)
   }
+
+  /**
+    * Given a collection of processor blocks (blocks containing at least one
+    * processor face), merge any blocks that share a common processor face.
+    * @param processorBlocks A Seq of blocks, each of which must contain at
+    *                        least one processor face.
+    * @return A Seq of merged blocks. None of them should contain a processor
+    *         face after the merging process.
+    */
+  def mergeProcessorBlocks(processorBlocks: Seq[Block]): Seq[Block] = {
+    val globalOrigin = Array(0.0, 0.0, 0.0)
+    var orphanBlocks = processorBlocks.map { block => Block(globalOrigin, block.updateFaces(globalOrigin)) }
+    var mergedBlocks = Seq.empty[Block]
+
+    // We only iterate more than once if a block contains multiple processor faces
+    while (orphanBlocks.nonEmpty) {
+      val normVecBlocks = orphanBlocks.groupBy { block =>
+        val processorFace = block.faces.find(_.isProcessorFace).get
+        ((math.abs(processorFace.a), math.abs(processorFace.b), math.abs(processorFace.c)),
+          math.abs(processorFace.d))
+      }
+
+      val mergeResults = normVecBlocks.values.toSeq.map(LoadBalancer.removeCommonProcessorJoint)
+      mergedBlocks = mergedBlocks ++ mergeResults.flatMap(_._1)
+      orphanBlocks = mergeResults.flatMap(_._2)
+    }
+
+    mergedBlocks
+  }
 }

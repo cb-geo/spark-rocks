@@ -87,7 +87,10 @@ object RockSlicer {
     val mergedBlocks = if (processorBlocks.isEmpty) {
       nonRedundantBlocks
     } else {
-      // Find blocks that do not contain processor joints
+      /*
+       * Since we're dealing with RDD's and not Seq's here, we have to adapt
+       * the logic of LoadBalancer.mergeProcessorBlocks
+       */
       val realBlocks = nonRedundantBlocks.filter { block =>
         !block.faces.exists(_.isProcessorFace)
       }
@@ -104,7 +107,7 @@ object RockSlicer {
        */
       while (!orphanBlocks.isEmpty()) {
         val normVecBlocks = orphanBlocks.groupBy { block =>
-          val processorFace = block.faces.filter(_.isProcessorFace).head
+          val processorFace = block.faces.find(_.isProcessorFace).get
           // Normal vectors for same joint could be equal and opposite, so use abs
           ((math.abs(processorFace.a), math.abs(processorFace.b), math.abs(processorFace.c)),
             math.abs(processorFace.d))
@@ -113,8 +116,8 @@ object RockSlicer {
         val mergeResults = normVecBlocks.map { case (_, blocks) =>
           LoadBalancer.removeCommonProcessorJoint(blocks.toSeq)
         }
-        orphanBlocks = mergeResults.keys.flatMap(identity[Seq[Block]])
-        matchedBlocks = matchedBlocks ++ mergeResults.values.flatMap(identity[Seq[Block]])
+        matchedBlocks = matchedBlocks ++ mergeResults.flatMap(_._1)
+        orphanBlocks = mergeResults.flatMap(_._2)
       }
 
       realBlocks ++ matchedBlocks

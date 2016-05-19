@@ -247,14 +247,7 @@ class LoadBalancerSpec extends FunSuite {
 
   test("Two blocks should be merged into unit cube") {
     val processorBlocks = Seq(leftHalfUnitCube, rightHalfUnitCube)
-    val groupedBlocks = processorBlocks.groupBy { block =>
-      val processorFace = block.faces.filter(_.isProcessorFace).head
-      ((math.abs(processorFace.a), math.abs(processorFace.b), math.abs(processorFace.c)),
-       math.abs(processorFace.d))
-    }
-    val mergedBlocks = groupedBlocks.values.toSeq.flatMap { blocks =>
-      LoadBalancer.removeCommonProcessorJoint(blocks)
-    }
+    val mergedBlocks = LoadBalancer.mergeProcessorBlocks(processorBlocks)
     val centroidMergedBlocks = mergedBlocks.map{ block =>
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
@@ -266,15 +259,7 @@ class LoadBalancerSpec extends FunSuite {
 
   test("Three blocks should be merged into unit cube") {
     val processorBlocks = Seq(leftQuarterUnitCube, centerPartUnitCube, rightQuarterUnitCube)
-    val groupedBlocks = processorBlocks.groupBy { block =>
-      val processorFace = block.faces.filter(_.isProcessorFace).head
-      ((math.abs(processorFace.a), math.abs(processorFace.b), math.abs(processorFace.c)),
-        math.abs(processorFace.d))
-    }
-    val mergedBlocks = groupedBlocks.values.toSeq.flatMap { blocks =>
-      LoadBalancer.removeCommonProcessorJoint(blocks)
-    }
-
+    val mergedBlocks = LoadBalancer.mergeProcessorBlocks(processorBlocks)
     val centroidMergedBlocks = mergedBlocks.map{ block =>
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
@@ -287,15 +272,7 @@ class LoadBalancerSpec extends FunSuite {
   test("Four blocks should be merged into unit cube") {
     val processorBlocks = Seq(leftQuarterUnitCube, leftCenterQuarterUnitCube,
       rightCenterQuarterUnitCube, rightQuarterUnitCube)
-    val groupedBlocks = processorBlocks.groupBy { block =>
-      val processorFace = block.faces.filter(_.isProcessorFace).head
-      ((math.abs(processorFace.a), math.abs(processorFace.b), math.abs(processorFace.c)),
-        math.abs(processorFace.d))
-    }
-    val mergedBlocks = groupedBlocks.values.toSeq.flatMap { blocks =>
-      LoadBalancer.removeCommonProcessorJoint(blocks)
-    }
-
+    val mergedBlocks = LoadBalancer.mergeProcessorBlocks(processorBlocks)
     val centroidMergedBlocks = mergedBlocks.map{ block =>
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
@@ -311,15 +288,7 @@ class LoadBalancerSpec extends FunSuite {
       bottomRightCenterEighthUnitCube, bottomRightEighthUnitCube,
       topLeftEighthUnitCube, topLeftCenterEighthUnitCube,
       topRightCenterEighthUnitCube, topRightEighthUnitCube)
-    val groupedBlocks = processorBlocks.groupBy { block =>
-      val processorFace = block.faces.filter(_.isProcessorFace).head
-      ((math.abs(processorFace.a), math.abs(processorFace.b), math.abs(processorFace.c)),
-        math.abs(processorFace.d))
-    }
-    val mergedBlocks = groupedBlocks.values.toSeq.flatMap { blocks =>
-      LoadBalancer.removeCommonProcessorJoint(blocks)
-    }
-
+    val mergedBlocks = LoadBalancer.mergeProcessorBlocks(processorBlocks)
     val centroidMergedBlocks = mergedBlocks.map{ block =>
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
@@ -368,15 +337,8 @@ class LoadBalancerSpec extends FunSuite {
     val processorBlocks = nonRedundantBlocks.filter { block =>
       block.faces.exists(_.isProcessorFace)
     }
-    val groupedBlocks = processorBlocks.groupBy { block =>
-      val processorFace = block.faces.filter(_.isProcessorFace).head
-      ((math.abs(processorFace.a), math.abs(processorFace.b), math.abs(processorFace.c)),
-        math.abs(processorFace.d))
-    }
-    val mergedBlocks = groupedBlocks.values.toSeq.flatMap { blocks =>
-      LoadBalancer.removeCommonProcessorJoint(blocks)
-    }
 
+    val mergedBlocks = LoadBalancer.mergeProcessorBlocks(processorBlocks)
     val centroidMergedBlocks = mergedBlocks.map{ block =>
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
@@ -425,18 +387,11 @@ class LoadBalancerSpec extends FunSuite {
     val nonRedundantBlocks = blocks map { case block @ Block(center, _, _) =>
       Block(center, block.nonRedundantFaces)
     }
+
     val processorBlocks = nonRedundantBlocks.filter { block =>
       block.faces.exists(_.isProcessorFace)
     }
-    val groupedBlocks = processorBlocks.groupBy { block =>
-      val processorFace = block.faces.filter(_.isProcessorFace).head
-      ((math.abs(processorFace.a), math.abs(processorFace.b), math.abs(processorFace.c)),
-        math.abs(processorFace.d))
-    }
-    val mergedBlocks = groupedBlocks.values.toSeq.flatMap { blocks =>
-      LoadBalancer.removeCommonProcessorJoint(blocks)
-    }
-
+    val mergedBlocks = LoadBalancer.mergeProcessorBlocks(processorBlocks)
     val centroidMergedBlocks = mergedBlocks.map{ block =>
       val centroid = block.centroid
       Block(centroid, block.updateFaces(centroid))
