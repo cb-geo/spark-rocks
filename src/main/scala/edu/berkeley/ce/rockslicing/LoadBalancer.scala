@@ -332,7 +332,7 @@ object LoadBalancer {
     val ((commonA, commonB, commonC), commonD) = commonJoint
 
     val (leftBlocks, rightBlocks) = blocks.partition { block =>
-      val processorFace = block.faces.filter(_.isProcessorFace).head
+      val processorFace = block.faces.find(_.isProcessorFace).get
       if (math.abs(processorFace.a) > NumericUtils.EPSILON) {
         processorFace.a >= NumericUtils.EPSILON
       } else if (math.abs(processorFace.b) > NumericUtils.EPSILON) {
@@ -366,6 +366,7 @@ object LoadBalancer {
           NumericUtils.roundToTolerance(math.abs(face.d)) != commonD
         }
         val globalOrigin = Array(0.0, 0.0, 0.0)
+        // No need to update newFaces since the inputs are already referenced to global origin
         val newBlock = Block(globalOrigin, newFaces)
         (rightBlock, Block(globalOrigin, newBlock.nonRedundantFaces))
       }

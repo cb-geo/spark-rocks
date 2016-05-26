@@ -165,7 +165,9 @@ class LoadBalancerSpec extends FunSuite {
   val topHalfUnitCube = Block(Array(0.0, 0.0, 0.5), topHalfUCFaces)
 
   // Divide unit cube into eight pieces with three processor joints present
-  val bottomLeftEightUCFaces = List(
+  // Faces lists will be the same in top and bottom portions of unit cube divided into
+  // eight blocks - only need to change center of block
+  val leftFaces = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
     Face(Array(0.0, -1.0, 0.0), 0.5, phi=0, cohesion=0),
@@ -173,29 +175,8 @@ class LoadBalancerSpec extends FunSuite {
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
-  val bottomLeftEighthUnitCube = Block(Array(0.0, 0.5, 0.0), bottomLeftEightUCFaces)
 
-  val bottomLeftCenterEightUCFaces = List(
-    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face(Array(0.0, -1.0, 0.0), 0.25, phi=0, cohesion=0, isProcessorFace = true),
-    Face(Array(0.0, 1.0, 0.0), 0.0, phi=0, cohesion=0, isProcessorFace = true),
-    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
-  )
-  val bottomLeftCenterEighthUnitCube = Block(Array(0.0, 0.5, 0.0), bottomLeftCenterEightUCFaces)
-
-  val bottomRightCenterEightUCFaces = List(
-    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, isProcessorFace = true),
-    Face(Array(0.0, 1.0, 0.0), 0.25, phi=0, cohesion=0, isProcessorFace = true),
-    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
-  )
-  val bottomRightCenterEighthUnitCube = Block(Array(0.0, 0.5, 0.0), bottomRightCenterEightUCFaces)
-
-  val bottomRightEightUCFaces = List(
+  val rightFaces = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
     Face(Array(0.0, -1.0, 0.0), -0.25, phi=0, cohesion=0, isProcessorFace = true),
@@ -203,19 +184,8 @@ class LoadBalancerSpec extends FunSuite {
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
-  val bottomRightEighthUnitCube = Block(Array(0.0, 0.5, 0.0), bottomRightEightUCFaces)
 
-  val topLeftEightUCFaces = List(
-    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face(Array(0.0, -1.0, 0.0), 0.5, phi=0, cohesion=0),
-    Face(Array(0.0, 1.0, 0.0), -0.25, phi=0, cohesion=0, isProcessorFace = true),
-    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
-  )
-  val topLeftEighthUnitCube = Block(Array(0.0, 0.5, 0.5), topLeftEightUCFaces)
-
-  val topLeftCenterEightUCFaces = List(
+  val leftCenterFaces = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
     Face(Array(0.0, -1.0, 0.0), 0.25, phi=0, cohesion=0, isProcessorFace = true),
@@ -223,9 +193,8 @@ class LoadBalancerSpec extends FunSuite {
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
-  val topLeftCenterEighthUnitCube = Block(Array(0.0, 0.5, 0.5), topLeftCenterEightUCFaces)
 
-  val topRightCenterEigthUCFaces = List(
+  val rightCenterFaces = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
     Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0, isProcessorFace = true),
@@ -233,17 +202,22 @@ class LoadBalancerSpec extends FunSuite {
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
   )
-  val topRightCenterEighthUnitCube = Block(Array(0.0, 0.5, 0.5), topRightCenterEigthUCFaces)
 
-  val topRightEigthUCFaces = List(
-    Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
-    Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
-    Face(Array(0.0, -1.0, 0.0), -0.25, phi=0, cohesion=0, isProcessorFace = true),
-    Face(Array(0.0, 1.0, 0.0), 0.5, phi=0, cohesion=0),
-    Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0),
-    Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)
-  )
-  val topRightEighthUnitCube = Block(Array(0.0, 0.5, 0.5), topRightEigthUCFaces)
+  val bottomLeftEighthUnitCube = Block(Array(0.0, 0.5, 0.0), leftFaces)
+
+  val bottomLeftCenterEighthUnitCube = Block(Array(0.0, 0.5, 0.0), leftCenterFaces)
+
+  val bottomRightCenterEighthUnitCube = Block(Array(0.0, 0.5, 0.0), rightCenterFaces)
+
+  val bottomRightEighthUnitCube = Block(Array(0.0, 0.5, 0.0), rightFaces)
+
+  val topLeftEighthUnitCube = Block(Array(0.0, 0.5, 0.5), leftFaces)
+
+  val topLeftCenterEighthUnitCube = Block(Array(0.0, 0.5, 0.5), leftCenterFaces)
+
+  val topRightCenterEighthUnitCube = Block(Array(0.0, 0.5, 0.5), rightCenterFaces)
+
+  val topRightEighthUnitCube = Block(Array(0.0, 0.5, 0.5), rightFaces)
 
   test("Two blocks should be merged into unit cube") {
     val processorBlocks = Seq(leftHalfUnitCube, rightHalfUnitCube)
@@ -289,8 +263,13 @@ class LoadBalancerSpec extends FunSuite {
       topLeftEighthUnitCube, topLeftCenterEighthUnitCube,
       topRightCenterEighthUnitCube, topRightEighthUnitCube)
 
-    val mergedBlocks = LoadBalancer.mergeProcessorBlocks(processorBlocks)
-    val expectedBlocks = Seq(topHalfUnitCube, bottomHalfUnitCube)
+    val globalOrigin = Array(0.0, 0.0, 0.0)
+    val mergedBlocks = LoadBalancer.mergeProcessorBlocks(processorBlocks).map { block =>
+      Block(globalOrigin, block.updateFaces(globalOrigin))
+    }
+    val expectedBlocks = Seq(topHalfUnitCube, bottomHalfUnitCube).map { block =>
+      Block(globalOrigin, block.updateFaces(globalOrigin))
+    }
 
     LoadBalancer.printBlocks(mergedBlocks)
     LoadBalancer.printBlocks(expectedBlocks)
