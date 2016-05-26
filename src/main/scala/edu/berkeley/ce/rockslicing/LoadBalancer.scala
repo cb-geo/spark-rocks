@@ -11,6 +11,7 @@ import scala.collection.mutable
   */
 object LoadBalancer {
   val VOLUME_TOLERANCE = 0.05
+
   /**
     * Produce processor joints that cut initial rock volume into approximately equal volumes.
     * These joints will be used to seed the initial Block RDD such that the volume or rock
@@ -201,7 +202,7 @@ object LoadBalancer {
     val newJoint = Joint(Array(normal(0), normal(1), normal(2)), origin, newCenter, phi = 0.0,
                          cohesion = 0.0, shape = Vector.empty, processorJoint = true)
     val new_Blocks = block.cut(newJoint)
-    val nonRedundantNew = new_Blocks.map { case block @ Block(center, _, _) =>
+    val nonRedundantNew = new_Blocks.map { case block@Block(center, _, _) =>
       Block(center, block.nonRedundantFaces)
     }
     val newBlocks = nonRedundantNew.sortWith { (left, right) =>
@@ -288,7 +289,7 @@ object LoadBalancer {
     } else if ((math.abs(newBlocks.head.volume/desiredVolume - 1.0) < tolerance) ||
                (iterations > iterationLimit)) {
       // Either gives appropriate volume of iteration limit has been reached
-      if (iterations > iterationLimit) println("Unable to converge within iteration limit, "+
+      if (iterations > iterationLimit) println("Unable to converge within iteration limit, " +
                                                "returning result of last iteration")
       Array(newJoint.centerX, newJoint.centerY, newJoint.centerZ)
     } else if (f_p * f_b < 0.0) { // If f_p and f_b have opposite signs, there is a root between
@@ -325,15 +326,19 @@ object LoadBalancer {
     *         blocks, and the second item in the pair is any blocks that were
     *         left unmatched at the end of the merging process.
     */
-  def removeCommonProcessorJoint(blocks: Seq[Block]): (Seq[Block], Seq[Block]) = {
+  def removeCommonProcessorJoint(commonJoint: ((Double, Double, Double), Double), blocks: Seq[Block]):
+      (Seq[Block], Seq[Block]) = {
+
+    val ((commonA, commonB, commonC), commonD) = commonJoint
+
     val (leftBlocks, rightBlocks) = blocks.partition { block =>
       val processorFace = block.faces.filter(_.isProcessorFace).head
       if (math.abs(processorFace.a) > NumericUtils.EPSILON) {
-        processorFace.a >= 0.0
+        processorFace.a >= NumericUtils.EPSILON
       } else if (math.abs(processorFace.b) > NumericUtils.EPSILON) {
-        processorFace.b >= 0.0
+        processorFace.b >= NumericUtils.EPSILON
       } else {
-        processorFace.c >= 0.0
+        processorFace.c >= NumericUtils.EPSILON
       }
     }
 
@@ -353,7 +358,13 @@ object LoadBalancer {
 
       // Use a 'view' to avoid unnecessary computation
       val candidateBlocks = mateCandidates.view.map { rightBlock =>
-        val newFaces = (leftBlock.faces ++ rightBlock.faces).filter(!_.isProcessorFace)
+        val newFaces = (leftBlock.faces ++ rightBlock.faces).filter { face =>
+          !face.isProcessorFace ||
+          NumericUtils.roundToTolerance(math.abs(face.a)) != commonA ||
+          NumericUtils.roundToTolerance(math.abs(face.b)) != commonB ||
+          NumericUtils.roundToTolerance(math.abs(face.c)) != commonC ||
+          NumericUtils.roundToTolerance(math.abs(face.d)) != commonD
+        }
         val globalOrigin = Array(0.0, 0.0, 0.0)
         val newBlock = Block(globalOrigin, newFaces)
         (rightBlock, Block(globalOrigin, newBlock.nonRedundantFaces))
@@ -363,19 +374,24 @@ object LoadBalancer {
       if (matchOpt.isDefined) {
         val (rightMate, mergedBlock) = matchOpt.get
         remainingRightBlocks.remove(rightMate)
-        mergedBlocks.add(mergedBlock)
+        if (mergedBlock.faces.exists(_.isProcessorFace)) {
+          orphanBlocks.add(mergedBlock)
+        } else {
+          mergedBlocks.add(mergedBlock)
+        }
       } else {
         orphanBlocks.add(leftBlock)
       }
     }
 
-    orphanBlocks.union(remainingRightBlocks)
+    orphanBlocks ++= remainingRightBlocks
     (mergedBlocks.toSeq, orphanBlocks.toSeq)
   }
 
   /**
     * Given a collection of processor blocks (blocks containing at least one
     * processor face), merge any blocks that share a common processor face.
+    *
     * @param processorBlocks A Seq of blocks, each of which must contain at
     *                        least one processor face.
     * @return A Seq of merged blocks. None of them should contain a processor
@@ -390,15 +406,29 @@ object LoadBalancer {
     while (orphanBlocks.nonEmpty) {
       val normVecBlocks = orphanBlocks.groupBy { block =>
         val processorFace = block.faces.find(_.isProcessorFace).get
-        ((math.abs(processorFace.a), math.abs(processorFace.b), math.abs(processorFace.c)),
-          math.abs(processorFace.d))
+        ((NumericUtils.roundToTolerance(math.abs(processorFace.a)),
+          NumericUtils.roundToTolerance(math.abs(processorFace.b)),
+          NumericUtils.roundToTolerance(math.abs(processorFace.c))),
+          NumericUtils.roundToTolerance(math.abs(processorFace.d)))
       }
 
-      val mergeResults = normVecBlocks.values.toSeq.map(LoadBalancer.removeCommonProcessorJoint)
+      val mergeResults = normVecBlocks.toSeq.map { case (commonJoint, blocks) =>
+        removeCommonProcessorJoint(commonJoint, blocks)
+      }
       mergedBlocks = mergedBlocks ++ mergeResults.flatMap(_._1)
       orphanBlocks = mergeResults.flatMap(_._2)
     }
 
     mergedBlocks
+  }
+
+  def printBlocks(blocks: Seq[Block]): Unit = {
+    blocks foreach { block =>
+      println(s"Center: ${block.center.mkString(",")}")
+      println("Faces:")
+      block.faces.foreach{ face =>
+        println(s"a: ${face.a}, b: ${face.b}, c: ${face.c}, d: ${face.d}, procFace: ${face.isProcessorFace}")
+      }
+    }
   }
 }

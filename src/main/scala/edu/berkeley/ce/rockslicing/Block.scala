@@ -615,14 +615,12 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     val sortedFaces1 = cleanFaces.sortBy(face => (face.d, face.a, face.b, face.c))
     val sortedFaces2 = cleanInputFaces.sortBy(face => (face.d, face.a, face.b, face.c))
 
-    val zippedFaces = sortedFaces1.zip(sortedFaces2)
-    val faceMatches = zippedFaces forall { case (face1, face2) =>
-      face1.approximateEquals(face2, tolerance)
-    }
     (math.abs(centerX - updatedInputBlock.centerX) < tolerance) &&
     (math.abs(centerY - updatedInputBlock.centerY) < tolerance) &&
     (math.abs(centerZ - updatedInputBlock.centerZ) < tolerance) &&
-    faceMatches
+    sortedFaces1.zip(sortedFaces2).forall { case (face1, face2) =>
+      face1.approximateEquals(face2, tolerance)
+    }
   }
 
   override def equals(obj: Any): Boolean = {

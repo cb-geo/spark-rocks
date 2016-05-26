@@ -113,8 +113,8 @@ object RockSlicer {
             math.abs(processorFace.d))
         }
 
-        val mergeResults = normVecBlocks.map { case (_, blocks) =>
-          LoadBalancer.removeCommonProcessorJoint(blocks.toSeq)
+        val mergeResults = normVecBlocks.map { case (commonJoint, blocks) =>
+          LoadBalancer.removeCommonProcessorJoint(commonJoint, blocks.toSeq)
         }
         matchedBlocks = matchedBlocks ++ mergeResults.flatMap(_._1)
         orphanBlocks = mergeResults.flatMap(_._2)
