@@ -316,6 +316,12 @@ object LoadBalancer {
     (centroid1(0) < centroid2(0)) && (centroid1(1) < centroid2(1)) && (centroid1(2) < centroid2(2))
   }
 
+  private def excludeProcessorFace(faces: Seq[Face], absNormVec: ((Double, Double, Double), Double)): Seq[Face] = {
+    faces.filter { face =>
+      !face.isProcessorFace || ((math.abs(face.a), math.abs(face.b), math.abs(face.c)), math.abs(face.d)) != absNormVec
+    }
+  }
+
   /**
     * Merge all blocks that are adjacent and separated only by a processor face.
     * All of the blocks should share a common processor face, i.e. this should
@@ -328,9 +334,7 @@ object LoadBalancer {
     */
   def removeCommonProcessorJoint(commonJoint: ((Double, Double, Double), Double), blocks: Seq[Block]):
       (Seq[Block], Seq[Block]) = {
-
-    val ((commonA, commonB, commonC), commonD) = commonJoint
-
+    // Partition blocks based on which side of the processor joint they're on
     val (leftBlocks, rightBlocks) = blocks.partition { block =>
       val processorFace = block.faces.find(_.isProcessorFace).get
       if (math.abs(processorFace.a) > NumericUtils.EPSILON) {
@@ -342,32 +346,44 @@ object LoadBalancer {
       }
     }
 
-    // Keep track of unmatched blocks, not easy to do in functional style
+    // Keep track of unmatched blocks
     val remainingRightBlocks = rightBlocks.to[mutable.Set]
     val mergedBlocks = mutable.Set.empty[Block]
     val orphanBlocks = mutable.Set.empty[Block]
 
     for (leftBlock <- leftBlocks) {
       // If bounding spheres don't intersect, blocks can't be mates
-      val mateCandidates = remainingRightBlocks filter { rightBlock =>
+      val sphereCandidates = remainingRightBlocks filter { rightBlock =>
         val sphereDistance = math.sqrt(math.pow(leftBlock.sphereCenterX - rightBlock.sphereCenterX, 2) +
                                        math.pow(leftBlock.sphereCenterY - rightBlock.sphereCenterY, 2) +
                                        math.pow(leftBlock.sphereCenterZ - rightBlock.sphereCenterZ, 2))
         sphereDistance < (leftBlock.sphereRadius + rightBlock.sphereRadius)
       }
 
-      // Use a 'view' to avoid unnecessary computation
-      val candidateBlocks = mateCandidates.view.map { rightBlock =>
-        val newFaces = (leftBlock.faces ++ rightBlock.faces).filter { face =>
-          !face.isProcessorFace ||
-          NumericUtils.roundToTolerance(math.abs(face.a)) != commonA ||
-          NumericUtils.roundToTolerance(math.abs(face.b)) != commonB ||
-          NumericUtils.roundToTolerance(math.abs(face.c)) != commonC ||
-          NumericUtils.roundToTolerance(math.abs(face.d)) != commonD
-        }
+      /*
+       * We also don't want to consider any right blocks that are separated
+       * from the current left block by a second joint, indicated by the
+       * presence of equal and opposite face normal vectors
+       */
+      val relevantLeftFaces = excludeProcessorFace(leftBlock.faces, commonJoint)
+      val rightBlocksRelevantFaces = sphereCandidates.map { rightBlock =>
+        (rightBlock, excludeProcessorFace(rightBlock.faces, commonJoint))
+      }
+
+      val mateCandidates = rightBlocksRelevantFaces.filter { case (rightBlock, relevantRightFaces) =>
+        !relevantLeftFaces.exists(leftFace => relevantRightFaces.exists { rightFace =>
+          math.abs(leftFace.a + rightFace.a) <= NumericUtils.EPSILON &&
+          math.abs(leftFace.b + rightFace.b) <= NumericUtils.EPSILON &&
+          math.abs(leftFace.c + rightFace.c) <= NumericUtils.EPSILON &&
+          math.abs(leftFace.d + rightFace.d) <= NumericUtils.EPSILON
+        })
+      }
+
+      // Use a 'view' to avoid unnecessary LP computation
+      val candidateBlocks = mateCandidates.view.map { case (rightBlock, relevantRightFaces) =>
         val globalOrigin = Array(0.0, 0.0, 0.0)
         // No need to update newFaces since the inputs are already referenced to global origin
-        val newBlock = Block(globalOrigin, newFaces)
+        val newBlock = Block(globalOrigin, relevantLeftFaces ++ relevantRightFaces)
         (rightBlock, Block(globalOrigin, newBlock.nonRedundantFaces))
       }
 
@@ -400,17 +416,17 @@ object LoadBalancer {
     */
   def mergeProcessorBlocks(processorBlocks: Seq[Block]): Seq[Block] = {
     val globalOrigin = Array(0.0, 0.0, 0.0)
-    var orphanBlocks = processorBlocks.map { block => Block(globalOrigin, block.updateFaces(globalOrigin)) }
+    var orphanBlocks = processorBlocks.map { block =>
+      // TODO: Requires 4 decimal places to pass unit tests. We should look at this.
+      Block(globalOrigin, block.updateFaces(globalOrigin).map(_.roundToTolerance(decimalPlaces=4)))
+    }
     var mergedBlocks = Seq.empty[Block]
 
     // We only iterate more than once if a block contains multiple processor faces
     while (orphanBlocks.nonEmpty) {
       val normVecBlocks = orphanBlocks.groupBy { block =>
         val processorFace = block.faces.find(_.isProcessorFace).get
-        ((NumericUtils.roundToTolerance(math.abs(processorFace.a)),
-          NumericUtils.roundToTolerance(math.abs(processorFace.b)),
-          NumericUtils.roundToTolerance(math.abs(processorFace.c))),
-          NumericUtils.roundToTolerance(math.abs(processorFace.d)))
+        ((math.abs(processorFace.a), math.abs(processorFace.b), math.abs(processorFace.c)), math.abs(processorFace.d))
       }
 
       val mergeResults = normVecBlocks.toSeq.map { case (commonJoint, blocks) =>

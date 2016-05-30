@@ -164,9 +164,11 @@ class LoadBalancerSpec extends FunSuite {
   )
   val topHalfUnitCube = Block(Array(0.0, 0.0, 0.5), topHalfUCFaces)
 
-  // Divide unit cube into eight pieces with three processor joints present
-  // Faces lists will be the same in top and bottom portions of unit cube divided into
-  // eight blocks - only need to change center of block
+  /*
+   * Divide unit cube into eight pieces with three processor joints present
+   * Faces lists will be the same in top and bottom portions of unit cube divided into
+   * eight blocks - only need to change center of block
+   */
   val leftFaces = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0),
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),
@@ -271,14 +273,10 @@ class LoadBalancerSpec extends FunSuite {
       Block(globalOrigin, block.updateFaces(globalOrigin))
     }
 
-    LoadBalancer.printBlocks(mergedBlocks)
-    LoadBalancer.printBlocks(expectedBlocks)
-
     assert(mergedBlocks.length == expectedBlocks.length)
     assert(mergedBlocks.forall(block1 => expectedBlocks.exists(block2 => block1.approximateEquals(block2))))
   }
 
-  /*
   test("Processor joints should be removed and actual blocks restored") {
     val processorJoint1 = Joint(Array(0.0, 1.0, 0.0), Array(0.0, 0.0, 0.0),
       Array(0.0, 0.3, 0.0), phi = 0.0, cohesion = 0.0, shape = Vector.empty,
@@ -301,32 +299,21 @@ class LoadBalancerSpec extends FunSuite {
     val joints = Seq(processorJoint1, processorJoint2, processorJoint3, processorJoint4,
       actualJoint1, actualJoint2)
 
-    val blocks = joints.foldLeft(Seq(unitCube)) { case (currentBlocks, joint) =>
+    val rawBlocks = joints.foldLeft(Seq(unitCube)) { case (currentBlocks, joint) =>
       currentBlocks.flatMap(_.cut(joint))
     }
-    val nonRedundantBlocks = blocks.map { case block @ Block(center, _, _) =>
+    val nonRedundantBlocks = rawBlocks.map { case block @ Block(center, _, _) =>
       Block(center, block.nonRedundantFaces)
     }
-    val processorBlocks = nonRedundantBlocks.filter { block =>
-      block.faces.exists(_.isProcessorFace)
-    }
 
-    val mergedBlocks = LoadBalancer.mergeProcessorBlocks(processorBlocks)
-    val centroidMergedBlocks = mergedBlocks.map{ block =>
-      val centroid = block.centroid
-      Block(centroid, block.updateFaces(centroid))
-    }
-
+    val (processorBlocks, nonProcessorBlocks) = nonRedundantBlocks.partition(_.faces.exists(_.isProcessorFace))
+    val mergedBlocks = LoadBalancer.mergeProcessorBlocks(processorBlocks) ++ nonProcessorBlocks
     val expectedBlocks = Seq(rightQuarterUnitCube, centerPartUnitCube, leftQuarterUnitCube)
-    val expectedBlocksCentroid = expectedBlocks map { block =>
-      val centroid = block.centroid
-      Block(centroid, block.updateFaces(centroid))
-    }
 
-    assert(centroidMergedBlocks.zip(expectedBlocksCentroid) forall { case (actual, expected) =>
-      actual.approximateEquals(expected)
-    })
-    assert(centroidMergedBlocks.length == 3)
+    assert(mergedBlocks.length == expectedBlocks.length)
+    assert(mergedBlocks.forall(actualBlock => expectedBlocks.exists { expectedBlock =>
+      actualBlock.approximateEquals(expectedBlock)
+    }))
   }
 
   test("Oblique processor joints should be removed and actual blocks restored") {
@@ -361,27 +348,13 @@ class LoadBalancerSpec extends FunSuite {
       Block(center, block.nonRedundantFaces)
     }
 
-    val processorBlocks = nonRedundantBlocks.filter { block =>
-      block.faces.exists(_.isProcessorFace)
-    }
-    val mergedBlocks = LoadBalancer.mergeProcessorBlocks(processorBlocks)
-    val centroidMergedBlocks = mergedBlocks.map{ block =>
-      val centroid = block.centroid
-      Block(centroid, block.updateFaces(centroid))
-    }
-
+    val (processorBlocks, nonProcessorBlocks) = nonRedundantBlocks.partition(_.faces.exists(_.isProcessorFace))
+    val mergedBlocks = LoadBalancer.mergeProcessorBlocks(processorBlocks) ++ nonProcessorBlocks
     val expectedBlocks = Seq(leftQuarterUnitCube, rightQuarterUnitCube, centerPartUnitCube)
-    val expectedBlocksCentroid = expectedBlocks map { block =>
-      val centroid = block.centroid
-      Block(centroid, block.updateFaces(centroid))
-    }
 
-    assert (
-      centroidMergedBlocks.zip(expectedBlocksCentroid) forall { case (actual, expected) =>
-        actual.approximateEquals(expected)
-      }
-    )
-    assert(centroidMergedBlocks.length == 3)
+    assert(mergedBlocks.length == expectedBlocks.length)
+    assert(mergedBlocks.forall(actualBlock => expectedBlocks.exists { expectedBlock =>
+      actualBlock.approximateEquals(expectedBlock)
+    }))
   }
-  */
 }

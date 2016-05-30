@@ -88,7 +88,7 @@ object RockSlicer {
       nonRedundantBlocks
     } else {
       /*
-       * Since we're dealing with RDD's and not Seq's here, we have to adapt
+       * Since we're dealing with RDDs and not Seqs here, we have to adapt
        * the logic of LoadBalancer.mergeProcessorBlocks
        */
       val realBlocks = nonRedundantBlocks.filter { block =>
@@ -97,7 +97,7 @@ object RockSlicer {
 
       var orphanBlocks = processorBlocks.map { block =>
         val globalOrigin = Array(0.0, 0.0, 0.0)
-        Block(globalOrigin, block.updateFaces(globalOrigin))
+        Block(globalOrigin, block.updateFaces(globalOrigin).map(_.roundToTolerance(decimalPlaces=4)))
       }
       var matchedBlocks: RDD[Block] = sc.emptyRDD[Block]
 
@@ -131,8 +131,8 @@ object RockSlicer {
 
     // Clean up faces of real blocks with values that should be zero, but have arbitrarily
     // small floating point values
-    val squeakyClean = centroidBlocks.map { case Block(center, faces, generation) =>
-      Block(center, faces.map(_.applyTolerance), generation)
+    val squeakyClean = centroidBlocks.map { case Block(center, faces, _) =>
+      Block(center, faces.map(_.applyTolerance))
     }
 
     // Convert list of rock blocks to requested output

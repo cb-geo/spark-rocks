@@ -59,7 +59,11 @@ class EndToEndSpec extends FunSuite {
 
     try {
       val expectedJson = expectedJsonSource.mkString
-      assert(blockJson.trim == expectedJson.trim)
+      val expectedBlocks = Json.blockSeqFromJson(expectedJson)
+
+      assert(cleanedBlocks.forall(actualBlock => expectedBlocks.exists{
+        expectedBlock => actualBlock.approximateEquals(expectedBlock)
+      }))
     } finally {
       expectedJsonSource.close()
     }
