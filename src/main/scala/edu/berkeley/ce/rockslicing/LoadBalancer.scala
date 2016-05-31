@@ -438,14 +438,4 @@ object LoadBalancer {
 
     mergedBlocks
   }
-
-  def printBlocks(blocks: Seq[Block]): Unit = {
-    blocks foreach { block =>
-      println(s"Center: ${block.center.mkString(",")}")
-      println("Faces:")
-      block.faces.foreach{ face =>
-        println(s"a: ${face.a}, b: ${face.b}, c: ${face.c}, d: ${face.d}, procFace: ${face.isProcessorFace}")
-      }
-    }
-  }
 }

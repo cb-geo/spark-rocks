@@ -97,6 +97,7 @@ object RockSlicer {
 
       var orphanBlocks = processorBlocks.map { block =>
         val globalOrigin = Array(0.0, 0.0, 0.0)
+        // Using same number of decimal places as in LoadBalancer for now
         Block(globalOrigin, block.updateFaces(globalOrigin).map(_.roundToTolerance(decimalPlaces=4)))
       }
       var matchedBlocks: RDD[Block] = sc.emptyRDD[Block]
