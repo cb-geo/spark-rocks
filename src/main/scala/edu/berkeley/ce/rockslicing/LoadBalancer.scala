@@ -4,7 +4,6 @@ import breeze.linalg
 import breeze.linalg.DenseVector
 
 import scala.annotation.tailrec
-import scala.collection.mutable
 
 /** 
   * Manages initial partitioning of rock volume to maintain load balance among partitions
@@ -316,6 +315,10 @@ object LoadBalancer {
     (centroid1(0) < centroid2(0)) && (centroid1(1) < centroid2(1)) && (centroid1(2) < centroid2(2))
   }
 
+  /*
+   * Excludes a processor face with a specific normal vector (positive or negative)
+   * from the resulting Seq of blocks
+   */
   private def excludeProcessorFace(faces: Seq[Face], absNormVec: ((Double, Double, Double), Double)): Seq[Face] = {
     faces.filter { face =>
       !face.isProcessorFace || ((math.abs(face.a), math.abs(face.b), math.abs(face.c)), math.abs(face.d)) != absNormVec
@@ -346,63 +349,57 @@ object LoadBalancer {
       }
     }
 
-    // Keep track of unmatched blocks
-    val remainingRightBlocks = rightBlocks.to[mutable.Set]
-    val mergedBlocks = mutable.Set.empty[Block]
-    val orphanBlocks = mutable.Set.empty[Block]
+    val (finalRightBlocks, finalMergedBlocks, finalOrphans) = leftBlocks.foldLeft((rightBlocks.toSet, Set.empty[Block],
+      Set.empty[Block])) { case ((remainingRightBlocks, mergedBlocks, orphanBlocks), leftBlock) =>
 
-    for (leftBlock <- leftBlocks) {
-      // If bounding spheres don't intersect, blocks can't be mates
-      val sphereCandidates = remainingRightBlocks filter { rightBlock =>
-        val sphereDistance = math.sqrt(math.pow(leftBlock.sphereCenterX - rightBlock.sphereCenterX, 2) +
-                                       math.pow(leftBlock.sphereCenterY - rightBlock.sphereCenterY, 2) +
-                                       math.pow(leftBlock.sphereCenterZ - rightBlock.sphereCenterZ, 2))
-        sphereDistance < (leftBlock.sphereRadius + rightBlock.sphereRadius)
-      }
-
-      /*
-       * We also don't want to consider any right blocks that are separated
-       * from the current left block by a second joint, indicated by the
-       * presence of equal and opposite face normal vectors
-       */
-      val relevantLeftFaces = excludeProcessorFace(leftBlock.faces, commonJoint)
-      val rightBlocksRelevantFaces = sphereCandidates.map { rightBlock =>
-        (rightBlock, excludeProcessorFace(rightBlock.faces, commonJoint))
-      }
-
-      val mateCandidates = rightBlocksRelevantFaces.filter { case (rightBlock, relevantRightFaces) =>
-        !relevantLeftFaces.exists(leftFace => relevantRightFaces.exists { rightFace =>
-          math.abs(leftFace.a + rightFace.a) <= NumericUtils.EPSILON &&
-          math.abs(leftFace.b + rightFace.b) <= NumericUtils.EPSILON &&
-          math.abs(leftFace.c + rightFace.c) <= NumericUtils.EPSILON &&
-          math.abs(leftFace.d + rightFace.d) <= NumericUtils.EPSILON
-        })
-      }
-
-      // Use a 'view' to avoid unnecessary LP computation
-      val candidateBlocks = mateCandidates.view.map { case (rightBlock, relevantRightFaces) =>
-        val globalOrigin = Array(0.0, 0.0, 0.0)
-        // No need to update newFaces since the inputs are already referenced to global origin
-        val newBlock = Block(globalOrigin, relevantLeftFaces ++ relevantRightFaces)
-        (rightBlock, Block(globalOrigin, newBlock.nonRedundantFaces))
-      }
-
-      val matchOpt = candidateBlocks.find(_._2.faces.nonEmpty)
-      if (matchOpt.isDefined) {
-        val (rightMate, mergedBlock) = matchOpt.get
-        remainingRightBlocks.remove(rightMate)
-        if (mergedBlock.faces.exists(_.isProcessorFace)) {
-          orphanBlocks.add(mergedBlock)
-        } else {
-          mergedBlocks.add(mergedBlock)
+        val sphereCandidates = rightBlocks filter { rightBlock =>
+          val sphereDistance = math.sqrt(math.pow(leftBlock.sphereCenterX - rightBlock.sphereCenterX, 2) +
+            math.pow(leftBlock.sphereCenterY - rightBlock.sphereCenterY, 2) +
+            math.pow(leftBlock.sphereCenterZ - rightBlock.sphereCenterZ, 2))
+          sphereDistance < (leftBlock.sphereRadius + rightBlock.sphereRadius)
         }
-      } else {
-        orphanBlocks.add(leftBlock)
-      }
-    }
 
-    orphanBlocks ++= remainingRightBlocks
-    (mergedBlocks.toSeq, orphanBlocks.toSeq)
+        /*
+           * We also don't want to consider any right blocks that are separated
+           * from the current left block by a second joint, indicated by the
+           * presence of equal and opposite face normal vectors
+           */
+        val relevantLeftFaces = excludeProcessorFace(leftBlock.faces, commonJoint)
+        val rightBlocksRelevantFaces = sphereCandidates.map { rightBlock =>
+          (rightBlock, excludeProcessorFace(rightBlock.faces, commonJoint))
+        }
+
+        val mateCandidates = rightBlocksRelevantFaces.filter { case (rightBlock, relevantRightFaces) =>
+          !relevantLeftFaces.exists(leftFace => relevantRightFaces.exists { rightFace =>
+            math.abs(leftFace.a + rightFace.a) <= NumericUtils.EPSILON &&
+              math.abs(leftFace.b + rightFace.b) <= NumericUtils.EPSILON &&
+              math.abs(leftFace.c + rightFace.c) <= NumericUtils.EPSILON &&
+              math.abs(leftFace.d + rightFace.d) <= NumericUtils.EPSILON
+          })
+        }
+
+        // Use a 'view' to avoid unnecessary LP computation
+        val candidateBlocks = mateCandidates.view.map { case (rightBlock, relevantRightFaces) =>
+          val globalOrigin = Array(0.0, 0.0, 0.0)
+          // No need to update newFaces since the inputs are already referenced to global origin
+          val newBlock = Block(globalOrigin, relevantLeftFaces ++ relevantRightFaces)
+          (rightBlock, Block(globalOrigin, newBlock.nonRedundantFaces))
+        }
+
+        val matchOpt = candidateBlocks.find(_._2.faces.nonEmpty)
+        if (matchOpt.isDefined) {
+          val (rightMate, mergedBlock) = matchOpt.get
+          if (mergedBlock.faces.exists(_.isProcessorFace)) {
+            (remainingRightBlocks - rightMate, mergedBlocks, orphanBlocks + mergedBlock)
+          } else {
+            (remainingRightBlocks - rightMate, mergedBlocks + mergedBlock, orphanBlocks)
+          }
+        } else {
+          (remainingRightBlocks, mergedBlocks, orphanBlocks + leftBlock)
+        }
+      }
+
+    (finalMergedBlocks.toSeq, (finalRightBlocks ++ finalOrphans).toSeq)
   }
 
   /**
