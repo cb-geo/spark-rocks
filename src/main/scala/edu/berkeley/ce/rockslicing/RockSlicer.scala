@@ -77,7 +77,7 @@ object RockSlicer {
       } else {
         block
       }
-    }
+    }.cache()
 
     // Find all blocks that contain processor joints
     val processorBlocks = nonRedundantBlocks.filter { block =>
@@ -107,13 +107,16 @@ object RockSlicer {
        * blocks are adjacent to multiple processor joints
        */
       while (!orphanBlocks.isEmpty()) {
-        val normVecBlocks = orphanBlocks.groupBy { block =>
+        val normVecBlocks = orphanBlocks.groupBy({ block =>
           val processorFace = block.faces.find(_.isProcessorFace).get
           // Normal vectors for same joint could be equal and opposite, so use abs
           ((math.abs(processorFace.a), math.abs(processorFace.b), math.abs(processorFace.c)),
             math.abs(processorFace.d))
-        }
+        }, numPartitions=arguments.numProcessors - 1)
 
+        normVecBlocks.foreach { case (commonJoint, blocks) =>
+          println(s"(${blocks.size})\t$commonJoint")
+        }
         val mergeResults = normVecBlocks.map { case (commonJoint, blocks) =>
           LoadBalancer.removeCommonProcessorJoint(commonJoint, blocks.toSeq)
         }
