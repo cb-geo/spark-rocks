@@ -1,10 +1,8 @@
 package edu.berkeley.ce.rockslicing
 
-import java.io.{File, PrintWriter}
-
+import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
-import scala.annotation.tailrec
 import scala.io.Source
 
 object RockSlicer {
@@ -79,82 +77,57 @@ object RockSlicer {
       } else {
         block
       }
-    }
+    }.cache()
 
     // Find all blocks that contain processor joints
     val processorBlocks = nonRedundantBlocks.filter { block =>
-      block.faces.exists(_.processorJoint)
+      block.faces.exists(_.isProcessorFace)
     }
 
-    // Find blocks that do not contain processor joints
-    val realBlocks = nonRedundantBlocks.filter { block =>
-      !block.faces.exists(_.processorJoint)
-    }
-
-    // Process processor blocks before continuing with remaining blocks
-    // Search blocks for matching processor joints
-    if (processorBlocks.count() > 0) {
-      // Create pair RDD that contains initially all the blocks on each partion as the first entry and
-      // an empty sequence of blocks as the second entry. The first entry represents blocks that are yet
-      // to be merged, the second entry is blocks that have already been merged.
-      val treeReduceBlockPairsRDD = processorBlocks.map{ blocks => (Seq(blocks), Seq.empty[Block])}
-      val (allOrphanBlocks, allReconstructedBlocks) = treeReduceBlockPairsRDD.treeReduce({
-        case ((toMerge1, merged1), (toMerge2, merged2)) =>
-          // All blocks that share a processor joint are merged/reconstructed. Blocks that do not share
-          // a processor joint with any of the blocks that are to be merged are "orphan" blocks.
-          val (treeReconBlocks, treeOrphanBlocks) = mergeBlocks(toMerge1 ++ toMerge2, Seq.empty[Block],
-            Seq.empty[Block])
-
-          // Merged/reconstructed blocks are partitioned based on whether they still contain processor joints
-          val (treeProcessorBlocks, treeRealBlocks) = treeReconBlocks.partition { block =>
-            block.faces.exists(_.processorJoint)
-          }
-
-          // Orphan blocks and merged/reconstructed blocks that still contain processor joints are returned
-          // as the first entry to the pair RDD. These will be merged with the next level of the tree. Blocks
-          // that have no remaining processor joints are returned as the second entry in the pair RDD.
-          (treeProcessorBlocks ++ treeOrphanBlocks, treeRealBlocks ++ merged1 ++ merged2)
-        // The following formula specifies the tree depth for treeReduce. It ensures that at most two leaves are
-        // merged during each reduction.
-      }, math.ceil(math.log(arguments.numProcessors)/math.log(2)).toInt)
-
-      assert(allOrphanBlocks.isEmpty)
-
-      val reconCentroidBlocks = allReconstructedBlocks.map {block =>
-          val centroid = block.centroid
-          Block(centroid, block.updateFaces(centroid))
+    val mergedBlocks = if (processorBlocks.isEmpty) {
+      nonRedundantBlocks
+    } else {
+      /*
+       * Since we're dealing with RDDs and not Seqs here, we have to adapt
+       * the logic of LoadBalancer.mergeProcessorBlocks
+       */
+      val realBlocks = nonRedundantBlocks.filter { block =>
+        !block.faces.exists(_.isProcessorFace)
       }
 
-      // Clean up faces of reconstructed blocks with values that should be zero, but have
-      // arbitrarily small floating point values
-      val squeakyCleanRecon = reconCentroidBlocks.map { case Block(center, faces, generation) =>
-        Block(center, faces.map(_.applyTolerance), generation)
+      var orphanBlocks = processorBlocks.map { block =>
+        val globalOrigin = Array(0.0, 0.0, 0.0)
+        // Using same number of decimal places as in LoadBalancer for now
+        Block(globalOrigin, block.updateFaces(globalOrigin).map(_.roundToTolerance(decimalPlaces=4)))
       }
+      var matchedBlocks: RDD[Block] = sc.emptyRDD[Block]
 
-      // Convert reconstructed blocks to requested output
-      if (arguments.toInequalities) {
-        val jsonReconBlocks = squeakyCleanRecon.map(Json.blockToMinimalJson)
-        val pw = new PrintWriter(new File("reconstructedBlocks.json"))
-        jsonReconBlocks.foreach { block =>
-          pw.println(block)
+      /*
+       * We should iterate more than once only in the unlikely event that some
+       * blocks are adjacent to multiple processor joints
+       */
+      while (!orphanBlocks.isEmpty()) {
+        val normVecBlocks = orphanBlocks.groupBy({ block =>
+          val processorFace = block.faces.find(_.isProcessorFace).get
+          // Normal vectors for same joint could be equal and opposite, so use abs
+          ((math.abs(processorFace.a), math.abs(processorFace.b), math.abs(processorFace.c)),
+            math.abs(processorFace.d))
+        }, numPartitions=arguments.numProcessors - 1)
+
+        normVecBlocks.foreach { case (commonJoint, blocks) =>
+          println(s"(${blocks.size})\t$commonJoint")
         }
-        pw.close()
+        val mergeResults = normVecBlocks.map { case (commonJoint, blocks) =>
+          LoadBalancer.removeCommonProcessorJoint(commonJoint, blocks.toSeq)
+        }
+        matchedBlocks = matchedBlocks ++ mergeResults.flatMap(_._1)
+        orphanBlocks = mergeResults.flatMap(_._2)
       }
 
-      if (arguments.toVTK) {
-        val vtkBlocksRecon = squeakyCleanRecon.map(BlockVTK(_))
-        val jsonVtkBlocksRecon = vtkBlocksRecon.map(JsonToVtk.blockVtkToMinimalJson)
-        val pw = new PrintWriter(new File("vtkReconstructedBlocks.json"))
-        jsonVtkBlocksRecon.foreach { block =>
-          pw.println(block)
-        }
-        pw.close()
-      }
+      realBlocks ++ matchedBlocks
     }
 
-    // Process remaining blocks that do not contain processor blocks
-    // Calculate centroid of each real block
-    val centroidBlocks = realBlocks.map { block =>
+    val centroidBlocks = mergedBlocks.map { block =>
       val centroid = block.centroid
       val updatedFaces = block.updateFaces(centroid)
       Block(centroid, updatedFaces)
@@ -162,8 +135,8 @@ object RockSlicer {
 
     // Clean up faces of real blocks with values that should be zero, but have arbitrarily
     // small floating point values
-    val squeakyClean = centroidBlocks.map { case Block(center, faces, generation) =>
-      Block(center, faces.map(_.applyTolerance), generation)
+    val squeakyClean = centroidBlocks.map { case Block(center, faces, _) =>
+      Block(center, faces.map(_.applyTolerance))
     }
 
     // Convert list of rock blocks to requested output
@@ -180,163 +153,7 @@ object RockSlicer {
       val jsonVtkBlocks = vtkBlocks.map(JsonToVtk.blockVtkToMinimalJson)
       jsonVtkBlocks.saveAsTextFile("vtkBlocks.json")
     }
+
     sc.stop()
-  }
-
-  /**
-    * Recursive function that merges sequence of blocks containing processor joints
-    * along matching processor joints, eliminating false blocks caused by division of
-    * input rock volume into equal volumes by load balancer
-    *
-    * @param processorBlocks Sequence of blocks containing one or more processor joints each
-    * @param mergedBlocks Sequence of blocks that have had processor joints removed. Initial
-    *                     input is an empty sequence
-    * @param orphanBlocks Sequence of blocks that cannot be matched with other blocks. Initial
-    *                     input is an empty sequence
-    * @return Tuple containing two sequences of blocks. The first sequence is all the merged blocks.
-    *         The second is all blocks that could not be merged.
-    */
-  @tailrec
-  def mergeBlocks(processorBlocks: Seq[Block], mergedBlocks: Seq[Block],
-                  orphanBlocks: Seq[Block]): (Seq[Block], Seq[Block]) = {
-    val blockMatches = findMates(processorBlocks)
-    val joinedBlocks = blockMatches.map{ case (paired, _) => paired }
-    val matchIndices = blockMatches.flatMap { case (_, indices) => indices}.distinct
-    val originalPairedBlocks = matchIndices.collect(processorBlocks)
-
-    val uniqueBlocks = (processorBlocks ++ orphanBlocks).foldLeft(Seq.empty[Block]) { (unique, current) =>
-      if (!unique.exists(current.approximateEquals(_))) {
-        current +: unique
-      } else {
-        unique
-      }
-    }
-
-    val currentOrphanBlocks = uniqueBlocks.diff(originalPairedBlocks)
-    val newProcessorBlocks = if (originalPairedBlocks.isEmpty) {
-      processorBlocks.tail
-    } else {
-      processorBlocks.diff(originalPairedBlocks)
-    }
-
-    // Check if more than one match was found. If so, merge all matches into one block
-    val mergedJoinedBlock = if (joinedBlocks.length > 1) {
-      // Note: originalPairedBlocks.head will be equal to processorBlocks.head
-      val temporaryOrigin = Array(originalPairedBlocks.head.centerX,
-                                  originalPairedBlocks.head.centerY,
-                                  originalPairedBlocks.head.centerZ)
-      val temporaryBlocks = originalPairedBlocks.tail.map { block =>
-        Block(temporaryOrigin, block.updateFaces(temporaryOrigin))
-      }
-
-      val sharedProcessorFaces = temporaryBlocks.flatMap { block =>
-        findSharedProcessorFaces(originalPairedBlocks.head, block)
-      }
-      val allFaces = temporaryBlocks.flatMap { block =>
-        block.faces
-      }
-      // Remove any faces that are shared between blocks
-      val nonSharedFaces = allFaces.diff(sharedProcessorFaces)
-      val smushedBlock = Block(temporaryOrigin, nonSharedFaces)
-      Seq(Block(temporaryOrigin, smushedBlock.nonRedundantFaces))
-    } else {
-      joinedBlocks
-    }
-
-    // Divide blocks into groups with and without processor joints remaining
-    val (remainingBlocks, completedBlocks) = mergedJoinedBlock.partition { block =>
-      block.faces.exists(_.processorJoint)
-    }
-
-    if (remainingBlocks.nonEmpty) {
-      // Merged blocks still contain some processor joints
-      mergeBlocks(remainingBlocks ++ newProcessorBlocks, completedBlocks ++ mergedBlocks,
-        currentOrphanBlocks)
-    } else if (newProcessorBlocks.isEmpty) {
-      // All blocks are free of processor joints - check for duplicates then return
-      (completedBlocks ++ mergedBlocks, currentOrphanBlocks)
-    } else {
-      // Proceed to next processor block
-      mergeBlocks(newProcessorBlocks, completedBlocks ++ mergedBlocks, currentOrphanBlocks)
-    }
-  }
-
-  /**
-    * Compares two input blocks and find shared processor faces
-    *
-    * @param block1 First input block
-    * @param block2 Second input block
-    * @param tolerance Tolerance for difference between compared values. Defaults to
-    *                  EPSILON
-    * @return List of processor faces that are shared by the two blocks. Will be
-    *         empty if they share no faces
-    */
-  def findSharedProcessorFaces(block1: Block, block2: Block, tolerance: Double = NumericUtils.EPSILON):
-      Seq[Face] = {
-    val processorFaces1 = block1.faces.filter(_.processorJoint)
-    val processorFaces2 = block2.faces.filter(_.processorJoint)
-    (processorFaces1 flatMap { face1 =>
-      processorFaces2 flatMap { face2 =>
-        if (face1.isSharedWith(face2, tolerance)) {
-          Seq[Face](face1, face2)
-        } else {
-          Seq.empty[Face]
-        }
-      }
-    }).distinct
-  }
-
-  /**
-    * Finds blocks that share a processor joint and appear on opposite sides of the processor joint.
-    *
-    * @param processorBlocks Seq of blocks to search for mates
-    * @return Seq of tuples. The first entry in the tuple is the block generated by merging two mated
-    *         blocks. The second entry in the tuple is a Seq containing the indices of the two blocks that
-    *         were merged to create the block in the first entry.
-    */
-  def findMates(processorBlocks: Seq[Block]): Seq[(Block, Seq[Int])] = {
-    if (processorBlocks.nonEmpty) {
-      processorBlocks.tail flatMap { block =>
-        val currentBlock = processorBlocks.head
-        val localCenter = currentBlock.center
-        val comparisonBlock = Block(localCenter, block.updateFaces(localCenter))
-        val sharedProcFaces = findSharedProcessorFaces(currentBlock, comparisonBlock)
-
-        if (sharedProcFaces.nonEmpty) {
-          val currentFaces = currentBlock.faces.diff(sharedProcFaces)
-          val updatedFaces = comparisonBlock.faces.diff(sharedProcFaces)
-          val allFaces = currentFaces ++ updatedFaces
-          // Check for any actual shared faces between blocks - if these exists blocks
-          // should not be merged since there is a real joint separating the blocks
-          val nonSharedFaces =
-            allFaces.foldLeft(Seq.empty[Face]) { (unique, current) =>
-              if (!unique.exists(current.isSharedWith(_))) {
-                current +: unique
-              } else {
-                unique
-              }
-            }
-
-          if (allFaces.diff(nonSharedFaces).isEmpty) {
-            val mergedBlock = Block(localCenter, nonSharedFaces)
-            val nonRedundantNonSharedFaces = mergedBlock.nonRedundantFaces
-
-            // Filter blocks that actually aren't adjacent at all,
-            // but share a processor joint
-            nonRedundantNonSharedFaces match {
-              case Nil => None
-              case x => Some(Block(localCenter, nonRedundantNonSharedFaces),
-                             Seq[Int](0, processorBlocks.indexOf(block)))
-            }
-          } else {
-            None
-          }
-        } else {
-          None
-        }
-      }
-    } else {
-      Seq((Block(Array(0.0, 0.0, 0.0), Seq.empty[Face]), Seq.empty[Int]))
-    }
   }
 }

@@ -15,15 +15,15 @@ class EndToEndSpec extends FunSuite {
     inputSource.close()
 
     // Create an initial block
-    val blocks = Seq(Block(globalOrigin, rockVolume))
+    val initialBlocks = Seq(Block(globalOrigin, rockVolume))
 
     // Generate processor joints
     val numProcessors = 6
-    val processorJoints = LoadBalancer.generateProcessorJoints(blocks.head, numProcessors)
+    val processorJoints = LoadBalancer.generateProcessorJoints(initialBlocks.head, numProcessors)
     val joints = processorJoints ++ jointList
 
     // Iterate through joints, cutting blocks where appropriate
-    val cutBlocks = blocks flatMap { block =>
+    val cutBlocks = initialBlocks flatMap { block =>
       joints.foldLeft(Seq(block)) { (currentBlocks, joint) =>
         currentBlocks.flatMap(_.cut(joint))
       }
@@ -34,57 +34,36 @@ class EndToEndSpec extends FunSuite {
       Block(center, block.nonRedundantFaces)
     }
 
-    // Note: The following two filter operations could be done using the partition method;
-    //       however, when executing on Spark this will be an RDD and partition will not work.
-    //       The two filter operations are left here to mimic what is done in the actual Spark code
-
-    // Find all blocks that contain processor joints
-    val processorBlocks = nonRedundantBlocks.filter { block =>
-      block.faces.exists(_.processorJoint)
-    }
-
     // Find blocks that do not contain processor joints
-    val realBlocks = nonRedundantBlocks.filter { block =>
-      val faceTests = block.faces.exists(_.processorJoint)
-      !faceTests
+    val (processorBlocks, realBlocks) = nonRedundantBlocks.partition { block => block.faces.exists(_.isProcessorFace) }
+    val finalBlocks = if (processorBlocks.isEmpty) {
+      realBlocks
+    } else {
+      realBlocks ++ LoadBalancer.mergeProcessorBlocks(processorBlocks)
     }
 
-    // Search blocks for matching processor joints
-    val updatedProcessorBlocks = processorBlocks.map { block =>
-      Block(globalOrigin, block.updateFaces(globalOrigin))
-    }
-    val (reconBlocks, orphanBlocks) = RockSlicer.mergeBlocks(updatedProcessorBlocks, Seq.empty[Block],
-                                                             Seq.empty[Block])
-
-    // Update centroids of reconstructed processor blocks and remove duplicates
-    val reconCentroidBlocks = reconBlocks.map { block =>
-      val centroid = block.centroid
-      Block(centroid, block.updateFaces(centroid))
-    }
-
-    // Calculate the centroid of each real block
-    val centroidBlocks = realBlocks.map { block =>
+    // Calculate the centroid of each block
+    val centroidBlocks = finalBlocks.map { block =>
       val centroid = block.centroid
       val updatedFaces = block.updateFaces(centroid)
       Block(centroid, updatedFaces)
     }
 
-    // Merge real blocks and reconstructed blocks - this won't happen on Spark since collect will
-    // be called and all reconstructed blocks will be on one node
-    val allBlocks = centroidBlocks ++ reconCentroidBlocks
-
     // Clean up double values arbitrarily close to 0.0
-    val cleanedBlocks = allBlocks.map { case Block(center, faces, _) =>
+    val cleanedBlocks = centroidBlocks.map { case Block(center, faces, _) =>
       Block(center, faces.map(_.applyTolerance))
     }
 
     val blockJson = Json.blockSeqToReadableJson(cleanedBlocks)
     val expectedJsonSource = Source.fromURL(getClass.getResource(s"/$OUTPUT_FILE_NAME"))
 
-    assert(orphanBlocks.isEmpty)
     try {
       val expectedJson = expectedJsonSource.mkString
-      assert(blockJson.trim == expectedJson.trim)
+      val expectedBlocks = Json.blockSeqFromJson(expectedJson)
+
+      assert(cleanedBlocks.forall(actualBlock => expectedBlocks.exists{
+        expectedBlock => actualBlock.approximateEquals(expectedBlock)
+      }))
     } finally {
       expectedJsonSource.close()
     }

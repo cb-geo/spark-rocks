@@ -4,7 +4,7 @@ import org.scalatest._
 import scala.math.sqrt
 
 class BlockSpec extends FunSuite {
-  val boundingFaces = List(
+  val unitCubeFaces = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0), // -x = 0
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),  // x = 1
     Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0), // -y = 0
@@ -12,9 +12,9 @@ class BlockSpec extends FunSuite {
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), // -z = 0
     Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)   // z = 1
   )
-  val unitCube = Block(Array(0.0, 0.0, 0.0), boundingFaces)
+  val unitCube = Block(Array(0.0, 0.0, 0.0), unitCubeFaces)
 
-  val boundingFaces2 = List(
+  val twoCubeFaces = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0), // -x = 0
     Face(Array(1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0), // x = 2
     Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0), // -y = 0
@@ -22,9 +22,9 @@ class BlockSpec extends FunSuite {
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), // -z = 0
     Face(Array(0.0, 0.0, 1.0), 2.0, phi=0, cohesion=0) // z = 2
   )
-  val twoCube = Block(Array(0.0, 0.0, 0.0), boundingFaces2)
+  val twoCube = Block(Array(0.0, 0.0, 0.0), twoCubeFaces)
 
-  val boundingFaces3 = List(
+  val twoCubeNonOriginFaces = List(
     Face(Array(-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0), // -x = 1
     Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0),  // x = 1
     Face(Array(0.0, -1.0, 0.0), 1.0, phi=0, cohesion=0), // -y = 1
@@ -32,9 +32,9 @@ class BlockSpec extends FunSuite {
     Face(Array(0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0), // -z = 1
     Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)   // z = 1
   )
-  val twoCubeNonOrigin = Block(Array(1.0, 1.0, 1.0), boundingFaces3)
+  val twoCubeNonOrigin = Block(Array(1.0, 1.0, 1.0), twoCubeNonOriginFaces)
 
-  val boundingFaces4 = List(
+  val unitCubeNonOriginFaces = List(
     Face(Array(-1.0, 0.0, 0.0), 0.5, phi=0, cohesion=0), // -x = 0
     Face(Array(1.0, 0.0, 0.0), 0.5, phi=0, cohesion=0),  // x = 1
     Face(Array(0.0, -1.0, 0.0), 0.5, phi=0, cohesion=0), // -y = 0
@@ -42,9 +42,9 @@ class BlockSpec extends FunSuite {
     Face(Array(0.0, 0.0, -1.0), 0.5, phi=0, cohesion=0), // -z = 0
     Face(Array(0.0, 0.0, 1.0), 0.5, phi=0, cohesion=0)   // z = 1
   )
-  val unitCubeNonOrigin = Block(Array(0.5, 0.5, 0.5), boundingFaces4)
+  val unitCubeNonOrigin = Block(Array(0.5, 0.5, 0.5), unitCubeNonOriginFaces)
 
-  val boundingFaces6 = List(
+  val rectPrismFaces = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi=0, cohesion=0), // -x = 0
     Face(Array(1.0, 0.0, 0.0), 0.5, phi=0, cohesion=0), // x = 0.5
     Face(Array(0.0, -1.0, 0.0), 0.0, phi=0, cohesion=0), // -y = 0
@@ -52,17 +52,17 @@ class BlockSpec extends FunSuite {
     Face(Array(0.0, 0.0, -1.0), 0.0, phi=0, cohesion=0), // -z = 0
     Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0) // z = 1
   )
-  val rectPrism = Block(Array(0.0, 0.0, 0.0), boundingFaces6)
+  val rectPrism = Block(Array(0.0, 0.0, 0.0), rectPrismFaces)
 
-  val boundingFaces7 = List(
+  val tetrahedralFaces = List(
     Face(Array(1/math.sqrt(3.0), 1/math.sqrt(3.0), 1/math.sqrt(3.0)), 0.0, phi=0, cohesion=0),
     Face(Array(-1.0, 0.0, 0.0), 0.3, phi=0, cohesion=0),
     Face(Array(0.0, -1.0, 0.0), 0.3, phi=0, cohesion=0),
     Face(Array(0.0, 0.0, -1.0), 0.3, phi=0, cohesion=0)
   )
-  val tetrahedralBlock = Block(Array(0.3, 0.3, 0.3), boundingFaces7)
+  val tetrahedralBlock = Block(Array(0.3, 0.3, 0.3), tetrahedralFaces)
 
-  val boundingFaces8 = List(
+  val tinyBlockFaces = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi = 0.0, cohesion = 0.0),
     Face(Array(0.0, -1.0, 0.0), 0.0, phi = 0.0, cohesion = 0.0),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi = 0.0, cohesion = 0.0),
@@ -70,9 +70,9 @@ class BlockSpec extends FunSuite {
     Face(Array(0.0, 1.0, 0.0), 1e-6, phi = 0.0, cohesion = 0.0),
     Face(Array(0.0, 0.0, 1.0), 1e-6, phi = 0.0, cohesion = 0.0)
   )
-  val tinyBlock = Block(Array(0.0, 0.0, 0.0), boundingFaces8)
+  val tinyBlock = Block(Array(0.0, 0.0, 0.0), tinyBlockFaces)
 
-  val boundingFaces9 = List(
+  val lessTinyBlockFaces = List(
     Face(Array(-1.0, 0.0, 0.0), 0.0, phi = 0.0, cohesion = 0.0),
     Face(Array(0.0, -1.0, 0.0), 0.0, phi = 0.0, cohesion = 0.0),
     Face(Array(0.0, 0.0, -1.0), 0.0, phi = 0.0, cohesion = 0.0),
@@ -80,7 +80,7 @@ class BlockSpec extends FunSuite {
     Face(Array(0.0, 1.0, 0.0), 0.009, phi = 0.0, cohesion = 0.0),
     Face(Array(0.0, 0.0, 1.0), 0.009, phi = 0.0, cohesion = 0.0)
   )
-  val lessTinyBlock = Block(Array(0.0, 0.0, 0.0), boundingFaces9)
+  val lessTinyBlock = Block(Array(0.0, 0.0, 0.0), lessTinyBlockFaces)
 
   val jointBounds = Vector(
     (Array(1.0, 0.0, 0.0), 1.0),
@@ -110,7 +110,6 @@ class BlockSpec extends FunSuite {
     Face(Array(0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0),
     Face(Array(1 / sqrt(2.0), 0.0, 1 / sqrt(2.0)), 1 / sqrt(2.0), phi=0, cohesion=0)
   )
-
   val halfUnitCube = Block(Array(0.0, 0.0, 0.0), halfUnitCubeFaces)
 
   def centroidDifference(c1: Array[Double], c2: Array[Double]): Double = {
@@ -280,11 +279,11 @@ class BlockSpec extends FunSuite {
   }
 
   test("The unit cube should not contain any redundant faces") {
-    assert(unitCube.nonRedundantFaces == boundingFaces)
+    assert(unitCube.nonRedundantFaces == unitCubeFaces)
   }
 
   test("Adding planes x,y,z = +- 2 to the unit cube should be considered redundant") {
-    val redundantBoundingFaces = boundingFaces ++ List(
+    val redundantBoundingFaces = unitCubeFaces ++ List(
       Face(Array(-1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0), // -x = 2
       Face(Array(1.0, 0.0, 0.0), 2.0, phi=0, cohesion=0), // x = 2
       Face(Array(0.0, -1.0, 0.0), 2.0, phi=0, cohesion=0), // -y = 2
@@ -294,16 +293,16 @@ class BlockSpec extends FunSuite {
     )
     val redundantUnitCube = Block(Array(0.0, 0.0, 0.0), redundantBoundingFaces)
 
-    assert(redundantUnitCube.nonRedundantFaces == boundingFaces)
+    assert(redundantUnitCube.nonRedundantFaces == unitCubeFaces)
   }
 
   test("The two cube should not contain any redundant faces") {
-    assert(twoCube.nonRedundantFaces == boundingFaces2)
+    assert(twoCube.nonRedundantFaces == twoCubeFaces)
   }
 
   test("Adding the boundary -x + 2z = 0 to the two cube should render z = 2 redundant") {
     val newFace = Face(Array(-1.0, 0.0, 2.0), 0.0, phi=0, cohesion=0)
-    val redundantBoundingFaces = newFace::boundingFaces2
+    val redundantBoundingFaces = newFace::twoCubeFaces
     val redundant2Cube = Block(Array(1.0, 1.0, 1.0), redundantBoundingFaces)
     val expectedFaces = redundantBoundingFaces.slice(0, redundantBoundingFaces.length - 1)
     assert(redundant2Cube.nonRedundantFaces == expectedFaces)
@@ -341,9 +340,9 @@ class BlockSpec extends FunSuite {
 
   test("Adding the face -x=1 to a two-cube centered at origin should be considered redundant") {
     val redundantFace = Face(Array(-1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
-    val newTwoCube = Block(Array(0.0, 0.0, 0.0), redundantFace::boundingFaces2)
+    val newTwoCube = Block(Array(0.0, 0.0, 0.0), redundantFace::twoCubeFaces)
     val testFaces = newTwoCube.nonRedundantFaces
-    assert(testFaces == boundingFaces2)
+    assert(testFaces == twoCubeFaces)
   }
 
   test("The points of intersection between the four planes should Array(0.0, 0.0, 0.0) & Array(0.0, 5.0, 0.0)") {

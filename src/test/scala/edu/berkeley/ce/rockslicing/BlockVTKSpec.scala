@@ -149,14 +149,14 @@ class BlockVTKSpec extends FunSuite {
   test("Vertex ID's should start from 0 and go up to 7") {
     val vtkBlock = BlockVTK(unitCube)
     val expectedIDs = 0 until 8
-    val idsDiff = intListElementDiff(expectedIDs.toSeq, vtkBlock.vertexIDs.toSeq)
+    val idsDiff = intListElementDiff(expectedIDs, vtkBlock.vertexIDs)
     assert(idsDiff forall (_ < NumericUtils.EPSILON))
   }
 
   test("Vertex ID's should start from 0 and go up to 9 (seven-sided block)") {
     val vtkBlock = BlockVTK(sevenSidedBlock)
     val expectedIDs = 0 until 10
-    val idsDiff = intListElementDiff(expectedIDs.toSeq, vtkBlock.vertexIDs.toSeq)
+    val idsDiff = intListElementDiff(expectedIDs, vtkBlock.vertexIDs)
     assert(idsDiff forall (_ < NumericUtils.EPSILON))
   }
 
@@ -196,7 +196,7 @@ class BlockVTKSpec extends FunSuite {
     val vtkBlock = BlockVTK(unitCube)
     val faceConnectivities = Seq(7, 6, 5, 4, 7, 4, 3, 2, 3, 1, 0, 2, 5, 6, 0, 1, 4, 5, 1, 3, 2, 0, 6, 7)
 
-    val connectionsDiff = intListElementDiff(faceConnectivities.toSeq, vtkBlock.connectivity.toSeq)
+    val connectionsDiff = intListElementDiff(faceConnectivities, vtkBlock.connectivity.toSeq)
     assert(connectionsDiff forall (_ < NumericUtils.EPSILON))
   }
 
@@ -205,7 +205,7 @@ class BlockVTKSpec extends FunSuite {
     val faceConnectivities = List(9, 8, 7, 6, 5, 4, 3, 2, 5, 2, 9, 6, 8, 1, 0, 7, 3, 4, 0, 1, 9, 2, 3,
                                   1, 8, 7, 0, 4, 5, 6)
 
-    val connectionsDiff = intListElementDiff(faceConnectivities.toSeq, vtkBlock.connectivity.toSeq)
+    val connectionsDiff = intListElementDiff(faceConnectivities, vtkBlock.connectivity.toSeq)
     assert(connectionsDiff forall (_ < NumericUtils.EPSILON))
   }
 

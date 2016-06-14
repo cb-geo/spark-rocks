@@ -46,7 +46,7 @@ object NumericUtils {
     * @param decimals Number of decimal places to round to.
     * @return Value with specified number of decimal places. Default is 6 decimal places.
     */
-  def roundToTolerance(d: Double, decimals: Int=7): Double = {
+  def roundToTolerance(d: Double, decimals: Int=6): Double = {
       BigDecimal(d).setScale(decimals, BigDecimal.RoundingMode.HALF_UP).toDouble
   }
 }

@@ -77,4 +77,12 @@ object Json {
     */
   def blockSeqToMinimalJson(blocks: Seq[Block]): String =
     PlayJson.stringify(PlayJson.toJson(blocks))
+
+  /**
+    * Converts a JSON string into a Seq of Blocks.
+    * @param json Valid JSON for a sequence of rock blocks.
+    * @return A Sequence of Block instances.
+    */
+  def blockSeqFromJson(json: String): Seq[Block] =
+    PlayJson.parse(json).as[Seq[Block]]
 }

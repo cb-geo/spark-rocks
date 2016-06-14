@@ -13,12 +13,12 @@ import org.apache.commons.lang3.builder.HashCodeBuilder
   * Accessed as 'd'.
   * @param phi The friction angle (phi) of the face.
   * @param cohesion The cohesion of the face.
-  * @param processorJoint Parameter that identifies joint as being artificial joint introduced as part
+  * @param isProcessorFace Parameter that identifies joint as being artificial joint introduced as part
   *                        of load balancing
   */
 @SerialVersionUID(1L)
 case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesion: Double,
-                processorJoint: Boolean=false) extends Serializable {
+                isProcessorFace: Boolean=false) extends Serializable {
   assert(normalVec.length == 3)
   val a = normalVec(0)
   val b = normalVec(1)
@@ -36,7 +36,19 @@ case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesio
     val newD = if (math.abs(d) > NumericUtils.EPSILON) d else 0.0
     val newPhi = if (math.abs(phi) > NumericUtils.EPSILON) phi else 0.0
     val newCohesion = if (math.abs(cohesion) > NumericUtils.EPSILON) cohesion else 0.0
-    Face(Array(newA, newB, newC), newD, newPhi, newCohesion, processorJoint)
+    Face(Array(newA, newB, newC), newD, newPhi, newCohesion, isProcessorFace)
+  }
+
+  /**
+    * Rounds the components of a face's normal vector to the specified number
+    * of decimal places, which defaults to 6.
+    * @param decimalPlaces The number of decimal places to round to.
+    * @return A new face with a rounded normal vector.
+    */
+  def roundToTolerance(decimalPlaces: Int=6): Face = {
+    Face(Array(NumericUtils.roundToTolerance(a, decimalPlaces), NumericUtils.roundToTolerance(b, decimalPlaces),
+         NumericUtils.roundToTolerance(c, decimalPlaces)), NumericUtils.roundToTolerance(d, decimalPlaces),
+         phi, cohesion, isProcessorFace)
   }
 
   /**
@@ -79,7 +91,7 @@ case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesio
         this.a == f.a && this.b == f.b && this.c == f.c &&
         this.distance == f.distance && this.phi == f.phi &&
         this.cohesion == f.cohesion &&
-        this.processorJoint == f.processorJoint
+        this.isProcessorFace == f.isProcessorFace
 
       case _ => false
     }
@@ -93,7 +105,7 @@ case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesio
         .append(distance)
         .append(phi)
         .append(cohesion)
-        .append(processorJoint)
+        .append(isProcessorFace)
         .toHashCode
 }
 
@@ -179,8 +191,8 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
 
   /**
    * Find a bounding sphere for a rock block.
-    *
-    * @return A pair where the first element is a triple giving the center of
+   *
+   * @return A pair where the first element is a triple giving the center of
    *         the bounding sphere and the second element is the radius of the
    *         bounding sphere.
    */
@@ -200,7 +212,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     // Solve LP to find maximum principal coordinate values
     val maxCoordinates = positiveBasisVectors.map { v =>
       val linProg = new LinearProgram(3)
-      linProg.setObjFun(v.toArray, LinearProgram.MAX)
+      linProg.setObjFun(v, LinearProgram.MAX)
       faces foreach { face =>
         val coeffs = Array[Double](face.a, face.b, face.c).map(NumericUtils.applyTolerance)
         val rhs = NumericUtils.applyTolerance(face.d)
@@ -590,7 +602,8 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
       }
 
       val n = DenseVector[Double](a, b, c)
-      val new_d = NumericUtils.roundToTolerance(-(n dot w) / linalg.norm(n))
+      // TODO: Need 7 places for unit tests to pass. We should look at this.
+      val new_d = NumericUtils.roundToTolerance(-(n dot w) / linalg.norm(n), 7)
       Face(Array(a, b, c), new_d, phi, cohesion, processorJoint)
     }
   }
@@ -615,14 +628,12 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     val sortedFaces1 = cleanFaces.sortBy(face => (face.d, face.a, face.b, face.c))
     val sortedFaces2 = cleanInputFaces.sortBy(face => (face.d, face.a, face.b, face.c))
 
-    val zippedFaces = sortedFaces1.zip(sortedFaces2)
-    val faceMatches = zippedFaces forall { case (face1, face2) =>
-      face1.approximateEquals(face2, tolerance)
-    }
     (math.abs(centerX - updatedInputBlock.centerX) < tolerance) &&
     (math.abs(centerY - updatedInputBlock.centerY) < tolerance) &&
     (math.abs(centerZ - updatedInputBlock.centerZ) < tolerance) &&
-    faceMatches
+    sortedFaces1.zip(sortedFaces2).forall { case (face1, face2) =>
+      face1.approximateEquals(face2, tolerance)
+    }
   }
 
   override def equals(obj: Any): Boolean = {
