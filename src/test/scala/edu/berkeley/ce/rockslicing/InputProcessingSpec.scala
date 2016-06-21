@@ -41,7 +41,7 @@ class InputProcessingSpec extends FunSuite {
     assert(InputProcessor.readInput(inputSrc).isEmpty)
   }
 
-  test("Input file without \"%\" should produce error") {
+  test("Input file without empty line for joint transition should produce error") {
     val inputStr = "0.0 0.0 0.0\n" +
       "0.0 0.0 0.0 2.0 2.0 2.0\n" +
       "\n" +
@@ -66,7 +66,7 @@ class InputProcessingSpec extends FunSuite {
       "0.0 1.0 0.0 2.0 0.0 0.0\n" +
       "0.0 0.0 -1.0 0.0 0.0 0.0\n" +
       "0.0 0.0 1.0 2.0 0.0 0.0\n" +
-      "%\n" +
+      "\n" +
       "1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0\n"
     val inputSrc = Source.fromString(inputStr)
     assert(InputProcessor.readInput(inputSrc).isEmpty)
@@ -82,7 +82,7 @@ class InputProcessingSpec extends FunSuite {
       "0.0 1.0 0.0 2.0 0.0 0.0\n" +
       "0.0 0.0 -1.0 0.0 0.0 0.0\n" +
       "0.0 0.0 1.0 2.0 0.0 0.0\n" +
-      "%\n" +
+      "\n" +
       "1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0\n"
     val inputSrc = Source.fromString(inputStr)
     assert(InputProcessor.readInput(inputSrc).isEmpty)
@@ -98,7 +98,7 @@ class InputProcessingSpec extends FunSuite {
       "0.0 1.0 0.0 2.0 0.0 0.0\n" +
       "0.0 0.0 -1.0 0.0 0.0 0.0\n" +
       "0.0 0.0 1.0 2.0 0.0 0.0\n" +
-      "%\n" +
+      "\n" +
       "1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0\n" // Invalid joint
     val inputSrc = Source.fromString(inputStr)
     assert(InputProcessor.readInput(inputSrc).isEmpty)
@@ -114,7 +114,7 @@ class InputProcessingSpec extends FunSuite {
       "0.0 1.0 0.0 2.0 0.0 0.0\n" +
       "0.0 0.0 -1.0 0.0 0.0 0.0\n" +
       "0.0 0.0 1.0 2.0 0.0 0.0\n" +
-      "%\n" +
+      "\n" +
       "1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0\n" +
       // Invalid joint
       "0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 -1.0 0.0 0.5 -1.0 0.0 0.0 0.0 1.0 0.0 0.0"
@@ -130,7 +130,7 @@ class InputProcessingSpec extends FunSuite {
       "0.0 1.0 0.0 2.0 0.0 0.0\n" +
       "0.0 0.0 -1.0 0.0 0.0 0.0\n" +
       "0.0 0.0 1.0 2.0 0.0 0.0\n" +
-      "%\n" +
+      "\n" +
       "1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0\n" +
       "0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 0.0 baz 0.0 -1.0 0.0 0.5 -1.0 0.0 0.0 0.0 1.0 0.0 0.0 0.5"
     val inputSrc = Source.fromString(inputStr)
@@ -145,7 +145,7 @@ class InputProcessingSpec extends FunSuite {
       "0.0 1.0 0.0 2.0 0.0 0.0\n" +
       "0.0 0.0 -1.0 0.0 0.0 0.0\n" +
       "0.0 0.0 1.0 2.0 0.0 0.0\n" +
-      "%\n" +
+      "\n" +
       "1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0\n" +
       "0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 -1.0 0.0 0.5 -1.0 0.0 0.0 0.0 1.0 0.0 0.0 0.5"
     val inputSrc = Source.fromString(inputStr)

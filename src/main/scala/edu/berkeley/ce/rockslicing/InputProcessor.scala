@@ -7,10 +7,11 @@ import scala.util.Try
 
 object InputProcessor {
   // Processes input file: Add rock volume faces and joints to respective input list
-  def readInput(inputSource: Source): Option[(Array[Double],
-                                             Seq[Face], Seq[Joint])] = {
+  def readInput(inputSource: Source): Option[(Array[Double], Array[Double],
+                                             Seq[Array[Double]], Seq[Array[Double]])] = {
     val lines = inputSource.getLines().zipWithIndex.toVector
     val globalOriginLine = lines.head._1
+    val boundingBoxLine = lines.tail.head._1
 
     val globalOriginTokens = globalOriginLine.split(" ") map { x => Try(x.toDouble) }
     val errIndex = globalOriginTokens.indexWhere(_.isFailure)
@@ -24,10 +25,23 @@ object InputProcessor {
     val globalOrigin = globalOriginTokens map(_.get)
     val globalOriginArr = Array(globalOrigin(0), globalOrigin(1), globalOrigin(2))
 
-    val remainingLines = lines.tail
-    val transitionIndex = remainingLines.indexWhere(_._1 == "%")
+    val boundingBoxTokens = boundingBoxLine.split(" ") map {x => Try(x.toDouble) }
+    val bbErrIndex = boundingBoxTokens.indexWhere(_.isFailure)
+    if (bbErrIndex != -1) {
+      println(s"Error, Line 2, Token $errIndex: Invalid double found in definition of bounding box")
+      return None
+    } else if (boundingBoxTokens.length !=  6) {
+      println("Error, Line 2: Input file must specify domain as bounding box with 6 double values")
+      return None
+    }
+    val boundingBox = boundingBoxTokens map(_.get)
+    val boundingBoxArr = Array(boundingBox(0), boundingBox(1), boundingBox(2),
+                               boundingBox(3), boundingBox(4), boundingBox(5))
+
+    val remainingLines = lines.tail.tail
+    val transitionIndex = remainingLines.indexWhere(_._1.isEmpty)
     if (transitionIndex == -1) {
-      println("Error: Input file must contain \"%\" to mark transition from rock volume to joints")
+      println("Error: Input file must contain empty line to mark transition from rock volume to joints")
       return None
     }
 
@@ -42,33 +56,13 @@ object InputProcessor {
         return None
       }
       val doubleVals = tokens map(_.get)
-      if (doubleVals.length != 6) {
-        println(s"Error, Line $index: Each face of input rock volume is defined by values: a, b, c, d, phi and cohesion")
+      if (doubleVals.length != 5) {
+        println(s"Error, Line $index: Each face of input rock volume is defined by values: strike, dip, x, y, z")
         return None
       }
 
-      val a = doubleVals(0)
-      val b = doubleVals(1)
-      val c = doubleVals(2)
-      val d = doubleVals(3)
-      val phi = doubleVals(4)
-      val cohesion = doubleVals(5)
-
-      // Ensure that the normal vector is also a unit vector
-      val normVec = DenseVector[Double](a, b, c)
-      val unitNormVec = breeze.linalg.normalize(normVec)
-      val aPrime = unitNormVec(0)
-      val bPrime = unitNormVec(1)
-      val cPrime = unitNormVec(2)
-
-      // Eliminate any inward-pointing normals, and round extremely small distances to 0
-      if (math.abs(d) >= NumericUtils.EPSILON) {
-        Face(Array(aPrime, bPrime, cPrime), d, phi, cohesion)
-      } else if (d < -NumericUtils.EPSILON) {
-        Face(Array(-aPrime, -bPrime, -cPrime), -d, phi, cohesion)
-      } else {
-        Face(Array(aPrime, bPrime, cPrime), 0, phi, cohesion)
-      }
+      // These values will be passed to JointGenerator to find joints corresponding to rock volume
+      doubleVals
     }
 
     val joints = jointData.map { case (line, index) =>
@@ -79,45 +73,27 @@ object InputProcessor {
         return None
       }
       val doubleVals = tokens map(_.get)
-      if (doubleVals.length < 11) {
-        println(s"""Error, Line $index: Each input joint is defined by at least 11 values:
-                        3 For Normal Vector
-                        3 For Local Origin
-                        3 For Joint Center
-                        Phi
-                        Cohesion
-                        4 For Each Bounding Face (Optional)
+      if (doubleVals.length < 4) {
+        println(s"""Error, Line $index: Each input joint is defined by at least 4 values:
+                        Strike
+                        Dip
+                        Joint Spacing
+                        Persistence (0 for persistent, 1 for non-persistent)
+                        Mean and standard deviation of 4 primary parameters (Optional)
                 """
         )
         return None
       }
 
-      val (mandatoryValues, optionalValues) = doubleVals.splitAt(11)
-      if (optionalValues.length % 4 != 0) {
-        println(s"Error, Line $index: Bounding Faces for Block Require 4 Values Each")
+      val optionalValues = doubleVals.drop(4)
+      if (optionalValues.length != 0 && (optionalValues.length != 6 || optionalValues.length != 8)) {
+        println(s"Error, Line $index: If specifying distributions for joints, they must be specified for all parameters")
         return None
       }
 
-      // Ensure that the normal vector is also a unit vector
-      val normVec = DenseVector[Double](mandatoryValues(0), mandatoryValues(1), mandatoryValues(2))
-      val unitNormVec = breeze.linalg.normalize(normVec)
-
-      val localOrigin = Array(mandatoryValues(3), mandatoryValues(4), mandatoryValues(5))
-      val center = Array(mandatoryValues(6), mandatoryValues(7), mandatoryValues(8))
-      val phi = mandatoryValues(9)
-      val cohesion = mandatoryValues(10)
-
-      val shape = optionalValues grouped(4) map { group =>
-        // Again, we want to be sure the normal vector is also a unit vector
-        val normVec = DenseVector[Double](group(0), group(1), group(2))
-        val unitNormVec = breeze.linalg.normalize(normVec)
-        val d = group(3)
-        (Array(unitNormVec(0), unitNormVec(1), unitNormVec(2)), d)
-      }
-
-      Joint(Array(unitNormVec(0), unitNormVec(1), unitNormVec(2)), localOrigin, center, phi, cohesion, shape.toVector)
+      doubleVals
     }
 
-    Some((globalOriginArr, rockVolume, joints))
+    Some((globalOriginArr, boundingBoxArr, rockVolume, joints))
   }
 }
