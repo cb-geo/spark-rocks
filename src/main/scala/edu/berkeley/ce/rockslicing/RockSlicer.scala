@@ -14,8 +14,8 @@ object RockSlicer {
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       // Require all classes to be registered
       .set("spark.kryo.registrationRequired", "true")
-    // Register classes with Kryo using ClassRegistrator
-    conf.set("spark.kryo.registrator", "edu.berkeley.ce.rockslicing.ClassRegistrator")
+      // Register classes with Kryo using ClassRegistrator
+      .set("spark.kryo.registrator", "edu.berkeley.ce.rockslicing.ClassRegistrator")
 
     val sc = new SparkContext(conf)
     val parsedArgs = CommandReader.parseArguments(args)
@@ -33,7 +33,7 @@ object RockSlicer {
       // Error message will already be printed out by InputProcessor
       System.exit(-1)
     }
-    val (globalOrigin, rockVolume, joints) = inputOpt.get
+    val (globalOrigin, boundingBox, rockVolumeInputs, jointSetInputs) = inputOpt.get
     val starterBlocks = Seq(Block(globalOrigin, rockVolume))
 
     // Generate a list of initial blocks before RDD-ifying it

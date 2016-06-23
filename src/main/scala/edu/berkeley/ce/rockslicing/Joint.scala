@@ -13,8 +13,8 @@ object Joint {
     * @param center The center of the joint plane. This should be in global coordinates.
     * @return
     */
-  private def findDistance(normalVec: Array[Double], localOrigin: Array[Double],
-                            center: Array[Double]): Double = {
+  def findDistance(normalVec: Array[Double], localOrigin: Array[Double],
+                           center: Array[Double]): Double = {
     assert(normalVec.length == 3 && localOrigin.length == 3 && center.length == 3)
 
     val w = DenseVector.zeros[Double](3)
@@ -224,16 +224,13 @@ object Joint {
   *        This avoids recalculation of a known dip angle.
   * @param dipDirectionParam An optional parameter that can be used to specify the dip direction for
   *        the joint. This avoids recalculation of a known dip direction.
-  * @param processorJoint Parameter that identifies joint as being artificial joint introduced as part
-  *                        of load balancing
   */
 @SerialVersionUID(1L)
 case class Joint(normalVec: Array[Double], localOrigin: Array[Double],
                  center: Array[Double], phi: Double, cohesion: Double,
                  shape: Vector[(Array[Double],Double)], dipAngleParam: Option[Double]=None,
                  dipDirectionParam: Option[Double]=None,
-                 boundingSphereParam: Option[(Array[Double],Double)]=null,
-                 processorJoint: Boolean=false) extends Serializable {
+                 boundingSphereParam: Option[(Array[Double],Double)]=null) extends Serializable {
   assert(normalVec.length == 3 && localOrigin.length == 3 && center.length == 3)
 
   val a = normalVec(0)
@@ -314,7 +311,7 @@ case class Joint(normalVec: Array[Double], localOrigin: Array[Double],
   def updateJoint(blockOrigin: Array[Double]): Joint = {
     assert(blockOrigin.length == 3)
     Joint(normalVec, blockOrigin, center, phi, cohesion, shape, Some(dipAngle),
-      Some(dipDirection), boundingSphere, processorJoint)
+      Some(dipDirection), boundingSphere)
   }
 
   /**
@@ -345,7 +342,6 @@ case class Joint(normalVec: Array[Double], localOrigin: Array[Double],
         this.a == j.a && this.b == j.b && this.c == j.c &&
         this.centerX == j.centerX && this.centerY == j.centerY && this.centerZ == j.centerZ &&
         this.dipAngle == j.dipAngle && this.dipDirection == j.dipDirection &&
-        this.processorJoint == j.processorJoint &&
         ((this.shape zip j.shape) forall { case ((norm1, d1), (norm2, d2)) =>
            (norm1 sameElements norm2) && d1 == d2
         })
@@ -362,7 +358,6 @@ case class Joint(normalVec: Array[Double], localOrigin: Array[Double],
     hcBuilder.append(centerZ)
     hcBuilder.append(dipAngle)
     hcBuilder.append(dipDirection)
-    hcBuilder.append(processorJoint)
 
     shape foreach { case (normVec, dist) =>
       hcBuilder.append(normVec(0)).append(normVec(1)).append(normVec(2))

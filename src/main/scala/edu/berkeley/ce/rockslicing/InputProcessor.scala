@@ -1,7 +1,5 @@
 package edu.berkeley.ce.rockslicing
 
-import breeze.linalg.DenseVector
-
 import scala.io.Source
 import scala.util.Try
 
@@ -56,8 +54,9 @@ object InputProcessor {
         return None
       }
       val doubleVals = tokens map(_.get)
-      if (doubleVals.length != 5) {
-        println(s"Error, Line $index: Each face of input rock volume is defined by values: strike, dip, x, y, z")
+      if (doubleVals.length != 7) {
+        println(s"Error, Line $index: Each face of input rock volume is defined by values: strike, dip, x, y, z,"+
+        " phi and cohesion")
         return None
       }
 
