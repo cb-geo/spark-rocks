@@ -72,21 +72,24 @@ object InputProcessor {
         return None
       }
       val doubleVals = tokens map(_.get)
-      if (doubleVals.length < 4) {
+      if (doubleVals.length < 6) {
         println(s"""Error, Line $index: Each input joint is defined by at least 4 values:
                         Strike
                         Dip
                         Joint Spacing
                         Persistence (0 for persistent, 1 for non-persistent)
+                        Phi
+                        Cohesion
                         Mean and standard deviation of 4 primary parameters (Optional)
                 """
         )
         return None
       }
 
-      val optionalValues = doubleVals.drop(4)
+      val optionalValues = doubleVals.drop(6)
       if (optionalValues.length != 0 && (optionalValues.length != 6 || optionalValues.length != 8)) {
-        println(s"Error, Line $index: If specifying distributions for joints, they must be specified for all parameters")
+        println(s"Error, Line $index: If specifying distributions for joints, they must be specified for strike, "+
+          "dip, spacing and, if relevant, persistence.")
         return None
       }
 
