@@ -2,7 +2,6 @@ package edu.berkeley.ce.rockslicing
 
 import breeze.linalg
 import breeze.linalg.DenseVector
-
 import scala.annotation.tailrec
 
 object JointGenerator {
@@ -80,9 +79,9 @@ object JointGenerator {
       }
     }
     if (masterJoints.length != joints.length) {
-      return None
+      None
     } else {
-      return Some(masterJoints)
+      Some(masterJoints)
     }
   }
 }
@@ -114,41 +113,87 @@ class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double], ro
     System.exit(-1)
   }
 
+  val jointSets = generateJointSets(jointSetData)
+
+  /**
+    * Generates joint sets for each of the input joint sets
+    *
+    * @param jointSetData Array of arrays containing the input data representing joint sets. The inputs in each array
+    *                     are strike, dip, joint spacing, persistence, phi, cohesion and optional stochastic parameters
+    * @return Seq of joints for each input joint set
+    */
   def generateJointSets(jointSetData: Array[Array[Double]]): Seq[Seq[Joint]] = {
     val jointTuple = masterJoints.zip(jointSetData)
+    val (deltaX, deltaY, deltaZ) = upperRightCorner.zip(lowerLeftCorner) map { case (upper, lower) =>
+      upper - lower
+    }
+    val lowerCorners = Array(lowerLeftCorner,
+      Array(lowerLeftCorner(0) + deltaX, lowerLeftCorner(1), lowerLeftCorner(2)),
+      Array(lowerLeftCorner(0) + deltaX, lowerLeftCorner(1) + deltaY, lowerLeftCorner(2)),
+      Array(lowerLeftCorner(0), lowerLeftCorner(1) + deltaY, lowerLeftCorner(2))
+    )
+
+    val upperCorners = lowerCorners.map(_ + deltaZ)
+    // Diagonal vectors of bounding box
+    val diagonalVectors = upperCorners.reverse.zip(lowerCorners) map { case (upper, lower) =>
+        DenseVector[Double](upper(0) - lower(0), upper(1) - lower(1), upper(2) - lower(2))
+    }
 
     jointTuple map { case (joint, jointData) =>
       if (jointData(3) == 0) {
-        val cutoff = Array(upperRightCorner(0) - lowerLeftCorner(0),
-          upperRightCorner(1) - lowerLeftCorner(1),
-          upperRightCorner(2) - lowerLeftCorner(2))
-        makePersistentJointSet(joint, jointData, cutoff, Seq.empty[Joint])
+        // Calculate dot product of each diagonal vector with joint normal
+        val diagDotProducts = diagonalVectors map { diagonal =>
+          math.abs(diagonal dot DenseVector[Double](joint.a, joint.b, joint.c))
+        }
+        // Use diagonal that is most parallel to joint normal - this ensures that joints generated will populate
+        // entire bounding box
+        val bestDiagonal = diagonalVectors(diagDotProducts.indexOf(diagDotProducts.max))
+        makePersistentJointSet(joint, jointData, bestDiagonal, lowerLeftCorner, Seq.empty[Joint])
       } else {
         makeNonPersistentJointSet(joint, jointData)
       }
     }
   }
 
+  /**
+    * Generates a sequence of joints spanning the entire bounding box. The sequence of joints represents
+    * a single joint set.
+    *
+    * @param joint Joint that is representative of the joint set - properties of the joint are the mean values.
+    * @param jointData Properties of the joint set - strike, dip, joint spacing, persistence, phi, cohesion and
+    *                  optional stochastic parameters
+    * @param diagonalVector Diagonal vector of bounding box along which joints will be generated
+    * @param center Center of joint
+    * @param jointSet Seq of joints representing the joint set. This will be an empty Seq when the function is
+    *                 first called.
+    * @return Seq of joints representing the joint set
+    */
   @tailrec
-  def makePersistentJointSet(joint: Joint, jointData: Array[Double], cutoff: Array[Double],
-                             jointSet: Seq[Joint]): Seq[Joint] = {
-    // Check for joints that have normal vector parallel to global axes; iteration constraints modified
-    // accordingly to avoid infinite recursion
-    if (math.abs(joint.normalVec(0) - 1.0) < NumericUtils.EPSILON ||
-      math.abs(joint.normalVec(1) - 1.0) < NumericUtils.EPSILON ||
-      math.abs(joint.normalVec(2) - 1.0) < NumericUtils.EPSILON) {
-      // Still within bounding box
-      if (cutoff(0) >= lowerLeftCorner(0) &&
-        cutoff(1) >= lowerLeftCorner(1) &&
-        cutoff(2) >= lowerLeftCorner(2) &&
-        cutoff(0) <= upperRightCorner(0) &&
-        cutoff(1) <= upperRightCorner(1) &&
-        cutoff(2) <= upperRightCorner(2)) {
-        // CONTINUE HERE, need to think about better way to determine iteration direction.
-      }
+  private def makePersistentJointSet(joint: Joint, jointData: Array[Double], diagonalVector: DenseVector[Double],
+                                     center: Array[Double], jointSet: Seq[Joint]): Seq[Joint] = {
+    // Check if center is still located within bounding box
+    if (center(0) < upperRightCorner(0) &&
+      center(1) < upperRightCorner(1) &&
+      center(2) < upperRightCorner(2)) {
+      // Create new joint with updated center
+      val newJoint = Joint(Array(joint.a, joint.b, joint.c), origin, center, joint.phi, joint.cohesion,
+        joint.shape, joint.dipAngleParam, joint.dipDirectionParam)
+      // Update center based on joint spacing and diagonal vector
+      val centerIncrement = math.abs(diagonalVector dot DenseVector[Double](joint.a, joint.b, joint.c)) * jointData(2)
+      val newCenter = center.map(_ + centerIncrement)
+      makePersistentJointSet(joint, jointData, diagonalVector, newCenter, newJoint +: jointSet)
+    } else {
+      jointSet
     }
   }
 
+  /**
+    * This function is not yet implemented. Placeholder until verifying current load balance logic works.
+    *
+    * @param joint
+    * @param jointData
+    * @return
+    */
   def makeNonPersistentJointSet(joint: Joint, jointData: Array[Double]): Seq[Joint] = {
     // Still needs to be implemented, but will require stochastic generator
     println("ERROR: Non-persistent joint generator not yet implemented")
