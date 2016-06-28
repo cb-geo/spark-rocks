@@ -124,16 +124,20 @@ class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double], ro
     */
   def generateJointSets(jointSetData: Array[Array[Double]]): Seq[Seq[Joint]] = {
     val jointTuple = masterJoints.zip(jointSetData)
-    val (deltaX, deltaY, deltaZ) = upperRightCorner.zip(lowerLeftCorner) map { case (upper, lower) =>
-      upper - lower
-    }
+    
+    val deltaX = upperRightCorner(0) - lowerLeftCorner(0)
+    val deltaY = upperRightCorner(1) - lowerLeftCorner(1)
+    val deltaZ = upperRightCorner(2) - lowerLeftCorner(2)
+
     val lowerCorners = Array(lowerLeftCorner,
       Array(lowerLeftCorner(0) + deltaX, lowerLeftCorner(1), lowerLeftCorner(2)),
       Array(lowerLeftCorner(0) + deltaX, lowerLeftCorner(1) + deltaY, lowerLeftCorner(2)),
       Array(lowerLeftCorner(0), lowerLeftCorner(1) + deltaY, lowerLeftCorner(2))
     )
 
-    val upperCorners = lowerCorners.map(_ + deltaZ)
+    val upperCorners = lowerCorners map { vertex =>
+      Array(vertex(0) + deltaZ, vertex(1) + deltaZ, vertex(2) + deltaZ)
+    }
     // Diagonal vectors of bounding box
     val diagonalVectors = upperCorners.reverse.zip(lowerCorners) map { case (upper, lower) =>
         DenseVector[Double](upper(0) - lower(0), upper(1) - lower(1), upper(2) - lower(2))

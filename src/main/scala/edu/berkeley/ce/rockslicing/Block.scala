@@ -87,7 +87,7 @@ case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesio
       case f: Face =>
         this.a == f.a && this.b == f.b && this.c == f.c &&
         this.distance == f.distance && this.phi == f.phi &&
-        this.cohesion == f.cohesion &&
+        this.cohesion == f.cohesion
 
       case _ => false
     }
