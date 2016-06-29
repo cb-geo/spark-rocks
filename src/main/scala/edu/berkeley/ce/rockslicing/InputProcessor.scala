@@ -5,8 +5,8 @@ import scala.util.Try
 
 object InputProcessor {
   // Processes input file: Add rock volume faces and joints to respective input list
-  def readInput(inputSource: Source): Option[(Array[Double], Array[Double],
-                                             Seq[Array[Double]], Seq[Array[Double]])] = {
+  def readInput(inputSource: Source): Option[ (Array[Double], Array[Double],
+    Vector[Array[Double]], Vector[Array[Double]]) ] = {
     val lines = inputSource.getLines().zipWithIndex.toVector
     val globalOriginLine = lines.head._1
     val boundingBoxLine = lines.tail.head._1
@@ -73,21 +73,22 @@ object InputProcessor {
       }
       val doubleVals = tokens map(_.get)
       if (doubleVals.length < 6) {
-        println(s"""Error, Line $index: Each input joint is defined by at least 4 values:
+        println(s"""Error, Line $index: Each input joint is defined by at least 6 values:
                         Strike
                         Dip
                         Joint Spacing
-                        Persistence (0 for persistent, 1 for non-persistent)
+                        Persistence (Input as percentage, 100 for persistent joints)
                         Phi
                         Cohesion
-                        Mean and standard deviation of 4 primary parameters (Optional)
+                        Optional input: Standard deviation of 4 geometric parameters. Standard deviation
+                        should not be specified for persistence when set to 100%
                 """
         )
         return None
       }
 
       val optionalValues = doubleVals.drop(6)
-      if (optionalValues.length != 0 && (optionalValues.length != 6 || optionalValues.length != 8)) {
+      if (optionalValues.length != 0 && optionalValues.length != 3 && optionalValues.length != 4) {
         println(s"Error, Line $index: If specifying distributions for joints, they must be specified for strike, "+
           "dip, spacing and, if relevant, persistence.")
         return None

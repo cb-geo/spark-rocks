@@ -13,8 +13,8 @@ object JointGenerator {
     * @return Array that specifies the x, y and z components of the joint plane
     */
   private def findJointNormal(strike: Double, dip: Double): Array[Double] = {
-    val strikeRadians = strike * math.Pi / 180.0
-    val dipRadians = dip * math.Pi / 180.0
+    val strikeRadians = strike.toRadians
+    val dipRadians = dip.toRadians
     val strikeVector = DenseVector[Double](math.cos(-strikeRadians), math.sin(-strikeRadians), 0.0)
     // If joint is vertical, dip vector will point along negative z-axis
     if (math.abs(dip - 90.0) < NumericUtils.EPSILON) {
@@ -22,8 +22,8 @@ object JointGenerator {
       val jointNormal = linalg.normalize(linalg.cross(strikeVector, dipVector))
       Array(jointNormal(0), jointNormal(1), jointNormal(2))
     } else {
-      val dipVector = DenseVector[Double](math.cos(-(strikeRadians + math.Pi / 2.0)),
-        math.sin(-(strikeRadians + math.Pi / 2.0)),
+      val dipVector = DenseVector[Double](math.cos(dipRadians) * math.cos(-(strikeRadians + math.Pi / 2.0)),
+        math.cos(dipRadians) * math.sin(-(strikeRadians + math.Pi / 2.0)),
         -math.sin(dipRadians))
       val jointNormal = linalg.normalize(linalg.cross(strikeVector, dipVector))
       Array(jointNormal(0), jointNormal(1), jointNormal(2))
@@ -100,7 +100,7 @@ object JointGenerator {
   * @param jointSetData Array of arrays containing the input data representing joint sets. The inputs in each array
   *                     are strike, dip, joint spacing, persistence, phi, cohesion and optional stochastic parameters
   */
-class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double], rockVolumeData: Array[Array[Double]],
+case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double], rockVolumeData: Array[Array[Double]],
                      jointSetData: Array[Array[Double]]) {
   val origin = globalOrigin
   val lowerLeftCorner = Array(boundingBox(0), boundingBox(1), boundingBox(2))
@@ -109,9 +109,9 @@ class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double], ro
   val masterJoints = JointGenerator.findMasterJoints(globalOrigin, lowerLeftCorner, jointSetData).get
 
   if (masterJoints.isEmpty) {
-    // Error message will already be printed by JointGenerator.findMasterJoints
-    System.exit(-1)
+    throw new IllegalArgumentException("ERROR: Stochastic joint generation not yet implemented")
   }
+
 
   val jointSets = generateJointSets(jointSetData)
 
@@ -144,7 +144,7 @@ class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double], ro
     }
 
     jointTuple map { case (joint, jointData) =>
-      if (jointData(3) == 0) {
+      if (jointData(3) == 100) {
         // Calculate dot product of each diagonal vector with joint normal
         val diagDotProducts = diagonalVectors map { diagonal =>
           math.abs(diagonal dot DenseVector[Double](joint.a, joint.b, joint.c))
