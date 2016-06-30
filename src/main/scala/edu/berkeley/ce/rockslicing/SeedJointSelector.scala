@@ -9,6 +9,11 @@ import scala.annotation.tailrec
 object SeedJointSelector {
 
   def findSeedJoints(jointSet: Seq[Joint], rockVolume: Block, numProcessors: Integer): Option[Seq[Joint]] = {
+    if (jointSet.length < numProcessors - 1) {
+      println(s"Error: Not enough joints to generate required number of seed joints. ${jointSet.length} joints but"+
+      s"$numProcessors processors. Try using less processors.")
+      return None
+    }
     val volumePerProc = rockVolume.volume / numProcessors
     val seedJoints = cycleJointSet(jointSet, rockVolume, volumePerProc, Seq.empty[Joint])
     if (seedJoints.length != numProcessors) {
@@ -22,7 +27,7 @@ object SeedJointSelector {
   @tailrec
   private def cycleJointSet(jointSet: Seq[Joint], initialBlock: Block, volumePerProcessor: Double,
                             selectedJoints: Seq[Joint]): Seq[Joint] = {
-    if (jointSet.length > 1) {
+//    if (jointSet.length > 1) {
       // More than 1 joint in input joint set
       val jointOption = testVolumes(jointSet.head, jointSet.tail.head, initialBlock, volumePerProcessor)
 
@@ -40,28 +45,28 @@ object SeedJointSelector {
           cycleJointSet(jointSet.tail, remainingVolume, volumePerProcessor, seedJoint +: selectedJoints)
         }
       }
-    } else {
-      // Only one joint in input joint set
-      val lastBlocks = initialBlock cut jointSet.head
-      val nonRedundantLastBlocks = lastBlocks map { case block @ Block(blockCenter, _, _) =>
-          Block(blockCenter, block.nonRedundantFaces)
-      }
-      val sortedLastBlocks = nonRedundantLastBlocks.sortWith(_.volume < _.volume)
-      if (sortedLastBlocks.length == 1) {
-        // Joint does not intersect volume
-        selectedJoints
-      } else {
-        // Joint intersect volume
-        if (sortedLastBlocks(1).volume <= volumePerProcessor) {
-          // Remaining volume small enough, return
-          jointSet.head +: selectedJoints
-        } else {
-          // Remaining volume not small enough, return anyway
-          println("ERROR: Remaining volume is still too large")
-          selectedJoints
-        }
-      }
-    }
+//    } else {
+//      // Only one joint in input joint set
+//      val lastBlocks = initialBlock cut jointSet.head
+//      val nonRedundantLastBlocks = lastBlocks map { case block @ Block(blockCenter, _, _) =>
+//          Block(blockCenter, block.nonRedundantFaces)
+//      }
+//      val sortedLastBlocks = nonRedundantLastBlocks.sortWith(_.volume < _.volume)
+//      if (sortedLastBlocks.length == 1) {
+//        // Joint does not intersect volume
+//        selectedJoints
+//      } else {
+//        // Joint intersect volume
+//        if (sortedLastBlocks(1).volume <= volumePerProcessor) {
+//          // Remaining volume small enough, return
+//          jointSet.head +: selectedJoints
+//        } else {
+//          // Remaining volume not small enough, return anyway
+//          println("ERROR: Remaining volume is still too large")
+//          selectedJoints
+//        }
+//      }
+//    }
   }
 
   private def testVolumes(joint1: Joint, joint2: Joint, initialBlock: Block,
