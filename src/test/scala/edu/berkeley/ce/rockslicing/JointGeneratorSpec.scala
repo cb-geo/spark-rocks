@@ -1,7 +1,6 @@
 package edu.berkeley.ce.rockslicing
 
 import org.scalatest.FunSuite
-
 import scala.math.sqrt
 
 class JointGeneratorSpec extends FunSuite {
@@ -229,8 +228,8 @@ class JointGeneratorSpec extends FunSuite {
   }
 
   test("Generated joint set should be x-z plane, spaced 0.5 apart") {
-    val globalOrigin = Array[Double](1.0, 1.0, 1.0)
-    val boundingBox = Array[Double](-1.0, -1.0, -1.0, 2.0, 2.0, 2.0)
+    val globalOrigin = Array[Double](0.5, 0.5, 0.5)
+    val boundingBox = Array[Double](0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
     val rockVolume = Array[Array[Double]](
       Array(0.0, 90.0, 0.0, 0.0, 0.0, 30.0, 0.0),
       Array(0.0, 90.0, 0.0, 2.0, 0.0, 30.0, 0.0),
@@ -243,115 +242,107 @@ class JointGeneratorSpec extends FunSuite {
       Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
-    val expectedOrigin = Array[Double](1.0, 1.0, 1.0)
-    val expectedLowerLeftCorner = Array[Double](-1.0, -1.0, -1.0)
-    val expectedUpperRightCorner = Array[Double](2.0, 2.0, 2.0)
-
-    val expectedRockVolume = Seq[Face](
-      Face(Array(0.0, -1.0, 0.0), 1.0, 30.0, 0.0),
-      Face(Array(0.0, 1.0, 0.0), 1.0, 30.0, 0.0),
-      Face(Array(-1.0, 0.0, 0.0), 1.0, 30.0, 0.0),
-      Face(Array(1.0, 0.0, 0.0), 1.0, 30.0, 0.0),
-      Face(Array(0.0, 0.0, -1.0), 1.0, 30.0, 0.0),
-      Face(Array(0.0, 0.0, 1.0), 1.0, 30.0, 0.0)
-    )
+    val expectedOrigin = Array[Double](0.5, 0.5, 0.5)
+    val expectedLowerLeftCorner = Array[Double](0.0, 0.0, 0.0)
+    val expectedUpperRightCorner = Array[Double](1.0, 1.0, 1.0)
 
     val expectedJoints = Seq[Seq[Joint]](
-      Seq[Joint](Joint(Array(0.0, -1.0, 0.0), Array(1.0, 1.0, 1.0), Array(-1.0, 1.0, -1.0), phi = 30.0,
-        cohesion = 0.0, shape = Vector.empty))
-        )
+      Seq[Joint](
+        Joint(Array(0.0, 1.0, 0.0), Array(0.5, 0.5, 0.5), Array(1.0, 1.0, 1.0), phi = 30.0,
+          cohesion = 0.0, shape = Vector.empty),
+        Joint(Array(0.0, 1.0, 0.0), Array(0.5, 0.5, 0.5), Array(0.5, 0.5, 0.5), phi = 30.0,
+          cohesion = 0.0, shape = Vector.empty),
+        Joint(Array(0.0, 1.0, 0.0), Array(0.5, 0.5, 0.5), Array(0.0, 0.0, 0.0), phi = 30.0,
+          cohesion = 0.0, shape = Vector.empty))
+    )
 
-    println("These are the GENERATED joints:")
-    generatedInput.jointSets.head.foreach{ joint =>
-      println(s"NormalVec: ${joint.a}, ${joint.b}, ${joint.c}")
-      println(s"Center: ${joint.centerX}, ${joint.centerY}, ${joint.centerZ}")
-      println(s"Origin: ${joint.localX}, ${joint.localY}, ${joint.localZ}")
-      println(s"Distance: ${joint.d}")
-      println(s"Dip: ${joint.dipAngle}")
-      println(s"Dip direction: ${joint.dipDirection}")
-      println(s"Phi: ${joint.phi}")
-      println(s"Cohesion: ${joint.cohesion}")
-    }
-
-    println("\nThese are the EXPECTED joints:")
-    expectedJoints.head.foreach { joint =>
-      println(s"NormalVec: ${joint.a}, ${joint.b}, ${joint.c}")
-      println(s"Center: ${joint.centerX}, ${joint.centerY}, ${joint.centerZ}")
-      println(s"Origin: ${joint.localX}, ${joint.localY}, ${joint.localZ}")
-      println(s"Distance: ${joint.d}")
-      println(s"Dip: ${joint.dipAngle}")
-      println(s"Dip direction: ${joint.dipDirection}")
-      println(s"Phi: ${joint.phi}")
-      println(s"Cohesion: ${joint.cohesion}")
+    val jointComparison = expectedJoints.head.zip(generatedInput.jointSets.head) map { case (joint1, joint2) =>
+      compareJoints(joint1, joint2)
     }
 
     assert((expectedOrigin sameElements generatedInput.origin) &&
       (expectedLowerLeftCorner sameElements generatedInput.lowerLeftCorner) &&
       (expectedUpperRightCorner sameElements generatedInput.upperRightCorner) &&
-      expectedRockVolume == generatedInput.rockVolume.map(_.roundToTolerance()) &&
-      expectedJoints == generatedInput.jointSets)
+      !jointComparison.contains(false))
   }
-  //  test("Testing constructor") {
-//    val globalOrigin = Array[Double](1.0, 1.0, 1.0)
-//    val boundingBox = Array[Double](-1.0, -1.0, -1.0, 2.0, 2.0, 2.0)
-//    val rockVolume = Array[Array[Double]](
-//      Array(0.0, 90.0, 0.0, 0.0, 0.0, 30.0, 0.0),
-//      Array(0.0, 90.0, 0.0, 2.0, 0.0, 30.0, 0.0),
-//      Array(90.0, 90.0, 0.0, 0.0, 0.0, 30.0, 0.0),
-//      Array(90.0, 90.0, 2.0, 0.0, 0.0, 30.0, 0.0),
-//      Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0),
-//      Array(0.0, 0.0, 0.0, 0.0, 2.0, 30.0, 0.0)
-//    )
-//    val jointData = Array[Array[Double]](
-//      Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
-//    )
-//    val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
-//    val expectedOrigin = Array[Double](1.0, 1.0, 1.0)
-//    val expectedLowerLeftCorner = Array[Double](-1.0, -1.0, -1.0)
-//    val expectedUpperRightCorner = Array[Double](2.0, 2.0, 2.0)
-//
-//    val expectedRockVolume = Seq[Face](
-//      Face(Array(0.0, -1.0, 0.0), 1.0, 30.0, 0.0),
-//      Face(Array(0.0, 1.0, 0.0), 1.0, 30.0, 0.0),
-//      Face(Array(-1.0, 0.0, 0.0), 1.0, 30.0, 0.0),
-//      Face(Array(1.0, 0.0, 0.0), 1.0, 30.0, 0.0),
-//      Face(Array(0.0, 0.0, -1.0), 1.0, 30.0, 0.0),
-//      Face(Array(0.0, 0.0, 1.0), 1.0, 30.0, 0.0)
-//    )
-//
-//    val expectedJoints = Seq[Seq[Joint]](
-//      Seq[Joint](Joint(Array(0.0, -1.0, 0.0), Array(1.0, 1.0, 1.0), Array(-1.0, 1.0, -1.0), phi = 30.0,
-//        cohesion = 0.0, shape = Vector.empty))
-//    )
-//
-//    println("These are the GENERATED joints:")
-//    generatedInput.jointSets.head.foreach{ joint =>
-//      println(s"NormalVec: ${joint.a}, ${joint.b}, ${joint.c}")
-//      println(s"Center: ${joint.centerX}, ${joint.centerY}, ${joint.centerZ}")
-//      println(s"Origin: ${joint.localX}, ${joint.localY}, ${joint.localZ}")
-//      println(s"Distance: ${joint.d}")
-//      println(s"Dip: ${joint.dipAngle}")
-//      println(s"Dip direction: ${joint.dipDirection}")
-//      println(s"Phi: ${joint.phi}")
-//      println(s"Cohesion: ${joint.cohesion}")
-//    }
-//
-//    println("\nThese are the EXPECTED joints:")
-//    expectedJoints.head.foreach { joint =>
-//      println(s"NormalVec: ${joint.a}, ${joint.b}, ${joint.c}")
-//      println(s"Center: ${joint.centerX}, ${joint.centerY}, ${joint.centerZ}")
-//      println(s"Origin: ${joint.localX}, ${joint.localY}, ${joint.localZ}")
-//      println(s"Distance: ${joint.d}")
-//      println(s"Dip: ${joint.dipAngle}")
-//      println(s"Dip direction: ${joint.dipDirection}")
-//      println(s"Phi: ${joint.phi}")
-//      println(s"Cohesion: ${joint.cohesion}")
-//    }
-//
-//    assert((expectedOrigin sameElements generatedInput.origin) &&
-//      (expectedLowerLeftCorner sameElements generatedInput.lowerLeftCorner) &&
-//      (expectedUpperRightCorner sameElements generatedInput.upperRightCorner) &&
-//      expectedRockVolume == generatedInput.rockVolume.map(_.roundToTolerance()) &&
-//      expectedJoints == generatedInput.jointSets)
-//  }
+
+  test("Generated joint set should be pi planes, spaced sqrt(3.0)/2.0 apart") {
+    val globalOrigin = Array[Double](0.5, 0.5, 0.5)
+    val boundingBox = Array[Double](0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+    val rockVolume = Array[Array[Double]](
+      Array(0.0, 90.0, 0.0, 0.0, 0.0, 30.0, 0.0),
+      Array(0.0, 90.0, 0.0, 2.0, 0.0, 30.0, 0.0),
+      Array(90.0, 90.0, 0.0, 0.0, 0.0, 30.0, 0.0),
+      Array(90.0, 90.0, 2.0, 0.0, 0.0, 30.0, 0.0),
+      Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0),
+      Array(0.0, 0.0, 0.0, 0.0, 2.0, 30.0, 0.0)
+    )
+    val jointData = Array[Array[Double]](
+      // Pi-plane in terms of strike and dip with sqrt(3.0)/2.0 spacing
+      Array(225.0, 54.73561032, 0.866025404, 100.0, 30.0, 0.0)
+    )
+    val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
+    val expectedOrigin = Array[Double](0.5, 0.5, 0.5)
+    val expectedLowerLeftCorner = Array[Double](0.0, 0.0, 0.0)
+    val expectedUpperRightCorner = Array[Double](1.0, 1.0, 1.0)
+
+    val expectedJoints = Seq[Seq[Joint]](
+      Seq[Joint](
+        Joint(Array(-1.0/sqrt(3.0), -1.0/sqrt(3.0), -1.0/sqrt(3.0)), Array(0.5, 0.5, 0.5),
+          Array(1.0, 1.0, 1.0), phi = 30.0, cohesion = 0.0, shape = Vector.empty),
+        Joint(Array(-1.0/sqrt(3.0), -1.0/sqrt(3.0), -1.0/sqrt(3.0)), Array(0.5, 0.5, 0.5),
+          Array(0.5, 0.5, 0.5), phi = 30.0, cohesion = 0.0, shape = Vector.empty),
+        Joint(Array(-1.0/sqrt(3.0), -1.0/sqrt(3.0), -1.0/sqrt(3.0)), Array(0.5, 0.5, 0.5),
+          Array(0.0, 0.0, 0.0), phi = 30.0, cohesion = 0.0, shape = Vector.empty))
+    )
+
+    val jointComparison = expectedJoints.head.zip(generatedInput.jointSets.head) map { case (joint1, joint2) =>
+      compareJoints(joint1, joint2)
+    }
+
+    assert((expectedOrigin sameElements generatedInput.origin) &&
+      (expectedLowerLeftCorner sameElements generatedInput.lowerLeftCorner) &&
+      (expectedUpperRightCorner sameElements generatedInput.upperRightCorner) &&
+      !jointComparison.contains(false))
+  }
+
+  test("Generated joint set should be pi planes rotated 90 degrees CCW, spaced sqrt(3.0)/2.0 apart") {
+    val globalOrigin = Array[Double](0.5, 0.5, 0.5)
+    val boundingBox = Array[Double](0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+    val rockVolume = Array[Array[Double]](
+      Array(0.0, 90.0, 0.0, 0.0, 0.0, 30.0, 0.0),
+      Array(0.0, 90.0, 0.0, 2.0, 0.0, 30.0, 0.0),
+      Array(90.0, 90.0, 0.0, 0.0, 0.0, 30.0, 0.0),
+      Array(90.0, 90.0, 2.0, 0.0, 0.0, 30.0, 0.0),
+      Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0),
+      Array(0.0, 0.0, 0.0, 0.0, 2.0, 30.0, 0.0)
+    )
+    val jointData = Array[Array[Double]](
+      // Pi-plane in terms of strike and dip with sqrt(3.0)/2.0 spacing
+      Array(135.0, 54.73561032, 0.866025404, 100.0, 30.0, 0.0)
+    )
+    val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
+    val expectedOrigin = Array[Double](0.5, 0.5, 0.5)
+    val expectedLowerLeftCorner = Array[Double](0.0, 0.0, 0.0)
+    val expectedUpperRightCorner = Array[Double](1.0, 1.0, 1.0)
+
+    val expectedJoints = Seq[Seq[Joint]](
+      Seq[Joint](
+        Joint(Array(1.0/sqrt(3.0), -1.0/sqrt(3.0), -1.0/sqrt(3.0)), Array(0.5, 0.5, 0.5),
+          Array(0.0, 1.0, 1.0), phi = 30.0, cohesion = 0.0, shape = Vector.empty),
+        Joint(Array(1.0/sqrt(3.0), -1.0/sqrt(3.0), -1.0/sqrt(3.0)), Array(0.5, 0.5, 0.5),
+          Array(0.5, 0.5, 0.5), phi = 30.0, cohesion = 0.0, shape = Vector.empty),
+        Joint(Array(1.0/sqrt(3.0), -1.0/sqrt(3.0), -1.0/sqrt(3.0)), Array(0.5, 0.5, 0.5),
+          Array(1.0, 0.0, 0.0), phi = 30.0, cohesion = 0.0, shape = Vector.empty))
+    )
+
+    val jointComparison = expectedJoints.head.zip(generatedInput.jointSets.head) map { case (joint1, joint2) =>
+      compareJoints(joint1, joint2)
+    }
+
+    assert((expectedOrigin sameElements generatedInput.origin) &&
+      (expectedLowerLeftCorner sameElements generatedInput.lowerLeftCorner) &&
+      (expectedUpperRightCorner sameElements generatedInput.upperRightCorner) &&
+      !jointComparison.contains(false))
+  }
 }
