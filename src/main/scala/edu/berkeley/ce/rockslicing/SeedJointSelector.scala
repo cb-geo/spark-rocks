@@ -29,7 +29,7 @@ object SeedJointSelector {
   @tailrec
   private def cycleJointSet(jointSet: Seq[Joint], initialBlock: Block, volumePerProcessor: Double,
                             selectedJoints: Seq[Joint]): Seq[Joint] = {
-//    if (jointSet.length > 1) {
+    if (jointSet.length > 1) {
       // More than 1 joint in input joint set
       val jointOption = testVolumes(jointSet.head, jointSet.tail.head, initialBlock, volumePerProcessor)
 
@@ -47,28 +47,28 @@ object SeedJointSelector {
           cycleJointSet(jointSet.tail, remainingVolume, volumePerProcessor, seedJoint +: selectedJoints)
         }
       }
-//    } else {
-//      // Only one joint in input joint set
-//      val lastBlocks = initialBlock cut jointSet.head
-//      val nonRedundantLastBlocks = lastBlocks map { case block @ Block(blockCenter, _, _) =>
-//          Block(blockCenter, block.nonRedundantFaces)
-//      }
-//      val sortedLastBlocks = nonRedundantLastBlocks.sortWith(_.volume < _.volume)
-//      if (sortedLastBlocks.length == 1) {
-//        // Joint does not intersect volume
-//        selectedJoints
-//      } else {
-//        // Joint intersect volume
-//        if (sortedLastBlocks(1).volume <= volumePerProcessor) {
-//          // Remaining volume small enough, return
-//          jointSet.head +: selectedJoints
-//        } else {
-//          // Remaining volume not small enough, return anyway
-//          println("ERROR: Remaining volume is still too large")
-//          selectedJoints
-//        }
-//      }
-//    }
+    } else {
+      // Only one joint in input joint set
+      val lastBlocks = initialBlock cut jointSet.head
+      val nonRedundantLastBlocks = lastBlocks map { case block @ Block(blockCenter, _, _) =>
+          Block(blockCenter, block.nonRedundantFaces)
+      }
+      val sortedLastBlocks = nonRedundantLastBlocks.sortWith(_.volume < _.volume)
+      if (sortedLastBlocks.length == 1) {
+        // Joint does not intersect volume
+        selectedJoints
+      } else {
+        // Joint intersect volume
+        if (sortedLastBlocks(1).volume <= volumePerProcessor) {
+          // Remaining volume small enough, return
+          jointSet.head +: selectedJoints
+        } else {
+          // Remaining volume not small enough, return anyway
+          println("ERROR: Remaining volume is still too large")
+          selectedJoints
+        }
+      }
+    }
   }
 
   private def testVolumes(joint1: Joint, joint2: Joint, initialBlock: Block,
@@ -85,109 +85,80 @@ object SeedJointSelector {
 
     val sortedBlocks1 = nonRedundantBlocks1.sortWith(_.volume < _.volume)
     val sortedBlocks2 = nonRedundantBlocks2.sortWith(_.volume < _.volume)
+//    println("Sorted Blocks 1:")
+//    sortedBlocks1.foreach { case block @ Block(center, faces, _) =>
+//        println(s"\nOrigin: ${block.centerX}, ${block.centerY}, ${block.centerZ}")
+//        faces.foreach { face =>
+//          println(s"Normal Vector: ${face.a}. ${face.b}, ${face.c}")
+//          println(s"Distance: ${face.d}")
+//        }
+//    }
+//    println("\nSorted Blocks 2:")
+//    sortedBlocks2.foreach { case block @ Block(center, faces, _) =>
+//      println(s"\nOrigin: ${block.centerX}, ${block.centerY}, ${block.centerZ}")
+//      faces.foreach { face =>
+//        println(s"Normal Vector: ${face.a}. ${face.b}, ${face.c}")
+//        println(s"Distance: ${face.d}")
+//      }
+//    }
 
-    if (sortedBlocks1.length == 1) {
-      println("Joint 1:")
-      println(s"Normal: ${joint1.a}, ${joint1.b}, ${joint1.c}")
-      println(s"Center: ${joint1.centerX}, ${joint1.centerY}, ${joint1.centerZ}")
-      println(s"Origin: ${joint1.localX}, ${joint1.localY}, ${joint1.localY}")
-      println("Joint 1 outside volume\n")
-      None
-    } else if (sortedBlocks1.length == 1 && sortedBlocks2.length == 1) {
-      println("Joint 1:")
-      println(s"Normal: ${joint1.a}, ${joint1.b}, ${joint1.c}")
-      println(s"Center: ${joint1.centerX}, ${joint1.centerY}, ${joint1.centerZ}")
-      println(s"Origin: ${joint1.localX}, ${joint1.localY}, ${joint1.localY}")
-      println("Joint 2:")
-      println(s"Normal: ${joint2.a}, ${joint2.b}, ${joint2.c}")
-      println(s"Center: ${joint2.centerX}, ${joint2.centerY}, ${joint2.centerZ}")
-      println(s"Origin: ${joint2.localX}, ${joint2.localY}, ${joint2.localY}")
-      println("Both joints outside volume\n")
-      None
-    } else if (sortedBlocks2.length == 1 && sortedBlocks1(1).volume <= desiredVolume) {
-      println("Joint 1:")
-      println(s"Normal: ${joint1.a}, ${joint1.b}, ${joint1.c}")
-      println(s"Center: ${joint1.centerX}, ${joint1.centerY}, ${joint1.centerZ}")
-      println(s"Origin: ${joint1.localX}, ${joint1.localY}, ${joint1.localY}")
-      println("Joint 2:")
-      println(s"Normal: ${joint2.a}, ${joint2.b}, ${joint2.c}")
-      println(s"Center: ${joint2.centerX}, ${joint2.centerY}, ${joint2.centerZ}")
-      println(s"Origin: ${joint2.localX}, ${joint2.localY}, ${joint2.localY}")
-      println("Joint 1 satisfactory, joint2 outside volume\n")
-      Some(joint1, sortedBlocks1(1))
-    } else if (sortedBlocks2.length == 1) {
-      println("Joint 2:")
-      println(s"Normal: ${joint2.a}, ${joint2.b}, ${joint2.c}")
-      println(s"Center: ${joint2.centerX}, ${joint2.centerY}, ${joint2.centerZ}")
-      println(s"Origin: ${joint2.localX}, ${joint2.localY}, ${joint2.localY}")
-      println("Something is going wrong...\n")
-      None
-    } else if (sortedBlocks1(0).volume <= desiredVolume && sortedBlocks2(0).volume >= desiredVolume) {
-      println("Joint 1:")
-      println(s"Normal: ${joint1.a}, ${joint1.b}, ${joint1.c}")
-      println(s"Center: ${joint1.centerX}, ${joint1.centerY}, ${joint1.centerZ}")
-      println(s"Origin: ${joint1.localX}, ${joint1.localY}, ${joint1.localY}")
-      println("Joint 2:")
-      println(s"Normal: ${joint2.a}, ${joint2.b}, ${joint2.c}")
-      println(s"Center: ${joint2.centerX}, ${joint2.centerY}, ${joint2.centerZ}")
-      println(s"Origin: ${joint2.localX}, ${joint2.localY}, ${joint2.localY}")
-      println("Joint2 satisfactory\n")
-      Some(joint2, sortedBlocks2(1))
-    } else if (sortedBlocks1(0).volume <= desiredVolume && sortedBlocks1(1).volume <= desiredVolume) {
-      println("Joint 1:")
-      println(s"Normal: ${joint1.a}, ${joint1.b}, ${joint1.c}")
-      println(s"Center: ${joint1.centerX}, ${joint1.centerY}, ${joint1.centerZ}")
-      println(s"Origin: ${joint1.localX}, ${joint1.localY}, ${joint1.localY}")
-      println("Joint 2:")
-      println(s"Normal: ${joint2.a}, ${joint2.b}, ${joint2.c}")
-      println(s"Center: ${joint2.centerX}, ${joint2.centerY}, ${joint2.centerZ}")
-      println(s"Origin: ${joint2.localX}, ${joint2.localY}, ${joint2.localY}")
-      println("Joint1 satisfactory, last joint. BOTH volumes small\n")
-      Some(joint1, sortedBlocks1(1))
-    } else if (sortedBlocks2(0).volume <= desiredVolume && sortedBlocks2(1).volume <= desiredVolume) {
-      println("Joint 1:")
-      println(s"Normal: ${joint1.a}, ${joint1.b}, ${joint1.c}")
-      println(s"Center: ${joint1.centerX}, ${joint1.centerY}, ${joint1.centerZ}")
-      println(s"Origin: ${joint1.localX}, ${joint1.localY}, ${joint1.localY}")
-      println("Joint 2:")
-      println(s"Normal: ${joint2.a}, ${joint2.b}, ${joint2.c}")
-      println(s"Center: ${joint2.centerX}, ${joint2.centerY}, ${joint2.centerZ}")
-      println(s"Origin: ${joint2.localX}, ${joint2.localY}, ${joint2.localY}")
-      println("Joint2 satisfactory, last joint. BOTH volumes small\n")
-      Some(joint2, sortedBlocks2(1))
-    } else if (sortedBlocks1(0).volume >= desiredVolume && sortedBlocks1(1).volume <= desiredVolume) {
-      println("Joint 1:")
-      println(s"Normal: ${joint1.a}, ${joint1.b}, ${joint1.c}")
-      println(s"Center: ${joint1.centerX}, ${joint1.centerY}, ${joint1.centerZ}")
-      println(s"Origin: ${joint1.localX}, ${joint1.localY}, ${joint1.localY}")
-      println("Joint 2:")
-      println(s"Normal: ${joint2.a}, ${joint2.b}, ${joint2.c}")
-      println(s"Center: ${joint2.centerX}, ${joint2.centerY}, ${joint2.centerZ}")
-      println(s"Origin: ${joint2.localX}, ${joint2.localY}, ${joint2.localY}")
-      println("Joint1 satisfactory, last joint. LAST volume small\n")
-      Some(joint1, sortedBlocks1(1))
-    } else if (sortedBlocks2(0).volume >= desiredVolume && sortedBlocks2(1).volume <= desiredVolume) {
-      println("Joint 1:")
-      println(s"Normal: ${joint1.a}, ${joint1.b}, ${joint1.c}")
-      println(s"Center: ${joint1.centerX}, ${joint1.centerY}, ${joint1.centerZ}")
-      println(s"Origin: ${joint1.localX}, ${joint1.localY}, ${joint1.localY}")
-      println("Joint 2:")
-      println(s"Normal: ${joint2.a}, ${joint2.b}, ${joint2.c}")
-      println(s"Center: ${joint2.centerX}, ${joint2.centerY}, ${joint2.centerZ}")
-      println(s"Origin: ${joint2.localX}, ${joint2.localY}, ${joint2.localY}")
-      println("Joint2 satisfactory, last joint. LAST volume small\n")
-      Some(joint2, sortedBlocks2(1))
-    } else {
-      println("Joint 1:")
-      println(s"Normal: ${joint1.a}, ${joint1.b}, ${joint1.c}")
-      println(s"Center: ${joint1.centerX}, ${joint1.centerY}, ${joint1.centerZ}")
-      println(s"Origin: ${joint1.localX}, ${joint1.localY}, ${joint1.localY}")
-      println("Joint 2:")
-      println(s"Normal: ${joint2.a}, ${joint2.b}, ${joint2.c}")
-      println(s"Center: ${joint2.centerX}, ${joint2.centerY}, ${joint2.centerZ}")
-      println(s"Origin: ${joint2.localX}, ${joint2.localY}, ${joint2.localY}")
-      println("No joints satisfactory\n")
-      None
-    }
+//    if (sortedBlocks1.length == 1) {
+//      println("Joint 1 outside volume\n")
+//      None
+//    } else if (sortedBlocks1.length == 1 && sortedBlocks2.length == 1) {
+//      println("Both joints outside volume\n")
+//      None
+//    } else
+    // First input joints lies outside block
+    if (sortedBlocks1.length == 1)
+      // Second joint also lies outside block
+      if (sortedBlocks2.length == 1) {
+        println("Both joints outside block")
+        None
+      } else if (sortedBlocks2(0).volume >= desiredVolume && sortedBlocks2(1).volume <= desiredVolume) {
+        println("Joint 1 outside block, Joint 2 satisfactory")
+        joint2
+      } else if (sortedBlocks2(0).volume <= desiredVolume && sortedBlocks2(1).volume <= desiredVolume) {
+        println("Joint 1 outside block, Joint 2 satisfactory - both volumes small")
+        joint2
+      } else if (sortedBlocks2(0).volume >= desiredVolume && sortedBlocks2(1).volume > desiredVolume) {
+        println("Joint 1 outside block, Joint 2 satisfactory - large volume remains")
+        joint2
+      }
+    // CONTINUE HERE: Deal with each case of when one of input joints don't intersect the initial volume
+    // so don't try to access indices outside of array length. Then deal with case when both joints intersect
+    // the input volume
+
+
+
+
+
+
+
+//    if (sortedBlocks2.length == 1 && sortedBlocks1(1).volume <= desiredVolume) {
+//      println("Joint 1 satisfactory, joint2 outside volume\n")
+//      Some(joint1, sortedBlocks1(1))
+//    } else if (sortedBlocks2.length == 1) {
+//      println("Something is going wrong...\n")
+//      None
+//    } else if (sortedBlocks1(0).volume < desiredVolume && sortedBlocks2(0).volume >= desiredVolume) {
+//      println("Joint2 satisfactory\n")
+//      Some(joint2, sortedBlocks2(1))
+//    } else if (sortedBlocks1(0).volume <= desiredVolume && sortedBlocks1(1).volume <= desiredVolume) {
+//      println("Joint1 satisfactory, last joint. BOTH volumes small\n")
+//      Some(joint1, sortedBlocks1(1))
+//    } else if (sortedBlocks2(0).volume <= desiredVolume && sortedBlocks2(1).volume <= desiredVolume) {
+//      println("Joint2 satisfactory, last joint. BOTH volumes small\n")
+//      Some(joint2, sortedBlocks2(1))
+//    } else if (sortedBlocks1(0).volume >= desiredVolume && sortedBlocks1(1).volume <= desiredVolume) {
+//      println("Joint1 satisfactory, last joint. LAST volume small\n")
+//      Some(joint1, sortedBlocks1(1))
+//    } else if (sortedBlocks2(0).volume > desiredVolume && sortedBlocks2(1).volume <= desiredVolume) {
+//      println("Joint2 satisfactory, last joint. LAST volume small\n")
+//      Some(joint2, sortedBlocks2(1))
+//    } else {
+//      println("No joints satisfactory\n")
+//      None
+//    }
   }
 }
