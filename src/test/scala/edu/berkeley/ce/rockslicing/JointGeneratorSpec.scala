@@ -232,11 +232,11 @@ class JointGeneratorSpec extends FunSuite {
     val boundingBox = Array[Double](0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
     val rockVolume = Array[Array[Double]](
       Array(0.0, 90.0, 0.0, 0.0, 0.0, 30.0, 0.0),
-      Array(0.0, 90.0, 0.0, 2.0, 0.0, 30.0, 0.0),
+      Array(0.0, 90.0, 0.0, 1.0, 0.0, 30.0, 0.0),
       Array(90.0, 90.0, 0.0, 0.0, 0.0, 30.0, 0.0),
-      Array(90.0, 90.0, 2.0, 0.0, 0.0, 30.0, 0.0),
+      Array(90.0, 90.0, 1.0, 0.0, 0.0, 30.0, 0.0),
       Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0),
-      Array(0.0, 0.0, 0.0, 0.0, 2.0, 30.0, 0.0)
+      Array(0.0, 0.0, 0.0, 0.0, 1.0, 30.0, 0.0)
     )
     val jointData = Array[Array[Double]](
       Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
@@ -271,11 +271,11 @@ class JointGeneratorSpec extends FunSuite {
     val boundingBox = Array[Double](0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
     val rockVolume = Array[Array[Double]](
       Array(0.0, 90.0, 0.0, 0.0, 0.0, 30.0, 0.0),
-      Array(0.0, 90.0, 0.0, 2.0, 0.0, 30.0, 0.0),
+      Array(0.0, 90.0, 0.0, 1.0, 0.0, 30.0, 0.0),
       Array(90.0, 90.0, 0.0, 0.0, 0.0, 30.0, 0.0),
-      Array(90.0, 90.0, 2.0, 0.0, 0.0, 30.0, 0.0),
+      Array(90.0, 90.0, 1.0, 0.0, 0.0, 30.0, 0.0),
       Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0),
-      Array(0.0, 0.0, 0.0, 0.0, 2.0, 30.0, 0.0)
+      Array(0.0, 0.0, 0.0, 0.0, 1.0, 30.0, 0.0)
     )
     val jointData = Array[Array[Double]](
       // Pi-plane in terms of strike and dip with sqrt(3.0)/2.0 spacing
@@ -311,11 +311,11 @@ class JointGeneratorSpec extends FunSuite {
     val boundingBox = Array[Double](0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
     val rockVolume = Array[Array[Double]](
       Array(0.0, 90.0, 0.0, 0.0, 0.0, 30.0, 0.0),
-      Array(0.0, 90.0, 0.0, 2.0, 0.0, 30.0, 0.0),
+      Array(0.0, 90.0, 0.0, 1.0, 0.0, 30.0, 0.0),
       Array(90.0, 90.0, 0.0, 0.0, 0.0, 30.0, 0.0),
-      Array(90.0, 90.0, 2.0, 0.0, 0.0, 30.0, 0.0),
+      Array(90.0, 90.0, 1.0, 0.0, 0.0, 30.0, 0.0),
       Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0),
-      Array(0.0, 0.0, 0.0, 0.0, 2.0, 30.0, 0.0)
+      Array(0.0, 0.0, 0.0, 0.0, 1.0, 30.0, 0.0)
     )
     val jointData = Array[Array[Double]](
       // Pi-plane in terms of strike and dip with sqrt(3.0)/2.0 spacing
