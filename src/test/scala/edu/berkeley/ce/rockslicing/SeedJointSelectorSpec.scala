@@ -37,7 +37,7 @@ class SeedJointSelectorSpec extends FunSuite {
 //    )
 //    val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
 //    val seedJoints = SeedJointSelector.findSeedJoints(generatedInput.jointSets.head,
-//      Block(generatedInput.origin, generatedInput.rockVolume), numProcessors = 1)
+//      Block(generatedInput.origin, generatedInput.rockVolume), numProcessors = 2)
 //
 //    val expectedJoints = Seq[Joint](
 //      Joint(Array(0.0, 1.0, 0.0), Array(0.5, 0.5, 0.5), Array(0.5, 0.5, 0.5), phi = 30.0,
@@ -67,12 +67,12 @@ class SeedJointSelectorSpec extends FunSuite {
 //    )
 //    val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
 //    val seedJoints = SeedJointSelector.findSeedJoints(generatedInput.jointSets.head,
-//      Block(generatedInput.origin, generatedInput.rockVolume), numProcessors = 1)
+//      Block(generatedInput.origin, generatedInput.rockVolume), numProcessors = 2)
 //
 //    val expectedJoints = Seq[Joint](
 //      Joint(Array(0.0, 1.0, 0.0), Array(0.5, 0.5, 0.5), Array(1.0, 1.0, 1.0), phi = 30.0,
 //        cohesion = 0.0, shape = Vector.empty)
-//    )
+//      )
 //
 //    val jointComparison = expectedJoints.zip(seedJoints.get) map { case (joint1, joint2) =>
 //      compareJoints(joint1, joint2)
@@ -97,7 +97,7 @@ class SeedJointSelectorSpec extends FunSuite {
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val seedJoints = SeedJointSelector.findSeedJoints(generatedInput.jointSets.head,
-      Block(generatedInput.origin, generatedInput.rockVolume), numProcessors = 2)
+      Block(generatedInput.origin, generatedInput.rockVolume), numProcessors = 3)
 
     val expectedJoints = Seq[Joint](
       Joint(Array(0.0, 1.0, 0.0), Array(0.5, 0.5, 0.5), Array(1.0, 1.0, 1.0), phi = 30.0,

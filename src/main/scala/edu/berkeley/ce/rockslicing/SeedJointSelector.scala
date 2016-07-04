@@ -14,12 +14,12 @@ object SeedJointSelector {
       s"$numProcessors processors. Try using less processors.")
       return None
     }
-    val volumePerProc = rockVolume.volume / (numProcessors + 1)
+    val volumePerProc = rockVolume.volume / numProcessors
     println("Volume per processor "+volumePerProc)
     println("Total volume: "+rockVolume.volume+"\n")
     val seedJoints = cycleJointSet(jointSet, rockVolume, volumePerProc, Seq.empty[Joint])
-    if (seedJoints.length != numProcessors) {
-      println(s"Error: Could not find the required $numProcessors, could only find ${seedJoints.length}")
+    if (seedJoints.length != numProcessors - 1) {
+      println(s"Error: Could not find the required ${numProcessors - 1}, could only find ${seedJoints.length}")
       None
     } else {
       Some(seedJoints)
@@ -31,10 +31,10 @@ object SeedJointSelector {
                             selectedJoints: Seq[Joint]): Seq[Joint] = {
     if (jointSet.length > 1) {
       // More than 1 joint in input joint set
-      val jointOption = testVolumes(jointSet.head, jointSet.tail.head, initialBlock, volumePerProcessor)
+      val jointOption = testVolumes(jointSet.head, initialBlock, volumePerProcessor)
 
       if (jointOption.isEmpty) {
-        // No joints meet criteria
+        // Joint did not meet criteria
         cycleJointSet(jointSet.tail, initialBlock, volumePerProcessor, selectedJoints)
       } else {
         // Joint meets criteria
@@ -76,15 +76,64 @@ object SeedJointSelector {
     val blockSet1 = initialBlock cut joint1
     val blockSet2 = initialBlock cut joint2
 
-    val nonRedundantBlocks1 = blockSet1 map { case block @ Block(blockCenter, _, _) =>
+    val nonRedundantBlocks = blockSet1 map { case block @ Block(blockCenter, _, _) =>
         Block(blockCenter, block.nonRedundantFaces)
     }
     val nonRedundantBlocks2 = blockSet2 map { case block @ Block(blockCenter, _, _) =>
       Block(blockCenter, block.nonRedundantFaces)
     }
 
-    val sortedBlocks1 = nonRedundantBlocks1.sortWith(_.volume < _.volume)
+    val sortedBlocks1 = nonRedundantBlocks.sortWith(_.volume < _.volume)
     val sortedBlocks2 = nonRedundantBlocks2.sortWith(_.volume < _.volume)
+
+    if (sortedBlocks1.length == 1) {
+      if (sortedBlocks2.length == 1) {
+        println("Both joints outside block")
+        None
+      } else if (sortedBlocks2(0).volume >= desiredVolume) {
+        println("Joint 2 satisfactory - large volume still remaining")
+        Some(joint2, sortedBlocks2(1))
+      } else if (sortedBlocks2(1).volume <= desiredVolume) {
+        println("Joint 2 satifactory - remaining volume small")
+        Some(joint2, sortedBlocks2(1))
+      } else {
+        println("Joint 2 NOT satisfactory, joint 1 outside block")
+      }
+    } else if (sortedBlocks2.length == 1) {
+      if (sortedBlocks1(0).volume >= desiredVolume) {
+        println("Joint 1 satisfactory - large volume still remaining")
+        Some(joint1, sortedBlocks1(1))
+      } else if (sortedBlocks1(1).volume <= desiredVolume) {
+        println("Joint 1 satisfactory - remaining volume small")
+        Some(joint1, sortedBlocks1(1))
+      } else {
+        println("Joint 1 NOT satisfactory, joint 2 outside block")
+        None
+      }
+    } else {
+      // CONTINUE HERE: Figure out how to pick between two joints
+      
+    }
+  }
+//    if (sortedBlocks1.length == 1) {
+//      println("Joint outside block")
+//      None
+//    } else if (sortedBlocks1(0).volume >= desiredVolume) {
+//      println("Joint satisfactory - Volume >= desired volume")
+//      println(s"Volume 1: ${sortedBlocks1(0).volume}, Volume 2: ${sortedBlocks1(1).volume}\n")
+//      Some(joint1, sortedBlocks1(1))
+//    } else if (sortedBlocks1(0).volume <= desiredVolume && sortedBlocks1(1).volume <= desiredVolume) {
+//      println("Joint satisfactory - Only small volume remaining")
+//      println(s"Volume 1: ${sortedBlocks1(0).volume}, Volume 2: ${sortedBlocks1(1).volume}\n")
+//      Some(joint1, sortedBlocks1(1))
+//    } else {
+//      println("Joint NOT satisfactory")
+//      println(s"Volume 1: ${sortedBlocks1(0).volume}, Volume 2: ${sortedBlocks1(1).volume}\n")
+//      None
+//    }
+//  }
+}
+
 //    println("Sorted Blocks 1:")
 //    sortedBlocks1.foreach { case block @ Block(center, faces, _) =>
 //        println(s"\nOrigin: ${block.centerX}, ${block.centerY}, ${block.centerZ}")
@@ -109,25 +158,30 @@ object SeedJointSelector {
 //      println("Both joints outside volume\n")
 //      None
 //    } else
-    // First input joints lies outside block
-    if (sortedBlocks1.length == 1)
-      // Second joint also lies outside block
-      if (sortedBlocks2.length == 1) {
-        println("Both joints outside block")
-        None
-      } else if (sortedBlocks2(0).volume >= desiredVolume && sortedBlocks2(1).volume <= desiredVolume) {
-        println("Joint 1 outside block, Joint 2 satisfactory")
-        joint2
-      } else if (sortedBlocks2(0).volume <= desiredVolume && sortedBlocks2(1).volume <= desiredVolume) {
-        println("Joint 1 outside block, Joint 2 satisfactory - both volumes small")
-        joint2
-      } else if (sortedBlocks2(0).volume >= desiredVolume && sortedBlocks2(1).volume > desiredVolume) {
-        println("Joint 1 outside block, Joint 2 satisfactory - large volume remains")
-        joint2
-      }
-    // CONTINUE HERE: Deal with each case of when one of input joints don't intersect the initial volume
-    // so don't try to access indices outside of array length. Then deal with case when both joints intersect
-    // the input volume
+// First input joints lies outside block
+//    if (sortedBlocks1.length == 1)
+//      // Second joint also lies outside block
+//      if (sortedBlocks2.length == 1) {
+//        println("Both joints outside block")
+//        None
+//      } else if (sortedBlocks2(0).volume >= desiredVolume) {
+//        println("")
+//      }
+//      } else if (sortedBlocks2(0).volume >= desiredVolume && sortedBlocks2(1).volume <= desiredVolume) {
+//        println("Joint 1 outside block, Joint 2 satisfactory")
+//        joint2
+//      } else if (sortedBlocks2(0).volume <= desiredVolume && sortedBlocks2(1).volume <= desiredVolume) {
+//        println("Joint 1 outside block, Joint 2 satisfactory - both volumes small")
+//        joint2
+//      } else if (sortedBlocks2(0).volume >= desiredVolume && sortedBlocks2(1).volume > desiredVolume) {
+//        println("Joint 1 outside block, Joint 2 satisfactory - large volume remains")
+//        joint2
+//      }
+// CONTINUE HERE: Deal with each case of when one of input joints don't intersect the initial volume
+// so don't try to access indices outside of array length. Then deal with case when both joints intersect
+// the input volume
+
+
 
 
 
@@ -160,5 +214,3 @@ object SeedJointSelector {
 //      println("No joints satisfactory\n")
 //      None
 //    }
-  }
-}
