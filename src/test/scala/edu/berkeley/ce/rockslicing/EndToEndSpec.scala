@@ -11,16 +11,19 @@ class EndToEndSpec extends FunSuite {
   test("Simple end-to-end test using unit cube and simple planes") {
     // Read input file to generate list of joints and initial rock block
     val inputSource = Source.fromURL(getClass.getResource(s"/$INPUT_FILE_NAME"))
-    val (globalOrigin, rockVolume, jointList) = InputProcessor.readInput(inputSource).get
+    val (globalOrigin, boundingBox, rockVolumeInputs, jointSetInput) = InputProcessor.readInput(inputSource).get
     inputSource.close()
+    val generatedInputs = JointGenerator(globalOrigin, boundingBox, rockVolumeInputs, jointSetInput)
 
     // Create an initial block
-    val initialBlocks = Seq(Block(globalOrigin, rockVolume))
+    val initialBlocks = Seq(Block(globalOrigin, generatedInputs.rockVolume))
 
-    // Generate processor joints
-    val numProcessors = 6
-    val processorJoints = LoadBalancer.generateProcessorJoints(initialBlocks.head, numProcessors)
-    val joints = processorJoints ++ jointList
+    // Generate seed joints
+    val numProcessors = 2
+    val seedJoints = SeedJointSelector.searchJointSets(generatedInputs.jointSets, initialBlocks.head, numProcessors).get
+    val nonSeedjoints = generatedInputs.jointSets.flatten.diff(seedJoints)
+
+    val joints = seedJoints ++ nonSeedjoints
 
     // Iterate through joints, cutting blocks where appropriate
     val cutBlocks = initialBlocks flatMap { block =>
@@ -29,21 +32,14 @@ class EndToEndSpec extends FunSuite {
       }
     }
 
+    println("FINDING NON-REDUNDANT BLOCKS")
     // Remove geometrically redundant joints
     val nonRedundantBlocks = cutBlocks.map { case block @ Block(center, _, _) =>
       Block(center, block.nonRedundantFaces)
     }
 
-    // Find blocks that do not contain processor joints
-    val (processorBlocks, realBlocks) = nonRedundantBlocks.partition { block => block.faces.exists(_.isProcessorFace) }
-    val finalBlocks = if (processorBlocks.isEmpty) {
-      realBlocks
-    } else {
-      realBlocks ++ LoadBalancer.mergeProcessorBlocks(processorBlocks)
-    }
-
     // Calculate the centroid of each block
-    val centroidBlocks = finalBlocks.map { block =>
+    val centroidBlocks = nonRedundantBlocks.map { block =>
       val centroid = block.centroid
       val updatedFaces = block.updateFaces(centroid)
       Block(centroid, updatedFaces)
@@ -53,8 +49,7 @@ class EndToEndSpec extends FunSuite {
     val cleanedBlocks = centroidBlocks.map { case Block(center, faces, _) =>
       Block(center, faces.map(_.applyTolerance))
     }
-
-    val blockJson = Json.blockSeqToReadableJson(cleanedBlocks)
+    
     val expectedJsonSource = Source.fromURL(getClass.getResource(s"/$OUTPUT_FILE_NAME"))
 
     try {

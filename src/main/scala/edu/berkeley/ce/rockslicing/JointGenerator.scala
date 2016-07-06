@@ -40,7 +40,7 @@ object JointGenerator {
     *                       Strike and dip should be specified in degrees.
     * @return A sequence of faces that represent the rock volume of interest
     */
-  private def findBoundingFaces(globalOrigin: Array[Double], rockVolumeData: Array[Array[Double]]): Seq[Face] = {
+  private def findBoundingFaces(globalOrigin: Array[Double], rockVolumeData: Seq[Array[Double]]): Seq[Face] = {
     rockVolumeData map { parameters =>
       val faceCenter = Array(parameters(2), parameters(3), parameters(4))
       val normal = findJointNormal(parameters(0), parameters(1))
@@ -65,7 +65,7 @@ object JointGenerator {
     *         to generate full joint set.
     */
   private def findMasterJoints(globalOrigin: Array[Double], lowerLeftCorner: Array[Double],
-                               joints: Array[Array[Double]]): Option[Seq[Joint]] = {
+                               joints: Seq[Array[Double]]): Option[Seq[Joint]] = {
     val masterJoints = joints flatMap { parameters =>
       if (parameters.length == 6) {
         // TODO: Implement non-persistent joint generator
@@ -100,8 +100,8 @@ object JointGenerator {
   * @param jointSetData Array of arrays containing the input data representing joint sets. The inputs in each array
   *                     are strike, dip, joint spacing, persistence, phi, cohesion and optional stochastic parameters
   */
-case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double], rockVolumeData: Array[Array[Double]],
-                     jointSetData: Array[Array[Double]]) {
+case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double], rockVolumeData: Seq[Array[Double]],
+                     jointSetData: Seq[Array[Double]]) {
   val origin = globalOrigin
   val lowerLeftCorner = Array(boundingBox(0), boundingBox(1), boundingBox(2))
   val upperRightCorner = Array(boundingBox(3), boundingBox(4), boundingBox(5))
@@ -112,7 +112,6 @@ case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double
     throw new IllegalArgumentException("ERROR: Stochastic joint generation not yet implemented")
   }
 
-
   val jointSets = generateJointSets(jointSetData)
 
   /**
@@ -122,7 +121,7 @@ case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double
     *                     are strike, dip, joint spacing, persistence, phi, cohesion and optional stochastic parameters
     * @return Seq of joints for each input joint set
     */
-  def generateJointSets(jointSetData: Array[Array[Double]]): Seq[Seq[Joint]] = {
+  def generateJointSets(jointSetData: Seq[Array[Double]]): Seq[Seq[Joint]] = {
     val jointTuple = masterJoints.zip(jointSetData)
     
     val deltaX = upperRightCorner(0) - lowerLeftCorner(0)

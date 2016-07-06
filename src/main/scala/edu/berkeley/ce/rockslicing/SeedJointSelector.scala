@@ -8,17 +8,59 @@ import scala.annotation.tailrec
   */
 object SeedJointSelector {
 
+  /**
+    * Searches though sequence of joint sets to find best seed joints
+    *
+    * @param jointSets Seq of Seq's of Joints representing input joint sets
+    * @param inputVolume Block representing input rock volume
+    * @param numProcessors Number of processors to be used in the analysis
+    * @return Returns a Seq containing the seed joints that best divide the input volume. If unable to find
+    *         satisfactory seed joints, returns None.
+    */
   @tailrec
-  def findSeedJoints(jointSet: Seq[Joint], rockVolume: Block, numProcessors: Integer, totalVolume: Double,
+  def searchJointSets(jointSets: Seq[Seq[Joint]], inputVolume: Block,
+                      numProcessors: Int): Option[Seq[Joint]] = {
+    if (jointSets.isEmpty) {
+      println("ERROR: Unable to find seed joints")
+      None
+    } else if (jointSets.head(0).shape.isEmpty) {
+      // Check that joint set is persistent
+      val seedJointOption = findSeedJoints(jointSets.head, inputVolume, numProcessors, inputVolume.volume)
+
+      if (seedJointOption.isEmpty) {
+          searchJointSets(jointSets.tail, inputVolume, numProcessors)
+      } else {
+        seedJointOption
+      }
+    } else {
+      searchJointSets(jointSets.tail, inputVolume, numProcessors)
+    }
+  }
+
+  /**
+    * Cycles through persistent joint set to find joints that approximately balances load across processes
+    *
+    * @param jointSet Seq of Joints representing a persistent joint set
+    * @param rockVolume Block representing input rock volume that should be divided into approximately equal pieces
+    *                   for each process to operate on
+    * @param numProcessors Number of processes that will be used in analysis
+    * @param totalVolume Total volume of rockVolume
+    * @param tolerance Tolerance in deviation from ideal volume per processor. Default initial value is 1%, though it
+    *                  will be updated as necessary in recursive calls.
+    * @param stepSize Step size that tolerance will be incremented by if unable to find enough seed joints. Default
+    *                 initial value is 1%, though it will be updated as necessary in recursive calls.
+    * @return If able to find the required number of seed joints, this function will return a Seq of Joints. If unable
+    *         to find sufficient seed joints, it will return None.
+    */
+  @tailrec
+  private def findSeedJoints(jointSet: Seq[Joint], rockVolume: Block, numProcessors: Integer, totalVolume: Double,
                      tolerance: Double = 0.01, stepSize: Double = 0.01): Option[Seq[Joint]] = {
     if (jointSet.length < numProcessors - 1) {
       println(s"Error: Not enough joints to generate required number of seed joints. ${jointSet.length} joints but"+
       s"$numProcessors processors. Try using less processors.")
-      None
+      return None
     }
     val volumePerProc = rockVolume.volume / numProcessors
-//    println("Volume per processor "+volumePerProc)
-//    println("Total volume: "+rockVolume.volume+"\n")
     val seedJoints = cycleJointSet(jointSet, rockVolume, volumePerProc, totalVolume,
       Seq.empty[Joint], tolerance, numProcessors)
     if (seedJoints.length != numProcessors - 1) {
@@ -27,6 +69,10 @@ object SeedJointSelector {
       println(s"Error: Could not find the required ${numProcessors - 1}, could only find ${seedJoints.length}")
       println(s"Re-running with lower tolerance: %.1f".format(tolerance * 100.0))
       findSeedJoints(jointSet, rockVolume, numProcessors, totalVolume, newTolerance, newStepSize)
+    } else if (stepSize < 0.001) {
+      println("Error: Unable to find satisfactory seed joints using current joint set. Please try another" +
+        "persistent joint set.")
+      None
     } else {
       val initialBlock = Seq(rockVolume)
       val blocks = seedJoints.foldLeft(initialBlock) { (currentBlocks, joint) =>
@@ -51,6 +97,18 @@ object SeedJointSelector {
     }
   }
 
+  /**
+    * Cycles through input joint set to find seed joints.
+    *
+    * @param jointSet Seq of Joints representing a persistent joint set
+    * @param initialBlock Block that should be subdivided by seed joints into approximately equal volumes
+    * @param volumePerProcessor Ideal volume per processor for load balance
+    * @param totalVolume Total volume of rock volume in analysis
+    * @param selectedJoints Seq of Joints that have been identified as seed joints
+    * @param tolerance Acceptable deviation from ideal volume per processor
+    * @param numProcessors Number of processors that will be used in the analysis
+    * @return
+    */
   @tailrec
   private def cycleJointSet(jointSet: Seq[Joint], initialBlock: Block, volumePerProcessor: Double,
                             totalVolume: Double, selectedJoints: Seq[Joint], tolerance: Double,
@@ -96,11 +154,24 @@ object SeedJointSelector {
     }
   }
 
-  private def testVolumes(joint1: Joint, joint2: Joint, initialBlock: Block,
+  /**
+    * Test which, if any, of two input joints divides the input block into blocks of
+    * desired volume.
+    *
+    * @param joint1 First input joint
+    * @param joint2 Second input joint
+    * @param inputBlock Block that is to be subdivided
+    * @param desiredVolume Desired volume of subdivision(s)
+    * @param totalVolume Total volume of rock volume in analysis
+    * @param tolerance Acceptable deviation from ideal volume per processor
+    * @return Returns tuple containing joint that provides best division of volume and remaining volume that is to be
+    *         subdivided further. If neither joint yields acceptable subdivision, function returns None.
+    */
+  private def testVolumes(joint1: Joint, joint2: Joint, inputBlock: Block,
                           desiredVolume: Double, totalVolume: Double,
-                          tolerance: Double):Option[(Joint, Block)] = {
-    val blockSet1 = initialBlock cut joint1
-    val blockSet2 = initialBlock cut joint2
+                          tolerance: Double): Option[(Joint, Block)] = {
+    val blockSet1 = inputBlock cut joint1
+    val blockSet2 = inputBlock cut joint2
 
     val nonRedundantBlocks = blockSet1 map { case block @ Block(blockCenter, _, _) =>
         Block(blockCenter, block.nonRedundantFaces)
@@ -113,170 +184,60 @@ object SeedJointSelector {
     val sortedBlocks2 = nonRedundantBlocks2.sortWith(_.volume < _.volume)
 
     if (sortedBlocks1.length == 1) {
+      // joint1 does not intersect the block
       if (sortedBlocks2.length == 1) {
-//        println("Both joints outside block")
+        // Neither joint intersects the block
         None
       } else if (sortedBlocks2(0).volume >= desiredVolume) {
-//        println("Joint 2 satisfactory - large volume still remaining")
-//        println(s"Joint 2 Block Volume: ${sortedBlocks2(0).volume}, ${sortedBlocks2(1).volume}\n")
+        // joint2 sufficiently divides block, remaining volume should still be further subdivided
         Some(joint2, sortedBlocks2(1))
       } else if (sortedBlocks2(1).volume <= desiredVolume) {
-//        println("Joint 2 satisfactory - remaining volume small")
-//        println(s"Desired Volume: $desiredVolume")
-//        println(s"Total Volume: $totalVolume")
-//        println(s"Joint 2 Block Volume: ${sortedBlocks2(0).volume}, ${sortedBlocks2(1).volume}\n")
+        // joint2 sufficiently divides block, remaining volume requires no further subdivision
         Some(joint2, sortedBlocks2(1))
       } else {
-//        println("Joint 2 NOT satisfactory, joint 1 outside block")
-//        println(s"Joint 2 Block Volume: ${sortedBlocks2(0).volume}, ${sortedBlocks2(1).volume}\n")
+        // joint 2 does not divide block adequately
         None
       }
     } else if (sortedBlocks2.length == 1) {
+      // joint 2 does not intersect the block
       if (sortedBlocks1(0).volume >= desiredVolume) {
-//        println("Joint 1 satisfactory - large volume still remaining")
-//        println(s"Joint 1 Block Volume: ${sortedBlocks1(0).volume}, ${sortedBlocks1(1).volume}\n")
+        // joint1 sufficiently divides block, remaining volume should still be further subdivided
         Some(joint1, sortedBlocks1(1))
       } else if (sortedBlocks1(1).volume <= desiredVolume) {
-//        println("Joint 1 satisfactory - remaining volume small")
-//        println(s"Joint 1 Block Volume: ${sortedBlocks1(0).volume}, ${sortedBlocks1(1).volume}\n")
+        // joint1 sufficiently divides block, remaining volume requires no further subdivision
         Some(joint1, sortedBlocks1(1))
       } else {
-//        println("Joint 1 NOT satisfactory, joint 2 outside block")
-//        println(s"Joint 1 Block Volume: ${sortedBlocks1(0).volume}, ${sortedBlocks1(1).volume}\n")
+        // joint 1 does not divide the block adequately
         None
       }
     } else {
+      // BOTH joints intersect the block
       // Compare volumes to desired volumes
       val volumeDiff1 = sortedBlocks1(0).volume - desiredVolume
       val volumeDiff2 = sortedBlocks2(0).volume - desiredVolume
 
       // Return joint that gives volume closest to desired volume
+      // When less than 50% of the total volume remains, begin loosening constaints on joint selected until
+      // a sufficient number of joints have been found. When more than 50% of the total volume still remains,
+      // seed joints are chosen when one of the input joints yields a block smaller than the desired volume and
+      // the other yields a block larger then the desired volume. The joint yielding a block with volume closest
+      // to the desired volume is selected.
       if ((math.abs(volumeDiff1) <= tolerance || math.abs(volumeDiff2) <= tolerance) &&
         (sortedBlocks1(1).volume <= 0.5 * totalVolume || sortedBlocks2(1).volume <= 0.5 * totalVolume)) {
-//        println("Past 50%")
         if (math.abs(volumeDiff1) >= math.abs(volumeDiff2)) {
-//          println("Joint 2 satisfactory")
-//          println(s"Joint 1 Block Volume: ${sortedBlocks1(0).volume}, ${sortedBlocks1(1).volume}")
-//          println(s"Joint 2 Block Volume: ${sortedBlocks2(0).volume}, ${sortedBlocks2(1).volume}\n")
           Some(joint2, sortedBlocks2(1))
         } else {
-//          println("Joint 1 satisfactory")
-//          println(s"Joint 1 Block Volume: ${sortedBlocks1(0).volume}, ${sortedBlocks1(1).volume}")
-//          println(s"Joint 2 Block Volume: ${sortedBlocks2(0).volume}, ${sortedBlocks2(1).volume}\n")
           Some(joint1, sortedBlocks1(1))
         }
       } else if (volumeDiff1 <= 0.0 && volumeDiff2 >= 0.0) {
-//        println("Sign choice")
         if (math.abs(volumeDiff1) >= math.abs(volumeDiff2)) {
           Some(joint2, sortedBlocks2(1))
         } else {
           Some(joint1, sortedBlocks1(1))
         }
       } else {
-//        println("None selected")
-        //        println("No joints satisfactory")
-        //        println(s"Joint 1 Block Volume: ${sortedBlocks1(0).volume}, ${sortedBlocks1(1).volume}")
-        //        println(s"Joint 2 Block Volume: ${sortedBlocks2(0).volume}, ${sortedBlocks2(1).volume}\n")
         None
       }
     }
   }
-//    if (sortedBlocks1.length == 1) {
-//      println("Joint outside block")
-//      None
-//    } else if (sortedBlocks1(0).volume >= desiredVolume) {
-//      println("Joint satisfactory - Volume >= desired volume")
-//      println(s"Volume 1: ${sortedBlocks1(0).volume}, Volume 2: ${sortedBlocks1(1).volume}\n")
-//      Some(joint1, sortedBlocks1(1))
-//    } else if (sortedBlocks1(0).volume <= desiredVolume && sortedBlocks1(1).volume <= desiredVolume) {
-//      println("Joint satisfactory - Only small volume remaining")
-//      println(s"Volume 1: ${sortedBlocks1(0).volume}, Volume 2: ${sortedBlocks1(1).volume}\n")
-//      Some(joint1, sortedBlocks1(1))
-//    } else {
-//      println("Joint NOT satisfactory")
-//      println(s"Volume 1: ${sortedBlocks1(0).volume}, Volume 2: ${sortedBlocks1(1).volume}\n")
-//      None
-//    }
-//  }
 }
-
-//    println("Sorted Blocks 1:")
-//    sortedBlocks1.foreach { case block @ Block(center, faces, _) =>
-//        println(s"\nOrigin: ${block.centerX}, ${block.centerY}, ${block.centerZ}")
-//        faces.foreach { face =>
-//          println(s"Normal Vector: ${face.a}. ${face.b}, ${face.c}")
-//          println(s"Distance: ${face.d}")
-//        }
-//    }
-//    println("\nSorted Blocks 2:")
-//    sortedBlocks2.foreach { case block @ Block(center, faces, _) =>
-//      println(s"\nOrigin: ${block.centerX}, ${block.centerY}, ${block.centerZ}")
-//      faces.foreach { face =>
-//        println(s"Normal Vector: ${face.a}. ${face.b}, ${face.c}")
-//        println(s"Distance: ${face.d}")
-//      }
-//    }
-
-//    if (sortedBlocks1.length == 1) {
-//      println("Joint 1 outside volume\n")
-//      None
-//    } else if (sortedBlocks1.length == 1 && sortedBlocks2.length == 1) {
-//      println("Both joints outside volume\n")
-//      None
-//    } else
-// First input joints lies outside block
-//    if (sortedBlocks1.length == 1)
-//      // Second joint also lies outside block
-//      if (sortedBlocks2.length == 1) {
-//        println("Both joints outside block")
-//        None
-//      } else if (sortedBlocks2(0).volume >= desiredVolume) {
-//        println("")
-//      }
-//      } else if (sortedBlocks2(0).volume >= desiredVolume && sortedBlocks2(1).volume <= desiredVolume) {
-//        println("Joint 1 outside block, Joint 2 satisfactory")
-//        joint2
-//      } else if (sortedBlocks2(0).volume <= desiredVolume && sortedBlocks2(1).volume <= desiredVolume) {
-//        println("Joint 1 outside block, Joint 2 satisfactory - both volumes small")
-//        joint2
-//      } else if (sortedBlocks2(0).volume >= desiredVolume && sortedBlocks2(1).volume > desiredVolume) {
-//        println("Joint 1 outside block, Joint 2 satisfactory - large volume remains")
-//        joint2
-//      }
-// CONTINUE HERE: Deal with each case of when one of input joints don't intersect the initial volume
-// so don't try to access indices outside of array length. Then deal with case when both joints intersect
-// the input volume
-
-
-
-
-
-
-
-
-
-//    if (sortedBlocks2.length == 1 && sortedBlocks1(1).volume <= desiredVolume) {
-//      println("Joint 1 satisfactory, joint2 outside volume\n")
-//      Some(joint1, sortedBlocks1(1))
-//    } else if (sortedBlocks2.length == 1) {
-//      println("Something is going wrong...\n")
-//      None
-//    } else if (sortedBlocks1(0).volume < desiredVolume && sortedBlocks2(0).volume >= desiredVolume) {
-//      println("Joint2 satisfactory\n")
-//      Some(joint2, sortedBlocks2(1))
-//    } else if (sortedBlocks1(0).volume <= desiredVolume && sortedBlocks1(1).volume <= desiredVolume) {
-//      println("Joint1 satisfactory, last joint. BOTH volumes small\n")
-//      Some(joint1, sortedBlocks1(1))
-//    } else if (sortedBlocks2(0).volume <= desiredVolume && sortedBlocks2(1).volume <= desiredVolume) {
-//      println("Joint2 satisfactory, last joint. BOTH volumes small\n")
-//      Some(joint2, sortedBlocks2(1))
-//    } else if (sortedBlocks1(0).volume >= desiredVolume && sortedBlocks1(1).volume <= desiredVolume) {
-//      println("Joint1 satisfactory, last joint. LAST volume small\n")
-//      Some(joint1, sortedBlocks1(1))
-//    } else if (sortedBlocks2(0).volume > desiredVolume && sortedBlocks2(1).volume <= desiredVolume) {
-//      println("Joint2 satisfactory, last joint. LAST volume small\n")
-//      Some(joint2, sortedBlocks2(1))
-//    } else {
-//      println("No joints satisfactory\n")
-//      None
-//    }
