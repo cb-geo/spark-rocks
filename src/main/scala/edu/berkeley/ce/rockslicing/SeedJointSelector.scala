@@ -8,34 +8,65 @@ import scala.annotation.tailrec
   */
 object SeedJointSelector {
 
-  def findSeedJoints(jointSet: Seq[Joint], rockVolume: Block, numProcessors: Integer): Option[Seq[Joint]] = {
+  @tailrec
+  def findSeedJoints(jointSet: Seq[Joint], rockVolume: Block, numProcessors: Integer, totalVolume: Double,
+                     tolerance: Double = 0.01, stepSize: Double = 0.01): Option[Seq[Joint]] = {
     if (jointSet.length < numProcessors - 1) {
       println(s"Error: Not enough joints to generate required number of seed joints. ${jointSet.length} joints but"+
       s"$numProcessors processors. Try using less processors.")
-      return None
+      None
     }
     val volumePerProc = rockVolume.volume / numProcessors
-    println("Volume per processor "+volumePerProc)
-    println("Total volume: "+rockVolume.volume+"\n")
-    val seedJoints = cycleJointSet(jointSet, rockVolume, volumePerProc, Seq.empty[Joint])
+//    println("Volume per processor "+volumePerProc)
+//    println("Total volume: "+rockVolume.volume+"\n")
+    val seedJoints = cycleJointSet(jointSet, rockVolume, volumePerProc, totalVolume,
+      Seq.empty[Joint], tolerance, numProcessors)
     if (seedJoints.length != numProcessors - 1) {
+      val newStepSize = if (tolerance >= 1.0) { stepSize / 2.0 } else { stepSize }
+      val newTolerance = if (tolerance >= 1.0) { newStepSize } else { tolerance + stepSize }
       println(s"Error: Could not find the required ${numProcessors - 1}, could only find ${seedJoints.length}")
-      None
+      println(s"Re-running with lower tolerance: %.1f".format(tolerance * 100.0))
+      findSeedJoints(jointSet, rockVolume, numProcessors, totalVolume, newTolerance, newStepSize)
     } else {
+      val initialBlock = Seq(rockVolume)
+      val blocks = seedJoints.foldLeft(initialBlock) { (currentBlocks, joint) =>
+        currentBlocks.flatMap(_.cut(joint))
+      }
+      val nonRedundantBlocks = blocks map { case block @ Block(blockCenter, _, _) =>
+          Block(blockCenter, block.nonRedundantFaces)
+      }
+      val volumes = nonRedundantBlocks.map(_.volume)
+      val avgVolume = volumes.sum / volumes.length
+      val maxImbalance = if (math.abs(volumes.max - avgVolume) > math.abs(volumes.min - avgVolume)) {
+        math.abs(volumes.max - avgVolume) / avgVolume
+      } else {
+        math.abs(volumes.min - avgVolume) / avgVolume
+      }
+      println("\nLOAD BALANCE INFORMATION:")
+      println(s"Average Volume: %.2f".format(avgVolume))
+      println(s"Max Volume: %.2f".format(volumes.max))
+      println(s"Min Volume: %.2f".format(volumes.min))
+      println(s"Maximum Imbalance: %.1f\n".format(maxImbalance * 100.0))
       Some(seedJoints)
     }
   }
 
   @tailrec
   private def cycleJointSet(jointSet: Seq[Joint], initialBlock: Block, volumePerProcessor: Double,
-                            selectedJoints: Seq[Joint]): Seq[Joint] = {
-    if (jointSet.length > 1) {
+                            totalVolume: Double, selectedJoints: Seq[Joint], tolerance: Double,
+                            numProcessors: Int): Seq[Joint] = {
+    if (selectedJoints.length == numProcessors - 1) {
+      // Enough seed joints have been found
+      selectedJoints
+    } else if (jointSet.length > 1) {
       // More than 1 joint in input joint set
-      val jointOption = testVolumes(jointSet.head, initialBlock, volumePerProcessor)
+      val jointOption = testVolumes(jointSet.head, jointSet.tail.head, initialBlock,
+        volumePerProcessor, totalVolume, tolerance)
 
       if (jointOption.isEmpty) {
         // Joint did not meet criteria
-        cycleJointSet(jointSet.tail, initialBlock, volumePerProcessor, selectedJoints)
+        cycleJointSet(jointSet.tail, initialBlock, volumePerProcessor, totalVolume, selectedJoints,
+          tolerance, numProcessors)
       } else {
         // Joint meets criteria
         val (seedJoint, remainingVolume) = jointOption.get
@@ -44,7 +75,8 @@ object SeedJointSelector {
           seedJoint +: selectedJoints
         } else {
           // Keep cycling through joints
-          cycleJointSet(jointSet.tail, remainingVolume, volumePerProcessor, seedJoint +: selectedJoints)
+          cycleJointSet(jointSet.tail, remainingVolume, volumePerProcessor, totalVolume,
+            seedJoint +: selectedJoints, tolerance, numProcessors)
         }
       }
     } else {
@@ -59,20 +91,14 @@ object SeedJointSelector {
         selectedJoints
       } else {
         // Joint intersect volume
-        if (sortedLastBlocks(1).volume <= volumePerProcessor) {
-          // Remaining volume small enough, return
-          jointSet.head +: selectedJoints
-        } else {
-          // Remaining volume not small enough, return anyway
-          println("ERROR: Remaining volume is still too large")
-          selectedJoints
-        }
+        jointSet.head +: selectedJoints
       }
     }
   }
 
   private def testVolumes(joint1: Joint, joint2: Joint, initialBlock: Block,
-                          desiredVolume: Double):Option[(Joint, Block)] = {
+                          desiredVolume: Double, totalVolume: Double,
+                          tolerance: Double):Option[(Joint, Block)] = {
     val blockSet1 = initialBlock cut joint1
     val blockSet2 = initialBlock cut joint2
 
@@ -88,31 +114,71 @@ object SeedJointSelector {
 
     if (sortedBlocks1.length == 1) {
       if (sortedBlocks2.length == 1) {
-        println("Both joints outside block")
+//        println("Both joints outside block")
         None
       } else if (sortedBlocks2(0).volume >= desiredVolume) {
-        println("Joint 2 satisfactory - large volume still remaining")
+//        println("Joint 2 satisfactory - large volume still remaining")
+//        println(s"Joint 2 Block Volume: ${sortedBlocks2(0).volume}, ${sortedBlocks2(1).volume}\n")
         Some(joint2, sortedBlocks2(1))
       } else if (sortedBlocks2(1).volume <= desiredVolume) {
-        println("Joint 2 satifactory - remaining volume small")
+//        println("Joint 2 satisfactory - remaining volume small")
+//        println(s"Desired Volume: $desiredVolume")
+//        println(s"Total Volume: $totalVolume")
+//        println(s"Joint 2 Block Volume: ${sortedBlocks2(0).volume}, ${sortedBlocks2(1).volume}\n")
         Some(joint2, sortedBlocks2(1))
       } else {
-        println("Joint 2 NOT satisfactory, joint 1 outside block")
+//        println("Joint 2 NOT satisfactory, joint 1 outside block")
+//        println(s"Joint 2 Block Volume: ${sortedBlocks2(0).volume}, ${sortedBlocks2(1).volume}\n")
+        None
       }
     } else if (sortedBlocks2.length == 1) {
       if (sortedBlocks1(0).volume >= desiredVolume) {
-        println("Joint 1 satisfactory - large volume still remaining")
+//        println("Joint 1 satisfactory - large volume still remaining")
+//        println(s"Joint 1 Block Volume: ${sortedBlocks1(0).volume}, ${sortedBlocks1(1).volume}\n")
         Some(joint1, sortedBlocks1(1))
       } else if (sortedBlocks1(1).volume <= desiredVolume) {
-        println("Joint 1 satisfactory - remaining volume small")
+//        println("Joint 1 satisfactory - remaining volume small")
+//        println(s"Joint 1 Block Volume: ${sortedBlocks1(0).volume}, ${sortedBlocks1(1).volume}\n")
         Some(joint1, sortedBlocks1(1))
       } else {
-        println("Joint 1 NOT satisfactory, joint 2 outside block")
+//        println("Joint 1 NOT satisfactory, joint 2 outside block")
+//        println(s"Joint 1 Block Volume: ${sortedBlocks1(0).volume}, ${sortedBlocks1(1).volume}\n")
         None
       }
     } else {
-      // CONTINUE HERE: Figure out how to pick between two joints
-      
+      // Compare volumes to desired volumes
+      val volumeDiff1 = sortedBlocks1(0).volume - desiredVolume
+      val volumeDiff2 = sortedBlocks2(0).volume - desiredVolume
+
+      // Return joint that gives volume closest to desired volume
+      if ((math.abs(volumeDiff1) <= tolerance || math.abs(volumeDiff2) <= tolerance) &&
+        (sortedBlocks1(1).volume <= 0.5 * totalVolume || sortedBlocks2(1).volume <= 0.5 * totalVolume)) {
+//        println("Past 50%")
+        if (math.abs(volumeDiff1) >= math.abs(volumeDiff2)) {
+//          println("Joint 2 satisfactory")
+//          println(s"Joint 1 Block Volume: ${sortedBlocks1(0).volume}, ${sortedBlocks1(1).volume}")
+//          println(s"Joint 2 Block Volume: ${sortedBlocks2(0).volume}, ${sortedBlocks2(1).volume}\n")
+          Some(joint2, sortedBlocks2(1))
+        } else {
+//          println("Joint 1 satisfactory")
+//          println(s"Joint 1 Block Volume: ${sortedBlocks1(0).volume}, ${sortedBlocks1(1).volume}")
+//          println(s"Joint 2 Block Volume: ${sortedBlocks2(0).volume}, ${sortedBlocks2(1).volume}\n")
+          Some(joint1, sortedBlocks1(1))
+        }
+      } else if (volumeDiff1 <= 0.0 && volumeDiff2 >= 0.0) {
+//        println("Sign choice")
+        if (math.abs(volumeDiff1) >= math.abs(volumeDiff2)) {
+          Some(joint2, sortedBlocks2(1))
+        } else {
+          Some(joint1, sortedBlocks1(1))
+        }
+      } else {
+//        println("None selected")
+        //        println("No joints satisfactory")
+        //        println(s"Joint 1 Block Volume: ${sortedBlocks1(0).volume}, ${sortedBlocks1(1).volume}")
+        //        println(s"Joint 2 Block Volume: ${sortedBlocks2(0).volume}, ${sortedBlocks2(1).volume}\n")
+        None
+      }
     }
   }
 //    if (sortedBlocks1.length == 1) {
