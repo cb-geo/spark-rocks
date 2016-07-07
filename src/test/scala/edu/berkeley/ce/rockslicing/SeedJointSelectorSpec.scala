@@ -37,8 +37,7 @@ class SeedJointSelectorSpec extends FunSuite {
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
-    val seedJoints = SeedJointSelector.findSeedJoints(jointSet = generatedInput.jointSets.head,
-      rockVolume = initialBlock, numProcessors = 2, totalVolume = initialBlock.volume)
+    val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 2)
 
     val expectedJoints = Seq[Joint](
       Joint(Array(0.0, 1.0, 0.0), Array(0.5, 0.5, 0.5), Array(0.5, 0.5, 0.5), phi = 30.0,
@@ -68,8 +67,7 @@ class SeedJointSelectorSpec extends FunSuite {
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
-    val seedJoints = SeedJointSelector.findSeedJoints(jointSet = generatedInput.jointSets.head,
-      rockVolume = initialBlock, numProcessors = 2, totalVolume = initialBlock.volume)
+    val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 2)
 
     val expectedJoints = Seq[Joint](
       Joint(Array(0.0, 1.0, 0.0), Array(0.5, 0.5, 0.5), Array(1.0, 1.0, 1.0), phi = 30.0,
@@ -99,8 +97,7 @@ class SeedJointSelectorSpec extends FunSuite {
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
-    val seedJoints = SeedJointSelector.findSeedJoints(jointSet = generatedInput.jointSets.head,
-      rockVolume = initialBlock, numProcessors = 3, totalVolume = initialBlock.volume)
+    val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 3)
 
     val expectedJoints = Seq[Joint](
       Joint(Array(0.0, 1.0, 0.0), Array(0.5, 0.5, 0.5), Array(0.5, 0.5, 0.5), phi = 30.0,
@@ -132,8 +129,7 @@ class SeedJointSelectorSpec extends FunSuite {
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
-    val seedJoints = SeedJointSelector.findSeedJoints(jointSet = generatedInput.jointSets.head,
-      rockVolume = initialBlock, numProcessors = 4, totalVolume = initialBlock.volume)
+    val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 4)
 
     val expectedJoints = Seq[Joint](
       Joint(Array(0.0, 1.0, 0.0), Array(0.5, 0.5, 0.5), Array(0.5, 0.5, 0.5), phi = 30.0,
@@ -167,9 +163,7 @@ class SeedJointSelectorSpec extends FunSuite {
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
-    val seedJoints = SeedJointSelector.findSeedJoints(jointSet = generatedInput.jointSets.head,
-      rockVolume = initialBlock, numProcessors = 21, totalVolume = initialBlock.volume)
-
+    val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 21)
 
     assert(seedJoints.get.length == 20)
   }
@@ -190,28 +184,9 @@ class SeedJointSelectorSpec extends FunSuite {
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
-    val seedJoints = SeedJointSelector.findSeedJoints(jointSet = generatedInput.jointSets.head,
-      rockVolume = initialBlock, numProcessors = 41, totalVolume = initialBlock.volume)
-
+    val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 41)
 
     assert(seedJoints.get.length == 40)
   }
 }
 
-//println("EXPECTED JOINTS:")
-//expectedJoints.foreach { joint =>
-//  println(s"Normal: ${joint.a}, ${joint.b}, ${joint.c}")
-//  println(s"Center: ${joint.centerX}, ${joint.centerY}, ${joint.centerZ}")
-//  println(s"Origin: ${joint.localX}, ${joint.localY}, ${joint.localY}")
-//}
-//
-//  println("\nGENERATED JOINTS:")
-//  if (seedJoints.isEmpty) {
-//  println("EMPTY!!!!!!!!!!!!")
-//} else {
-//  seedJoints.get.foreach { joint =>
-//  println(s"Normal: ${joint.a}, ${joint.b}, ${joint.c}")
-//  println(s"Center: ${joint.centerX}, ${joint.centerY}, ${joint.centerZ}")
-//  println(s"Origin: ${joint.localX}, ${joint.localY}, ${joint.localY}")
-//}
-//}

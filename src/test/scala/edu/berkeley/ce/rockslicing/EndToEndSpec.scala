@@ -32,7 +32,6 @@ class EndToEndSpec extends FunSuite {
       }
     }
 
-    println("FINDING NON-REDUNDANT BLOCKS")
     // Remove geometrically redundant joints
     val nonRedundantBlocks = cutBlocks.map { case block @ Block(center, _, _) =>
       Block(center, block.nonRedundantFaces)
@@ -49,7 +48,7 @@ class EndToEndSpec extends FunSuite {
     val cleanedBlocks = centroidBlocks.map { case Block(center, faces, _) =>
       Block(center, faces.map(_.applyTolerance))
     }
-    
+
     val expectedJsonSource = Source.fromURL(getClass.getResource(s"/$OUTPUT_FILE_NAME"))
 
     try {
