@@ -57,22 +57,23 @@ object SeedJointSelector {
                      tolerance: Double = 0.01, stepSize: Double = 0.01): Option[Seq[Joint]] = {
     if (jointSet.length < numProcessors - 1) {
       println(s"Error: Not enough joints to generate required number of seed joints. ${jointSet.length} joints but"+
-      s"$numProcessors processors. Try using less processors.")
+      s" $numProcessors processors. Try using less processors.")
       return None
     }
     val volumePerProc = rockVolume.volume / numProcessors
     val seedJoints = cycleJointSet(jointSet, rockVolume, volumePerProc, totalVolume,
       Seq.empty[Joint], tolerance, numProcessors)
-    if (seedJoints.length != numProcessors - 1) {
+
+    if (stepSize < 0.01) {
+      println("Error: Unable to find satisfactory seed joints using current joint set. Please try another " +
+        "persistent joint set.")
+      None
+    } else if (seedJoints.length != numProcessors - 1) {
       val newStepSize = if (tolerance >= 1.0) { stepSize / 2.0 } else { stepSize }
       val newTolerance = if (tolerance >= 1.0) { newStepSize } else { tolerance + stepSize }
       println(s"Error: Could not find the required ${numProcessors - 1}, could only find ${seedJoints.length}")
       println(s"Re-running with lower tolerance: %.1f".format(tolerance * 100.0))
       findSeedJoints(jointSet, rockVolume, numProcessors, totalVolume, newTolerance, newStepSize)
-    } else if (stepSize < 0.001) {
-      println("Error: Unable to find satisfactory seed joints using current joint set. Please try another" +
-        "persistent joint set.")
-      None
     } else {
       val initialBlock = Seq(rockVolume)
       val blocks = seedJoints.foldLeft(initialBlock) { (currentBlocks, joint) =>
