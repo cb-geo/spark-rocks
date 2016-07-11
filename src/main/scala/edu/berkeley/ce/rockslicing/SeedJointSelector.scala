@@ -71,8 +71,8 @@ object SeedJointSelector {
     } else if (seedJoints.length != numProcessors - 1) {
       val newStepSize = if (tolerance >= 1.0) { stepSize / 2.0 } else { stepSize }
       val newTolerance = if (tolerance >= 1.0) { newStepSize } else { tolerance + stepSize }
-      println(s"Error: Could not find the required ${numProcessors - 1}, could only find ${seedJoints.length}")
-      println(s"Re-running with lower tolerance: %.1f".format(tolerance * 100.0))
+      println(s"Warning: Could not find the required ${numProcessors - 1}, could only find ${seedJoints.length}")
+      println(s"Re-running with lower tolerance: %.1f%%".format(newTolerance * 100.0))
       findSeedJoints(jointSet, rockVolume, numProcessors, totalVolume, newTolerance, newStepSize)
     } else {
       val initialBlock = Seq(rockVolume)
@@ -93,7 +93,6 @@ object SeedJointSelector {
       println(s"Average Volume: %.2f".format(avgVolume))
       println(s"Max Volume: %.2f".format(volumes.max))
       println(s"Min Volume: %.2f".format(volumes.min))
-      println(s"Maximum Imbalance: %.1f\n".format(maxImbalance * 100.0))
       Some(seedJoints)
     }
   }
@@ -214,8 +213,8 @@ object SeedJointSelector {
     } else {
       // BOTH joints intersect the block
       // Compare volumes to desired volumes
-      val volumeDiff1 = sortedBlocks1(0).volume - desiredVolume
-      val volumeDiff2 = sortedBlocks2(0).volume - desiredVolume
+      val volumeDiff1 = (sortedBlocks1(0).volume - desiredVolume) / desiredVolume
+      val volumeDiff2 = (sortedBlocks2(0).volume - desiredVolume) / desiredVolume
 
       // Return joint that gives volume closest to desired volume
       // When less than 50% of the total volume remains, begin loosening constaints on joint selected until

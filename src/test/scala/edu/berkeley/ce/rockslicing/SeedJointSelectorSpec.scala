@@ -168,7 +168,7 @@ class SeedJointSelectorSpec extends FunSuite {
     assert(seedJoints.get.length == 20)
   }
 
-  test("40 seed joints should be selected - pi planes dividing two cube") {
+  test("20 seed joints should be selected - pi planes dividing two cube") {
     val globalOrigin = Array[Double](0.5, 0.5, 0.5)
     val boundingBox = Array[Double](0.0, 0.0, 0.0, 2.0, 2.0, 2.0)
     val rockVolume = Array[Array[Double]](
@@ -184,9 +184,29 @@ class SeedJointSelectorSpec extends FunSuite {
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
-    val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 41)
+    val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 21)
 
-    assert(seedJoints.get.length == 40)
+    assert(seedJoints.get.length == 20)
+  }
+
+  test("Seed joint test on first Spaulding joint set") {
+    val globalOrigin = Array[Double](0.0, 0.0, 0.0)
+    val boundingBox = Array[Double](-5.0, -5.0, -5.0, 5.0, 5.0, 5.0)
+    val rockVolume = Array[Array[Double]](
+      Array(90.0, 90.0, 4.0, 0.0, 0.0, 30.0, 0.0),
+      Array(0.0, 90.0, 0.0, 4.0, 0.0, 30.0, 0.0),
+      Array(0.0, 0.0, 0.0, 0.0, 4.0, 30.0, 0.0),
+      Array(90.0, 90.0, -4.0, 0.0, 0.0, 30.0, 0.0),
+      Array(0.0, 90.0, 0.0, -4.0, 0.0, 30.0, 0.0),
+      Array(0.0, 0.0, 0.0, 0.0, -4.0, 30.0, 0.0)
+    )
+    val jointData = Array[Array[Double]](
+      Array(60.0, 25.0, 0.5, 100.0, 30.0, 0.0)
+    )
+    val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
+    val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
+    val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 4)
+
+    assert(seedJoints.get.length == 3)
   }
 }
-
