@@ -14,7 +14,7 @@ object Joint {
     * @return
     */
   def findDistance(normalVec: Array[Double], localOrigin: Array[Double],
-                           center: Array[Double]): Double = {
+                   center: Array[Double]): Double = {
     assert(normalVec.length == 3 && localOrigin.length == 3 && center.length == 3)
 
     val w = DenseVector.zeros[Double](3)

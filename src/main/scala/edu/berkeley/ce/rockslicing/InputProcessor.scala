@@ -6,10 +6,10 @@ import scala.util.Try
 object InputProcessor {
   // Processes input file: Add rock volume faces and joints to respective input list
   def readInput(inputSource: Source): Option[ (Array[Double], Array[Double],
-    Vector[Array[Double]], Vector[Array[Double]]) ] = {
+    Seq[Array[Double]], Seq[Array[Double]]) ] = {
     val lines = inputSource.getLines().zipWithIndex.toVector
     val globalOriginLine = lines.head._1
-    val boundingBoxLine = lines.tail.head._1
+    val boundingBoxLine = lines(1)._1
 
     val globalOriginTokens = globalOriginLine.split(" ") map { x => Try(x.toDouble) }
     val errIndex = globalOriginTokens.indexWhere(_.isFailure)
@@ -23,7 +23,7 @@ object InputProcessor {
     val globalOrigin = globalOriginTokens map(_.get)
     val globalOriginArr = Array(globalOrigin(0), globalOrigin(1), globalOrigin(2))
 
-    val boundingBoxTokens = boundingBoxLine.split(" ") map {x => Try(x.toDouble) }
+    val boundingBoxTokens = boundingBoxLine.split(" ") map { x => Try(x.toDouble) }
     val bbErrIndex = boundingBoxTokens.indexWhere(_.isFailure)
     if (bbErrIndex != -1) {
       println(s"Error, Line 2, Token $errIndex: Invalid double found in definition of bounding box")
@@ -36,7 +36,7 @@ object InputProcessor {
     val boundingBoxArr = Array(boundingBox(0), boundingBox(1), boundingBox(2),
                                boundingBox(3), boundingBox(4), boundingBox(5))
 
-    val remainingLines = lines.tail.tail
+    val remainingLines = lines.drop(2)
     val transitionIndex = remainingLines.indexWhere(_._1.isEmpty)
     if (transitionIndex == -1) {
       println("Error: Input file must contain empty line to mark transition from rock volume to joints")
@@ -85,15 +85,11 @@ object InputProcessor {
                 """
         )
         return None
-      }
-
-      val optionalValues = doubleVals.drop(6)
-      if (optionalValues.length != 0 && optionalValues.length != 3 && optionalValues.length != 4) {
+      } else if (doubleVals.length != 6 && doubleVals.length != 9 && doubleVals.length != 10) {
         println(s"Error, Line $index: If specifying distributions for joints, they must be specified for strike, "+
           "dip, spacing and, if relevant, persistence.")
         return None
       }
-
       doubleVals
     }
 

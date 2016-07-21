@@ -44,7 +44,7 @@ class SeedJointSelectorSpec extends FunSuite {
         cohesion = 0.0, shape = Vector.empty)
     )
 
-    val jointComparison = expectedJoints.zip(seedJoints.get) map { case (joint1, joint2) =>
+    val jointComparison = expectedJoints.zip(seedJoints) map { case (joint1, joint2) =>
       compareJoints(joint1, joint2)
     }
 
@@ -74,7 +74,7 @@ class SeedJointSelectorSpec extends FunSuite {
         cohesion = 0.0, shape = Vector.empty)
       )
 
-    val jointComparison = expectedJoints.zip(seedJoints.get) map { case (joint1, joint2) =>
+    val jointComparison = expectedJoints.zip(seedJoints) map { case (joint1, joint2) =>
       compareJoints(joint1, joint2)
     }
 
@@ -106,7 +106,7 @@ class SeedJointSelectorSpec extends FunSuite {
         cohesion = 0.0, shape = Vector.empty)
     )
 
-    val jointComparison = expectedJoints.zip(seedJoints.get) map { case (joint1, joint2) =>
+    val jointComparison = expectedJoints.zip(seedJoints) map { case (joint1, joint2) =>
       compareJoints(joint1, joint2)
     }
 
@@ -140,7 +140,7 @@ class SeedJointSelectorSpec extends FunSuite {
         cohesion = 0.0, shape = Vector.empty)
     )
 
-    val jointComparison = expectedJoints.zip(seedJoints.get) map { case (joint1, joint2) =>
+    val jointComparison = expectedJoints.zip(seedJoints) map { case (joint1, joint2) =>
       compareJoints(joint1, joint2)
     }
 
@@ -165,7 +165,7 @@ class SeedJointSelectorSpec extends FunSuite {
     val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
     val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 21)
 
-    assert(seedJoints.get.length == 20)
+    assert(seedJoints.length == 20)
   }
 
   test("20 seed joints should be selected - pi planes dividing two cube") {
@@ -186,7 +186,7 @@ class SeedJointSelectorSpec extends FunSuite {
     val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
     val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 21)
 
-    assert(seedJoints.get.length == 20)
+    assert(seedJoints.length == 20)
   }
 
   test("Seed joint test on first Spaulding joint set") {
@@ -207,6 +207,6 @@ class SeedJointSelectorSpec extends FunSuite {
     val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
     val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 4)
 
-    assert(seedJoints.get.length == 3)
+    assert(seedJoints.length == 3)
   }
 }

@@ -38,7 +38,7 @@ object RockSlicer {
 
     // Generate a list of initial blocks before RDD-ifying it
     val seedJoints = if (arguments.numProcessors > 1) {
-      // Check if at least on of the input joint sets is persistent
+      // Check if at least one of the input joint sets is persistent
       val persistentCheck = jointSetInputs exists { jointSet =>
         jointSet(3) == 100
       }
@@ -49,14 +49,8 @@ object RockSlicer {
         System.exit(-1)
       }
 
-      val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets,
+      SeedJointSelector.searchJointSets(generatedInput.jointSets,
         starterBlocks.head, arguments.numProcessors)
-
-      if (seedJoints.isEmpty) {
-        println("ERROR: Unable to find satisfactory seed joints")
-        System.exit(-1)
-      }
-      seedJoints.get
     } else {
       Seq.empty[Joint]
     }

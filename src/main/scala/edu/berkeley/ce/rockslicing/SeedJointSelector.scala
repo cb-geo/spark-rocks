@@ -7,30 +7,30 @@ import scala.annotation.tailrec
   * approximately balanced loads among processors.
   */
 object SeedJointSelector {
-
+  val THRESHOLD = 0.50
   /**
     * Searches though sequence of joint sets to find best seed joints
     *
     * @param jointSets Seq of Seq's of Joints representing input joint sets
     * @param inputVolume Block representing input rock volume
     * @param numProcessors Number of processors to be used in the analysis
-    * @return Returns a Seq containing the seed joints that best divide the input volume. If unable to find
-    *         satisfactory seed joints, returns None.
+    * @return Returns a Seq containing the seed joints that best divide the input volume
     */
   @tailrec
   def searchJointSets(jointSets: Seq[Seq[Joint]], inputVolume: Block,
-                      numProcessors: Int): Option[Seq[Joint]] = {
+                      numProcessors: Int): Seq[Joint] = {
     if (jointSets.isEmpty) {
-      println("ERROR: Unable to find seed joints")
-      None
-    } else if (jointSets.head(0).shape.isEmpty) {
+      throw new IllegalStateException("ERROR: Unable to find satisfactory seed joints")
+    }
+    if (jointSets.head(0).shape.isEmpty) {
       // Check that joint set is persistent
       val seedJointOption = findSeedJoints(jointSets.head, inputVolume, numProcessors, inputVolume.volume)
 
+      // Check whether joint set yields satisfactory seed joints. If it does not, check next joint set.
       if (seedJointOption.isEmpty) {
           searchJointSets(jointSets.tail, inputVolume, numProcessors)
       } else {
-        seedJointOption
+        seedJointOption.get
       }
     } else {
       searchJointSets(jointSets.tail, inputVolume, numProcessors)
@@ -44,7 +44,6 @@ object SeedJointSelector {
     * @param rockVolume Block representing input rock volume that should be divided into approximately equal pieces
     *                   for each process to operate on
     * @param numProcessors Number of processes that will be used in analysis
-    * @param totalVolume Total volume of rockVolume
     * @param tolerance Tolerance in deviation from ideal volume per processor. Default initial value is 1%, though it
     *                  will be updated as necessary in recursive calls.
     * @param stepSize Step size that tolerance will be incremented by if unable to find enough seed joints. Default
@@ -53,27 +52,25 @@ object SeedJointSelector {
     *         to find sufficient seed joints, it will return None.
     */
   @tailrec
-  private def findSeedJoints(jointSet: Seq[Joint], rockVolume: Block, numProcessors: Integer, totalVolume: Double,
-                     tolerance: Double = 0.01, stepSize: Double = 0.01): Option[Seq[Joint]] = {
+  private def findSeedJoints(jointSet: Seq[Joint], rockVolume: Block, numProcessors: Integer, tolerance: Double = 0.01,
+                             stepSize: Double = 0.01): Option[Seq[Joint]] = {
     if (jointSet.length < numProcessors - 1) {
-      println(s"Error: Not enough joints to generate required number of seed joints. ${jointSet.length} joints but"+
-      s" $numProcessors processors. Try using less processors.")
-      return None
+      throw new IllegalArgumentException(s"Error: Not enough joints to generate required number of seed joints. ${jointSet.length} joints but"+
+        s" $numProcessors processors. Try using fewer processors.")
     }
+
+    val totalVolume = rockVolume.volume
     val volumePerProc = rockVolume.volume / numProcessors
-    val seedJoints = cycleJointSet(jointSet, rockVolume, volumePerProc, totalVolume,
+    val seedJoints = selectSeedJoints(jointSet, rockVolume, volumePerProc, totalVolume,
       Seq.empty[Joint], tolerance, numProcessors)
 
     if (stepSize < 0.01) {
-      println("Error: Unable to find satisfactory seed joints using current joint set. Please try another " +
-        "persistent joint set.")
+      // Unable to find satisfactory seed joints using current joint set
       None
     } else if (seedJoints.length != numProcessors - 1) {
       val newStepSize = if (tolerance >= 1.0) { stepSize / 2.0 } else { stepSize }
       val newTolerance = if (tolerance >= 1.0) { newStepSize } else { tolerance + stepSize }
-      println(s"Warning: Could not find the required ${numProcessors - 1}, could only find ${seedJoints.length}")
-      println(s"Re-running with lower tolerance: %.1f%%".format(newTolerance * 100.0))
-      findSeedJoints(jointSet, rockVolume, numProcessors, totalVolume, newTolerance, newStepSize)
+      findSeedJoints(jointSet, rockVolume, numProcessors, newTolerance, newStepSize)
     } else {
       val initialBlock = Seq(rockVolume)
       val blocks = seedJoints.foldLeft(initialBlock) { (currentBlocks, joint) =>
@@ -84,11 +81,6 @@ object SeedJointSelector {
       }
       val volumes = nonRedundantBlocks.map(_.volume)
       val avgVolume = volumes.sum / volumes.length
-      val maxImbalance = if (math.abs(volumes.max - avgVolume) > math.abs(volumes.min - avgVolume)) {
-        math.abs(volumes.max - avgVolume) / avgVolume
-      } else {
-        math.abs(volumes.min - avgVolume) / avgVolume
-      }
       println("\nLOAD BALANCE INFORMATION:")
       println(s"Average Volume: %.2f".format(avgVolume))
       println(s"Max Volume: %.2f".format(volumes.max))
@@ -98,7 +90,8 @@ object SeedJointSelector {
   }
 
   /**
-    * Cycles through input joint set to find seed joints.
+    * Iterates through input joint set and selects joints that divide the initial block into approximately
+    * equal volumes
     *
     * @param jointSet Seq of Joints representing a persistent joint set
     * @param initialBlock Block that should be subdivided by seed joints into approximately equal volumes
@@ -107,10 +100,10 @@ object SeedJointSelector {
     * @param selectedJoints Seq of Joints that have been identified as seed joints
     * @param tolerance Acceptable deviation from ideal volume per processor
     * @param numProcessors Number of processors that will be used in the analysis
-    * @return
+    * @return Seq of joints that divide initial block into approximately equal volumes
     */
   @tailrec
-  private def cycleJointSet(jointSet: Seq[Joint], initialBlock: Block, volumePerProcessor: Double,
+  private def selectSeedJoints(jointSet: Seq[Joint], initialBlock: Block, volumePerProcessor: Double,
                             totalVolume: Double, selectedJoints: Seq[Joint], tolerance: Double,
                             numProcessors: Int): Seq[Joint] = {
     if (selectedJoints.length == numProcessors - 1) {
@@ -123,7 +116,7 @@ object SeedJointSelector {
 
       if (jointOption.isEmpty) {
         // Joint did not meet criteria
-        cycleJointSet(jointSet.tail, initialBlock, volumePerProcessor, totalVolume, selectedJoints,
+        selectSeedJoints(jointSet.tail, initialBlock, volumePerProcessor, totalVolume, selectedJoints,
           tolerance, numProcessors)
       } else {
         // Joint meets criteria
@@ -133,7 +126,7 @@ object SeedJointSelector {
           seedJoint +: selectedJoints
         } else {
           // Keep cycling through joints
-          cycleJointSet(jointSet.tail, remainingVolume, volumePerProcessor, totalVolume,
+          selectSeedJoints(jointSet.tail, remainingVolume, volumePerProcessor, totalVolume,
             seedJoint +: selectedJoints, tolerance, numProcessors)
         }
       }
@@ -155,8 +148,13 @@ object SeedJointSelector {
   }
 
   /**
-    * Test which, if any, of two input joints divides the input block into blocks of
-    * desired volume.
+    * Test which, if any, of two input joints divides the input block into blocks of approximately the
+    * desired volume. Since joints most likely will not divide input block into exactly the desired volume,
+    * consider two joints simultaneously and compare how they divide the input block. When one joint yields a block
+    * smaller than the desired volume and the other yields a block larger than the desired volume, select joint that
+    * yields block closest to the desired volume.
+    * When less than THRESHOLD percent of the total volume remains, the tolerance on the joint selection is loosened
+    * to ensure that an adequate number of seed joints can be found.
     *
     * @param joint1 First input joint
     * @param joint2 Second input joint
@@ -173,14 +171,15 @@ object SeedJointSelector {
     val blockSet1 = inputBlock cut joint1
     val blockSet2 = inputBlock cut joint2
 
-    val nonRedundantBlocks = blockSet1 map { case block @ Block(blockCenter, _, _) =>
+    val nonRedundantBlocks1 = blockSet1 map { case block @ Block(blockCenter, _, _) =>
         Block(blockCenter, block.nonRedundantFaces)
     }
     val nonRedundantBlocks2 = blockSet2 map { case block @ Block(blockCenter, _, _) =>
       Block(blockCenter, block.nonRedundantFaces)
     }
 
-    val sortedBlocks1 = nonRedundantBlocks.sortWith(_.volume < _.volume)
+    // Sort generated blocks based on volume
+    val sortedBlocks1 = nonRedundantBlocks1.sortWith(_.volume < _.volume)
     val sortedBlocks2 = nonRedundantBlocks2.sortWith(_.volume < _.volume)
 
     if (sortedBlocks1.length == 1) {
@@ -216,14 +215,14 @@ object SeedJointSelector {
       val volumeDiff1 = (sortedBlocks1(0).volume - desiredVolume) / desiredVolume
       val volumeDiff2 = (sortedBlocks2(0).volume - desiredVolume) / desiredVolume
 
-      // Return joint that gives volume closest to desired volume
-      // When less than 50% of the total volume remains, begin loosening constaints on joint selected until
-      // a sufficient number of joints have been found. When more than 50% of the total volume still remains,
+      // Return joint that gives volume closest to desired volume.
+      // When less than 50% of the total volume remains, begin loosening constraints on joint selected until
+      // a sufficient number of joints have been found. When more than TOLERANCE of the total volume still remains,
       // seed joints are chosen when one of the input joints yields a block smaller than the desired volume and
       // the other yields a block larger then the desired volume. The joint yielding a block with volume closest
       // to the desired volume is selected.
       if ((math.abs(volumeDiff1) <= tolerance || math.abs(volumeDiff2) <= tolerance) &&
-        (sortedBlocks1(1).volume <= 0.5 * totalVolume || sortedBlocks2(1).volume <= 0.5 * totalVolume)) {
+        (sortedBlocks1(1).volume <= THRESHOLD * totalVolume || sortedBlocks2(1).volume <= THRESHOLD * totalVolume)) {
         if (math.abs(volumeDiff1) >= math.abs(volumeDiff2)) {
           Some(joint2, sortedBlocks2(1))
         } else {

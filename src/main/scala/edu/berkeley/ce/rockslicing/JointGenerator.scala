@@ -17,17 +17,15 @@ object JointGenerator {
     val dipRadians = dip.toRadians
     val strikeVector = DenseVector[Double](math.cos(-strikeRadians), math.sin(-strikeRadians), 0.0)
     // If joint is vertical, dip vector will point along negative z-axis
-    if (math.abs(dip - 90.0) < NumericUtils.EPSILON) {
-      val dipVector = DenseVector[Double](0.0, 0.0, -1.0)
-      val jointNormal = linalg.normalize(linalg.cross(strikeVector, dipVector))
-      Array(jointNormal(0), jointNormal(1), jointNormal(2))
+    val dipVector = if (math.abs(dip - 90.0) < NumericUtils.EPSILON) {
+      DenseVector[Double](0.0, 0.0, -1.0)
     } else {
-      val dipVector = DenseVector[Double](math.cos(dipRadians) * math.cos(-(strikeRadians + math.Pi / 2.0)),
+      DenseVector[Double](math.cos(dipRadians) * math.cos(-(strikeRadians + math.Pi / 2.0)),
         math.cos(dipRadians) * math.sin(-(strikeRadians + math.Pi / 2.0)),
         -math.sin(dipRadians))
-      val jointNormal = linalg.normalize(linalg.cross(strikeVector, dipVector))
-      Array(jointNormal(0), jointNormal(1), jointNormal(2))
     }
+    val jointNormal = linalg.normalize(linalg.cross(strikeVector, dipVector))
+    Array(jointNormal(0), jointNormal(1), jointNormal(2))
   }
 
   /**
@@ -56,17 +54,19 @@ object JointGenerator {
 
   /**
     * Finds representative joint for each joint set, centered at the lower left corner of the
-    * bounding box.
+    * bounding box. For deterministic inputs, representative joint will have normal vector
+    * corresponding to strike and dip input by user as well as the specified phi and cohesion.
+    * Stochastic inputs are presently not supported, but will be implemented at a later time.
     *
     * @param globalOrigin Coordinates of the global origin
     * @param lowerLeftCorner Lower left corner of the bounding box
-    * @param joints Array containing the input data representing joint sets
+    * @param jointSets Array containing the input data representing joint sets
     * @return Seq of "master" joints that represent input joint sets. These will be used as a starting point
     *         to generate full joint set.
     */
   private def findMasterJoints(globalOrigin: Array[Double], lowerLeftCorner: Array[Double],
-                               joints: Seq[Array[Double]]): Option[Seq[Joint]] = {
-    val masterJoints = joints flatMap { parameters =>
+                               jointSets: Seq[Array[Double]]): Seq[Joint] = {
+    val masterJoints = jointSets flatMap { parameters =>
       if (parameters.length == 6) {
         // TODO: Implement non-persistent joint generator
         val normal = findJointNormal(parameters(0), parameters(1))
@@ -74,15 +74,11 @@ object JointGenerator {
           phi=parameters(4), cohesion=parameters(5), shape=Vector.empty))
       } else {
         // TODO: Implement stochastic generator
-        println("Error, Joint Input Data: Stochastic joint generation not implemented yet")
-        None
+        throw new UnsupportedOperationException("ERROR: Joint Input Data: Stochastic joint generation " +
+          "not yet implemented")
       }
     }
-    if (masterJoints.length != joints.length) {
-      None
-    } else {
-      Some(masterJoints)
-    }
+    masterJoints
   }
 }
 
@@ -93,25 +89,20 @@ object JointGenerator {
   * @param globalOrigin Coordinates of the global origin
   * @param boundingBox Coordinates specifying the lower left and upper right corners of the box that bounds
   *                    the domain of interest.
-  * @param rockVolumeData Array of arrays describing each of the faces that define the boundaries of
+  * @param rockVolumeData Seq of arrays describing each of the faces that define the boundaries of
   *                       the rock volume of interest. The inputs in each array are strike, dip and the x,
   *                       y and z coordinates of a point that lies within the plane containing the face.
   *                       Strike and dip should be specified in degrees.
-  * @param jointSetData Array of arrays containing the input data representing joint sets. The inputs in each array
+  * @param jointSetData Seq of arrays containing the input data representing joint sets. The inputs in each array
   *                     are strike, dip, joint spacing, persistence, phi, cohesion and optional stochastic parameters
   */
 case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double], rockVolumeData: Seq[Array[Double]],
-                     jointSetData: Seq[Array[Double]]) {
+                          jointSetData: Seq[Array[Double]]) {
   val origin = globalOrigin
   val lowerLeftCorner = Array(boundingBox(0), boundingBox(1), boundingBox(2))
   val upperRightCorner = Array(boundingBox(3), boundingBox(4), boundingBox(5))
   val rockVolume = JointGenerator.findBoundingFaces(globalOrigin, rockVolumeData)
-  val masterJoints = JointGenerator.findMasterJoints(globalOrigin, lowerLeftCorner, jointSetData).get
-
-  if (masterJoints.isEmpty) {
-    throw new IllegalArgumentException("ERROR: Stochastic joint generation not yet implemented")
-  }
-
+  val masterJoints = JointGenerator.findMasterJoints(globalOrigin, lowerLeftCorner, jointSetData)
   val jointSets = generateJointSets(jointSetData)
 
   /**
@@ -122,7 +113,7 @@ case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double
     * @return Seq of joints for each input joint set
     */
   def generateJointSets(jointSetData: Seq[Array[Double]]): Seq[Seq[Joint]] = {
-    val jointTuple = masterJoints.zip(jointSetData)
+    val jointTuples = masterJoints.zip(jointSetData)
     
     val deltaX = upperRightCorner(0) - lowerLeftCorner(0)
     val deltaY = upperRightCorner(1) - lowerLeftCorner(1)
@@ -146,7 +137,7 @@ case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double
         linalg.normalize(DenseVector[Double](upper(0) - lower(0), upper(1) - lower(1), upper(2) - lower(2)))
     }
 
-    jointTuple map { case (joint, jointData) =>
+    jointTuples map { case (joint, jointData) =>
       if (jointData(3) == 100) {
         // Calculate dot product of each diagonal vector with joint normal
         val diagDotProducts = diagonalVectors map { diagonal =>
@@ -158,7 +149,7 @@ case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double
         val diagonalIndex = diagDotProducts.indexOf(diagDotProducts.max)
         val initialCorner = lowerCorners(diagonalIndex)
         val terminalCorner = upperCorners(diagonalIndex)
-        makePersistentJointSet(joint, jointData, bestDiagonal, initialCorner, terminalCorner, Seq.empty[Joint])
+        makePersistentJointSet(joint, jointData, bestDiagonal, initialCorner, terminalCorner)
       } else {
         makeNonPersistentJointSet(joint, jointData)
       }
@@ -182,7 +173,7 @@ case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double
   @tailrec
   private def makePersistentJointSet(joint: Joint, jointData: Array[Double], diagonalVector: DenseVector[Double],
                                      center: Array[Double], terminationPoint: Array[Double],
-                                     jointSet: Seq[Joint]): Seq[Joint] = {
+                                     jointSet: Seq[Joint] = Seq.empty[Joint]): Seq[Joint] = {
     val terminationVector = DenseVector[Double](terminationPoint(0) - center(0),
       terminationPoint(1) - center(1),
       terminationPoint(2) - center(2)
@@ -214,8 +205,6 @@ case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double
     */
   def makeNonPersistentJointSet(joint: Joint, jointData: Array[Double]): Seq[Joint] = {
     // Still needs to be implemented, but will require stochastic generator
-    println("ERROR: Non-persistent joint generator not yet implemented")
-    System.exit(-1)
-    Seq.empty[Joint]
+    throw new UnsupportedOperationException("ERROR: Non-persistent joint generator not yet implemented")
   }
 }

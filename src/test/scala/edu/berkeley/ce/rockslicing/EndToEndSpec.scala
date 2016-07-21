@@ -20,7 +20,7 @@ class EndToEndSpec extends FunSuite {
 
     // Generate seed joints
     val numProcessors = 2
-    val seedJoints = SeedJointSelector.searchJointSets(generatedInputs.jointSets, initialBlocks.head, numProcessors).get
+    val seedJoints = SeedJointSelector.searchJointSets(generatedInputs.jointSets, initialBlocks.head, numProcessors)
     val nonSeedjoints = generatedInputs.jointSets.flatten.diff(seedJoints)
 
     val joints = seedJoints ++ nonSeedjoints
