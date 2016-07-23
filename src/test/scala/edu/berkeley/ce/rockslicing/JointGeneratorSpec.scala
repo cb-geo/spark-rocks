@@ -28,8 +28,8 @@ class JointGeneratorSpec extends FunSuite {
     val rockVolume = Array[Array[Double]](
       Array(0.0, 0.0, 0.0, 0.0, 2.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0))
     )
 
     val generatedRockData = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
@@ -43,8 +43,8 @@ class JointGeneratorSpec extends FunSuite {
     val rockVolume = Array[Array[Double]](
       Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0))
     )
 
     val generatedRockData = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
@@ -58,8 +58,8 @@ class JointGeneratorSpec extends FunSuite {
     val rockVolume = Array[Array[Double]](
       Array(90.0, 90.0, 2.0, 0.0, 0.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0))
     )
 
     val generatedRockData = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
@@ -73,8 +73,8 @@ class JointGeneratorSpec extends FunSuite {
     val rockVolume = Array[Array[Double]](
       Array(90.0, 90.0, 0.0, 0.0, 0.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0))
     )
 
     val generatedRockData = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
@@ -88,8 +88,8 @@ class JointGeneratorSpec extends FunSuite {
     val rockVolume = Array[Array[Double]](
       Array(0.0, 90.0, 0.0, 2.0, 0.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0))
     )
 
     val generatedRockData = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
@@ -103,8 +103,8 @@ class JointGeneratorSpec extends FunSuite {
     val rockVolume = Array[Array[Double]](
       Array(0.0, 90.0, 0.0, 0.0, 0.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0))
     )
 
     val generatedRockData = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
@@ -118,8 +118,8 @@ class JointGeneratorSpec extends FunSuite {
     val rockVolume = Array[Array[Double]](
       Array(180.0, 45.0, 0.0, 1.0/sqrt(2.0), 1.0/sqrt(2.0), 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(0.0, 45.0, 0.5, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(0.0, 45.0, 0.5, 100.0, 30.0, 0.0))
     )
 
     val generatedRockData = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
@@ -133,10 +133,9 @@ class JointGeneratorSpec extends FunSuite {
     val rockVolume = Array[Array[Double]](
       Array(270, 30.0, 1.0/2.0, 0.0, sqrt(3.0)/2.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(0.0, 45.0, 0.5, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(0.0, 45.0, 0.5, 100.0, 30.0, 0.0))
     )
-
     val generatedRockData = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val expectedFace = Seq(Face(Array(1.0/2.0, 0.0, sqrt(3.0)/2.0), 1.0, phi = 30.0, cohesion = 0.0))
     assert(expectedFace.map(_.roundToTolerance()) == generatedRockData.rockVolume.map(_.roundToTolerance()))
@@ -153,8 +152,8 @@ class JointGeneratorSpec extends FunSuite {
       Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0),
       Array(0.0, 0.0, 0.0, 0.0, 2.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0))
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val expectedOrigin = Array[Double](1.0, 1.0, 1.0)
@@ -187,8 +186,8 @@ class JointGeneratorSpec extends FunSuite {
       Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0),
       Array(0.0, 0.0, 0.0, 0.0, 2.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(0.0, 0.0, 0.5, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(0.0, 0.0, 0.5, 100.0, 30.0, 0.0))
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
 
@@ -210,8 +209,8 @@ class JointGeneratorSpec extends FunSuite {
       Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0),
       Array(0.0, 0.0, 0.0, 0.0, 2.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(270.0, 30.0, 0.5, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(270.0, 30.0, 0.5, 100.0, 30.0, 0.0))
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
 
@@ -238,8 +237,8 @@ class JointGeneratorSpec extends FunSuite {
       Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0),
       Array(0.0, 0.0, 0.0, 0.0, 1.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0))
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val expectedOrigin = Array[Double](0.5, 0.5, 0.5)
@@ -277,9 +276,9 @@ class JointGeneratorSpec extends FunSuite {
       Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0),
       Array(0.0, 0.0, 0.0, 0.0, 1.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
+    val jointData = Seq[JointSet](
       // Pi-plane in terms of strike and dip with sqrt(3.0)/2.0 spacing
-      Array(225.0, 54.73561032, 0.866025404, 100.0, 30.0, 0.0)
+      JointSet(Array(225.0, 54.73561032, 0.866025404, 100.0, 30.0, 0.0))
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val expectedOrigin = Array[Double](0.5, 0.5, 0.5)
@@ -317,9 +316,9 @@ class JointGeneratorSpec extends FunSuite {
       Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0),
       Array(0.0, 0.0, 0.0, 0.0, 1.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
+    val jointData = Seq[JointSet](
       // Pi-plane in terms of strike and dip with sqrt(3.0)/2.0 spacing
-      Array(135.0, 54.73561032, 0.866025404, 100.0, 30.0, 0.0)
+      JointSet(Array(135.0, 54.73561032, 0.866025404, 100.0, 30.0, 0.0))
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val expectedOrigin = Array[Double](0.5, 0.5, 0.5)

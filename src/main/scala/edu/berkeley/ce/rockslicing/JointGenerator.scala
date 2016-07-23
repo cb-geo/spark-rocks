@@ -65,13 +65,13 @@ object JointGenerator {
     *         to generate full joint set.
     */
   private def findMasterJoints(globalOrigin: Array[Double], lowerLeftCorner: Array[Double],
-                               jointSets: Seq[Array[Double]]): Seq[Joint] = {
-    val masterJoints = jointSets flatMap { parameters =>
-      if (parameters.length == 6) {
+                               jointSets: Seq[JointSet]): Seq[Joint] = {
+    val masterJoints = jointSets flatMap { jointSet =>
+      if (!jointSet.stochasticFlag) {
         // TODO: Implement non-persistent joint generator
-        val normal = findJointNormal(parameters(0), parameters(1))
+        val normal = findJointNormal(jointSet.strike, jointSet.dip)
         Some(Joint(normal, globalOrigin, center=Array(lowerLeftCorner(0), lowerLeftCorner(1), lowerLeftCorner(2)),
-          phi=parameters(4), cohesion=parameters(5), shape=Vector.empty))
+          phi = jointSet.phi, cohesion = jointSet.cohesion, shape=Vector.empty))
       } else {
         // TODO: Implement stochastic generator
         throw new UnsupportedOperationException("ERROR: Joint Input Data: Stochastic joint generation " +
@@ -97,7 +97,7 @@ object JointGenerator {
   *                     are strike, dip, joint spacing, persistence, phi, cohesion and optional stochastic parameters
   */
 case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double], rockVolumeData: Seq[Array[Double]],
-                          jointSetData: Seq[Array[Double]]) {
+                          jointSetData: Seq[JointSet]) {
   val origin = globalOrigin
   val lowerLeftCorner = Array(boundingBox(0), boundingBox(1), boundingBox(2))
   val upperRightCorner = Array(boundingBox(3), boundingBox(4), boundingBox(5))
@@ -108,11 +108,11 @@ case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double
   /**
     * Generates joint sets for each of the input joint sets
     *
-    * @param jointSetData Array of arrays containing the input data representing joint sets. The inputs in each array
+    * @param jointSetData Seq of JointSets containing the input data representing joint sets. The inputs in each array
     *                     are strike, dip, joint spacing, persistence, phi, cohesion and optional stochastic parameters
     * @return Seq of joints for each input joint set
     */
-  def generateJointSets(jointSetData: Seq[Array[Double]]): Seq[Seq[Joint]] = {
+  def generateJointSets(jointSetData: Seq[JointSet]): Seq[Seq[Joint]] = {
     val jointTuples = masterJoints.zip(jointSetData)
     
     val deltaX = upperRightCorner(0) - lowerLeftCorner(0)
@@ -138,7 +138,7 @@ case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double
     }
 
     jointTuples map { case (joint, jointData) =>
-      if (jointData(3) == 100) {
+      if (jointData.persistence == 100) {
         // Calculate dot product of each diagonal vector with joint normal
         val diagDotProducts = diagonalVectors map { diagonal =>
           math.abs(diagonal dot DenseVector[Double](joint.a, joint.b, joint.c))
@@ -171,7 +171,7 @@ case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double
     * @return Seq of joints representing the joint set
     */
   @tailrec
-  private def makePersistentJointSet(joint: Joint, jointData: Array[Double], diagonalVector: DenseVector[Double],
+  private def makePersistentJointSet(joint: Joint, jointData: JointSet, diagonalVector: DenseVector[Double],
                                      center: Array[Double], terminationPoint: Array[Double],
                                      jointSet: Seq[Joint] = Seq.empty[Joint]): Seq[Joint] = {
     val terminationVector = DenseVector[Double](terminationPoint(0) - center(0),
@@ -184,7 +184,7 @@ case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double
       val newJoint = Joint(Array(joint.a, joint.b, joint.c), origin, center, joint.phi, joint.cohesion,
         joint.shape, joint.dipAngleParam, joint.dipDirectionParam)
       // Update center based on joint spacing and diagonal vector
-      val centerIncrement = jointData(2) / math.abs(diagonalVector dot DenseVector[Double](joint.a, joint.b, joint.c))
+      val centerIncrement = jointData.jointSpacing / math.abs(diagonalVector dot DenseVector[Double](joint.a, joint.b, joint.c))
       val newCenter = Array(
         diagonalVector(0)*centerIncrement + center(0),
         diagonalVector(1)*centerIncrement + center(1),
@@ -203,7 +203,7 @@ case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double
     * @param jointData
     * @return
     */
-  def makeNonPersistentJointSet(joint: Joint, jointData: Array[Double]): Seq[Joint] = {
+  def makeNonPersistentJointSet(joint: Joint, jointData: JointSet): Seq[Joint] = {
     // Still needs to be implemented, but will require stochastic generator
     throw new UnsupportedOperationException("ERROR: Non-persistent joint generator not yet implemented")
   }

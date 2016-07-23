@@ -8,17 +8,28 @@ import scala.annotation.tailrec
   */
 object SeedJointSelector {
   val THRESHOLD = 0.50
+
   /**
     * Searches though sequence of joint sets to find best seed joints
     *
     * @param jointSets Seq of Seq's of Joints representing input joint sets
     * @param inputVolume Block representing input rock volume
     * @param numProcessors Number of processors to be used in the analysis
-    * @return Returns a Seq containing the seed joints that best divide the input volume
+    * @param remainingJoints Seq of Seq of joints that were not selected as seed joints
+    * @return Returns a tuple containing two Seq's of Joints. The first Seq contains the seed joints that
+    *         best divide the input volume. The second Seq contains the joints that remain from the input
+    *         joint set.
     */
   @tailrec
   def searchJointSets(jointSets: Seq[Seq[Joint]], inputVolume: Block,
-                      numProcessors: Int): Seq[Joint] = {
+                      numProcessors: Int, remainingJoints: Seq[Seq[Joint]] = Seq.empty[Seq[Joint]]):
+  (Seq[Joint], Seq[Joint]) = {
+    val allJoints = if (remainingJoints.isEmpty) {
+      jointSets
+    } else {
+      remainingJoints
+    }
+
     if (jointSets.isEmpty) {
       throw new IllegalStateException("ERROR: Unable to find satisfactory seed joints")
     }
@@ -28,12 +39,16 @@ object SeedJointSelector {
 
       // Check whether joint set yields satisfactory seed joints. If it does not, check next joint set.
       if (seedJointOption.isEmpty) {
-          searchJointSets(jointSets.tail, inputVolume, numProcessors)
+          searchJointSets(jointSets.tail, inputVolume, numProcessors, allJoints)
       } else {
-        seedJointOption.get
+        val seedJoints = seedJointOption.get
+        val remainingFromJointSet = jointSets.head.diff(seedJoints)
+        val allOtherJoints = remainingJoints.take(remainingJoints.length - jointSets.length).flatten ++
+          remainingFromJointSet ++ jointSets.tail.flatten
+        (seedJoints, allOtherJoints)
       }
     } else {
-      searchJointSets(jointSets.tail, inputVolume, numProcessors)
+      searchJointSets(jointSets.tail, inputVolume, numProcessors, allJoints)
     }
   }
 

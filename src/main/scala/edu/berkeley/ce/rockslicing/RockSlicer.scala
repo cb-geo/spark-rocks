@@ -37,10 +37,10 @@ object RockSlicer {
     val starterBlocks = Seq(Block(globalOrigin, generatedInput.rockVolume))
 
     // Generate a list of initial blocks before RDD-ifying it
-    val seedJoints = if (arguments.numProcessors > 1) {
+    val (seedJoints, remainingJoints) = if (arguments.numProcessors > 1) {
       // Check if at least one of the input joint sets is persistent
       val persistentCheck = jointSetInputs exists { jointSet =>
-        jointSet(3) == 100
+        jointSet.persistence == 100
       }
 
       if (!persistentCheck) {
@@ -49,10 +49,9 @@ object RockSlicer {
         System.exit(-1)
       }
 
-      SeedJointSelector.searchJointSets(generatedInput.jointSets,
-        starterBlocks.head, arguments.numProcessors)
+      SeedJointSelector.searchJointSets(generatedInput.jointSets, starterBlocks.head, arguments.numProcessors)
     } else {
-      Seq.empty[Joint]
+      (Seq.empty[Joint], generatedInput.jointSets.flatten)
     }
 
     val seedBlocks = if (seedJoints.isEmpty) {
@@ -63,9 +62,8 @@ object RockSlicer {
       }
     }
 
-    val joints = generatedInput.jointSets.flatten.diff(seedJoints)
     val seedBlockRdd = sc.parallelize(seedBlocks)
-    val broadcastJoints = sc.broadcast(joints)
+    val broadcastJoints = sc.broadcast(remainingJoints)
 
     // Iterate through the discontinuities for each seed block, cutting where appropriate
     val cutBlocks = seedBlockRdd flatMap { seedBlock =>

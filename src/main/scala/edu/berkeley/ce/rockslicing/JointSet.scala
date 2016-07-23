@@ -14,6 +14,13 @@ case class JointSet(parameters: Array[Double]) {
   val phi = parameters(4)
   val cohesion = parameters(5)
 
+  // Indicates whether joint set is deterministic or stochastic
+  val stochasticFlag = if (parameters.length > 6) {
+    true
+  } else {
+    false
+  }
+
   // Optional stochastic parameters
   val strikeStDev = if (parameters.length > 6) {
     parameters(6)

@@ -32,12 +32,12 @@ class SeedJointSelectorSpec extends FunSuite {
       Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0),
       Array(0.0, 0.0, 0.0, 0.0, 1.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0))
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
-    val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 2)
+    val (seedJoints, _) = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 2)
 
     val expectedJoints = Seq[Joint](
       Joint(Array(0.0, 1.0, 0.0), Array(0.5, 0.5, 0.5), Array(0.5, 0.5, 0.5), phi = 30.0,
@@ -62,12 +62,12 @@ class SeedJointSelectorSpec extends FunSuite {
       Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0),
       Array(0.0, 0.0, 0.0, 0.0, 2.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0))
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
-    val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 2)
+    val (seedJoints, _) = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 2)
 
     val expectedJoints = Seq[Joint](
       Joint(Array(0.0, 1.0, 0.0), Array(0.5, 0.5, 0.5), Array(1.0, 1.0, 1.0), phi = 30.0,
@@ -92,12 +92,12 @@ class SeedJointSelectorSpec extends FunSuite {
       Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0),
       Array(0.0, 0.0, 0.0, 0.0, 2.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0))
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
-    val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 3)
+    val (seedJoints, _) = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 3)
 
     val expectedJoints = Seq[Joint](
       Joint(Array(0.0, 1.0, 0.0), Array(0.5, 0.5, 0.5), Array(0.5, 0.5, 0.5), phi = 30.0,
@@ -124,12 +124,12 @@ class SeedJointSelectorSpec extends FunSuite {
       Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0),
       Array(0.0, 0.0, 0.0, 0.0, 2.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(0.0, 90.0, 0.5, 100.0, 30.0, 0.0))
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
-    val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 4)
+    val (seedJoints, _) = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 4)
 
     val expectedJoints = Seq[Joint](
       Joint(Array(0.0, 1.0, 0.0), Array(0.5, 0.5, 0.5), Array(0.5, 0.5, 0.5), phi = 30.0,
@@ -158,12 +158,12 @@ class SeedJointSelectorSpec extends FunSuite {
       Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0),
       Array(0.0, 0.0, 0.0, 0.0, 2.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(0.0, 90.0, 0.02, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(0.0, 90.0, 0.02, 100.0, 30.0, 0.0))
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
-    val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 21)
+    val (seedJoints, _) = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 21)
 
     assert(seedJoints.length == 20)
   }
@@ -179,12 +179,12 @@ class SeedJointSelectorSpec extends FunSuite {
       Array(0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 0.0),
       Array(0.0, 0.0, 0.0, 0.0, 2.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(45.0, 45.0, 0.01, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(45.0, 45.0, 0.01, 100.0, 30.0, 0.0))
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
-    val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 21)
+    val (seedJoints, _) = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 21)
 
     assert(seedJoints.length == 20)
   }
@@ -200,12 +200,12 @@ class SeedJointSelectorSpec extends FunSuite {
       Array(0.0, 90.0, 0.0, -4.0, 0.0, 30.0, 0.0),
       Array(0.0, 0.0, 0.0, 0.0, -4.0, 30.0, 0.0)
     )
-    val jointData = Array[Array[Double]](
-      Array(60.0, 25.0, 0.5, 100.0, 30.0, 0.0)
+    val jointData = Seq[JointSet](
+      JointSet(Array(60.0, 25.0, 0.5, 100.0, 30.0, 0.0))
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
     val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
-    val seedJoints = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 4)
+    val (seedJoints, _) = SeedJointSelector.searchJointSets(generatedInput.jointSets, initialBlock, 4)
 
     assert(seedJoints.length == 3)
   }

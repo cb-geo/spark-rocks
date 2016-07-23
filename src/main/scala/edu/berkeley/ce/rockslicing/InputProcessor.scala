@@ -6,7 +6,7 @@ import scala.util.Try
 object InputProcessor {
   // Processes input file: Add rock volume faces and joints to respective input list
   def readInput(inputSource: Source): Option[ (Array[Double], Array[Double],
-    Seq[Array[Double]], Seq[Array[Double]]) ] = {
+    Seq[Array[Double]], Seq[JointSet]) ] = {
     val lines = inputSource.getLines().zipWithIndex.toVector
     val globalOriginLine = lines.head._1
     val boundingBoxLine = lines(1)._1
@@ -90,7 +90,7 @@ object InputProcessor {
           "dip, spacing and, if relevant, persistence.")
         return None
       }
-      doubleVals
+      JointSet(doubleVals)
     }
 
     Some((globalOriginArr, boundingBoxArr, rockVolume, joints))
