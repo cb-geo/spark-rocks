@@ -21,9 +21,8 @@ object SeedJointSelector {
     *         joint set.
     */
   @tailrec
-  def searchJointSets(jointSets: Seq[Seq[Joint]], inputVolume: Block,
-                      numProcessors: Int, remainingJoints: Seq[Seq[Joint]] = Seq.empty[Seq[Joint]]):
-  (Seq[Joint], Seq[Joint]) = {
+  def searchJointSets(jointSets: Seq[Seq[Joint]], inputVolume: Block, numProcessors: Int,
+                      remainingJoints: Seq[Seq[Joint]] = Seq.empty[Seq[Joint]]): (Seq[Joint], Seq[Joint]) = {
     val allJoints = if (remainingJoints.isEmpty) {
       jointSets
     } else {
@@ -69,11 +68,6 @@ object SeedJointSelector {
   @tailrec
   private def findSeedJoints(jointSet: Seq[Joint], rockVolume: Block, numProcessors: Integer, tolerance: Double = 0.01,
                              stepSize: Double = 0.01): Option[Seq[Joint]] = {
-    if (jointSet.length < numProcessors - 1) {
-      throw new IllegalArgumentException(s"Error: Not enough joints to generate required number of seed joints. ${jointSet.length} joints but"+
-        s" $numProcessors processors. Try using fewer processors.")
-    }
-
     val totalVolume = rockVolume.volume
     val volumePerProc = rockVolume.volume / numProcessors
     val seedJoints = selectSeedJoints(jointSet, rockVolume, volumePerProc, totalVolume,
@@ -119,14 +113,14 @@ object SeedJointSelector {
     */
   @tailrec
   private def selectSeedJoints(jointSet: Seq[Joint], initialBlock: Block, volumePerProcessor: Double,
-                            totalVolume: Double, selectedJoints: Seq[Joint], tolerance: Double,
-                            numProcessors: Int): Seq[Joint] = {
+                               totalVolume: Double, selectedJoints: Seq[Joint], tolerance: Double,
+                               numProcessors: Int): Seq[Joint] = {
     if (selectedJoints.length == numProcessors - 1) {
       // Enough seed joints have been found
       selectedJoints
     } else if (jointSet.length > 1) {
       // More than 1 joint in input joint set
-      val jointOption = testVolumes(jointSet.head, jointSet.tail.head, initialBlock,
+      val jointOption = testVolumes(jointSet(0), jointSet(1), initialBlock,
         volumePerProcessor, totalVolume, tolerance)
 
       if (jointOption.isEmpty) {

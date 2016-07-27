@@ -32,22 +32,22 @@ object JointGenerator {
     * Finds the faces that define the rock volume of interest
     *
     * @param globalOrigin Coordinates of global origin
-    * @param rockVolumeData Array of arrays describing each of the faces that define the boundaries of
+    * @param rockVolume Array of arrays describing each of the faces that define the boundaries of
     *                       the rock volume of interest. The inputs in each array are strike, dip and the x,
     *                       y and z coordinates of a point that lies within the plane containing the face.
     *                       Strike and dip should be specified in degrees.
     * @return A sequence of faces that represent the rock volume of interest
     */
-  private def findBoundingFaces(globalOrigin: Array[Double], rockVolumeData: Seq[Array[Double]]): Seq[Face] = {
-    rockVolumeData map { parameters =>
-      val faceCenter = Array(parameters(2), parameters(3), parameters(4))
-      val normal = findJointNormal(parameters(0), parameters(1))
+  private def findBoundingFaces(globalOrigin: Array[Double], rockVolume: Seq[InputFace]): Seq[Face] = {
+    rockVolume map { inputFace =>
+      val faceCenter = inputFace.pointInPlane
+      val normal = findJointNormal(inputFace.strike, inputFace.dip)
       val distance = Joint.findDistance(normal, globalOrigin, faceCenter)
       if (distance > 0.0) {
-        Face(normal, distance, parameters(5), parameters(6))
+        Face(normal, distance, inputFace.phi, inputFace.cohesion)
       } else {
         // Ensures that all normals are outward pointing
-        Face(Array(-normal(0), -normal(1), -normal(2)), -distance, parameters(5), parameters(6))
+        Face(Array(-normal(0), -normal(1), -normal(2)), -distance, inputFace.phi, inputFace.cohesion)
       }
     }
   }
@@ -67,7 +67,7 @@ object JointGenerator {
   private def findMasterJoints(globalOrigin: Array[Double], lowerLeftCorner: Array[Double],
                                jointSets: Seq[JointSet]): Seq[Joint] = {
     val masterJoints = jointSets flatMap { jointSet =>
-      if (!jointSet.stochasticFlag) {
+      if (!jointSet.isStochastic) {
         // TODO: Implement non-persistent joint generator
         val normal = findJointNormal(jointSet.strike, jointSet.dip)
         Some(Joint(normal, globalOrigin, center=Array(lowerLeftCorner(0), lowerLeftCorner(1), lowerLeftCorner(2)),
@@ -89,31 +89,31 @@ object JointGenerator {
   * @param globalOrigin Coordinates of the global origin
   * @param boundingBox Coordinates specifying the lower left and upper right corners of the box that bounds
   *                    the domain of interest.
-  * @param rockVolumeData Seq of arrays describing each of the faces that define the boundaries of
-  *                       the rock volume of interest. The inputs in each array are strike, dip and the x,
-  *                       y and z coordinates of a point that lies within the plane containing the face.
-  *                       Strike and dip should be specified in degrees.
+  * @param rockVolumeInputs Seq of arrays describing each of the faces that define the boundaries of
+  *                         the rock volume of interest. The inputs in each array are strike, dip and the x,
+  *                         y and z coordinates of a point that lies within the plane containing the face.
+  *                         Strike and dip should be specified in degrees.
   * @param jointSetData Seq of arrays containing the input data representing joint sets. The inputs in each array
   *                     are strike, dip, joint spacing, persistence, phi, cohesion and optional stochastic parameters
   */
-case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double], rockVolumeData: Seq[Array[Double]],
-                          jointSetData: Seq[JointSet]) {
+case class JointGenerator(globalOrigin: Array[Double], boundingBox: (Array[Double], Array[Double]),
+                          rockVolumeInputs: Seq[InputFace], jointSetData: Seq[JointSet]) {
   val origin = globalOrigin
-  val lowerLeftCorner = Array(boundingBox(0), boundingBox(1), boundingBox(2))
-  val upperRightCorner = Array(boundingBox(3), boundingBox(4), boundingBox(5))
-  val rockVolume = JointGenerator.findBoundingFaces(globalOrigin, rockVolumeData)
+  val lowerLeftCorner = boundingBox._1
+  val upperRightCorner = boundingBox._2
+  val rockVolume = JointGenerator.findBoundingFaces(globalOrigin, rockVolumeInputs)
   val masterJoints = JointGenerator.findMasterJoints(globalOrigin, lowerLeftCorner, jointSetData)
   val jointSets = generateJointSets(jointSetData)
 
   /**
     * Generates joint sets for each of the input joint sets
     *
-    * @param jointSetData Seq of JointSets containing the input data representing joint sets. The inputs in each array
-    *                     are strike, dip, joint spacing, persistence, phi, cohesion and optional stochastic parameters
+    * @param jointSets Seq of JointSets containing the input data representing joint sets. The inputs in each array
+    *                  are strike, dip, joint spacing, persistence, phi, cohesion and optional stochastic parameters
     * @return Seq of joints for each input joint set
     */
-  def generateJointSets(jointSetData: Seq[JointSet]): Seq[Seq[Joint]] = {
-    val jointTuples = masterJoints.zip(jointSetData)
+  private def generateJointSets(jointSets: Seq[JointSet]): Seq[Seq[Joint]] = {
+    val jointTuples = masterJoints.zip(jointSets)
     
     val deltaX = upperRightCorner(0) - lowerLeftCorner(0)
     val deltaY = upperRightCorner(1) - lowerLeftCorner(1)
@@ -161,7 +161,7 @@ case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double
     * a single joint set.
     *
     * @param joint Joint that is representative of the joint set - properties of the joint are the mean values.
-    * @param jointData Properties of the joint set - strike, dip, joint spacing, persistence, phi, cohesion and
+    * @param jointProperties Properties of the joint set - strike, dip, joint spacing, persistence, phi, cohesion and
     *                  optional stochastic parameters
     * @param diagonalVector Diagonal vector of bounding box along which joints will be generated
     * @param center Center of joint
@@ -171,7 +171,7 @@ case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double
     * @return Seq of joints representing the joint set
     */
   @tailrec
-  private def makePersistentJointSet(joint: Joint, jointData: JointSet, diagonalVector: DenseVector[Double],
+  private def makePersistentJointSet(joint: Joint, jointProperties: JointSet, diagonalVector: DenseVector[Double],
                                      center: Array[Double], terminationPoint: Array[Double],
                                      jointSet: Seq[Joint] = Seq.empty[Joint]): Seq[Joint] = {
     val terminationVector = DenseVector[Double](terminationPoint(0) - center(0),
@@ -184,13 +184,13 @@ case class JointGenerator(globalOrigin: Array[Double], boundingBox: Array[Double
       val newJoint = Joint(Array(joint.a, joint.b, joint.c), origin, center, joint.phi, joint.cohesion,
         joint.shape, joint.dipAngleParam, joint.dipDirectionParam)
       // Update center based on joint spacing and diagonal vector
-      val centerIncrement = jointData.jointSpacing / math.abs(diagonalVector dot DenseVector[Double](joint.a, joint.b, joint.c))
+      val centerIncrement = jointProperties.jointSpacing / math.abs(diagonalVector dot DenseVector[Double](joint.a, joint.b, joint.c))
       val newCenter = Array(
         diagonalVector(0)*centerIncrement + center(0),
         diagonalVector(1)*centerIncrement + center(1),
         diagonalVector(2)*centerIncrement + center(2)
       )
-      makePersistentJointSet(joint, jointData, diagonalVector, newCenter, terminationPoint, newJoint +: jointSet)
+      makePersistentJointSet(joint, jointProperties, diagonalVector, newCenter, terminationPoint, newJoint +: jointSet)
     } else {
       jointSet
     }

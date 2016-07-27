@@ -3,10 +3,24 @@ package edu.berkeley.ce.rockslicing
 import scala.io.Source
 import scala.util.Try
 
+/**
+  * Processes inputs provided in user input file
+  */
 object InputProcessor {
   // Processes input file: Add rock volume faces and joints to respective input list
-  def readInput(inputSource: Source): Option[ (Array[Double], Array[Double],
-    Seq[Array[Double]], Seq[JointSet]) ] = {
+  /**
+    * Processes input file to extract global origin, bounding box,
+    * initial rock volume and joint sets.
+    *
+    * @param inputSource Input file containing user inputs
+    * @return If input is properly formatted, returns a tuple containing an array representing
+    *         the global origin, an array representing the bounding box, a Seq of arrays
+    *         representing the bounding faces of the initial rock volume and a Seq of JointSets
+    *         representing the joint sets present in the rock volume. If input is not properly
+    *         formatted, it returns None.
+    */
+  def readInput(inputSource: Source): Option[ (Array[Double], (Array[Double], Array[Double]),
+    Seq[InputFace], Seq[JointSet]) ] = {
     val lines = inputSource.getLines().zipWithIndex.toVector
     val globalOriginLine = lines.head._1
     val boundingBoxLine = lines(1)._1
@@ -33,8 +47,8 @@ object InputProcessor {
       return None
     }
     val boundingBox = boundingBoxTokens map(_.get)
-    val boundingBoxArr = Array(boundingBox(0), boundingBox(1), boundingBox(2),
-                               boundingBox(3), boundingBox(4), boundingBox(5))
+    val boundingBoxArr = (Array(boundingBox(0), boundingBox(1), boundingBox(2)),
+      Array(boundingBox(3), boundingBox(4), boundingBox(5)))
 
     val remainingLines = lines.drop(2)
     val transitionIndex = remainingLines.indexWhere(_._1.isEmpty)
@@ -61,7 +75,8 @@ object InputProcessor {
       }
 
       // These values will be passed to JointGenerator to find joints corresponding to rock volume
-      doubleVals
+      InputFace(doubleVals(0), doubleVals(1), Array(doubleVals(2), doubleVals(3), doubleVals(4)),
+        doubleVals(5), doubleVals(6))
     }
 
     val joints = jointData.map { case (line, index) =>
@@ -73,7 +88,7 @@ object InputProcessor {
       }
       val doubleVals = tokens map(_.get)
       if (doubleVals.length < 6) {
-        println(s"""Error, Line $index: Each input joint is defined by at least 6 values:
+        println(s"""Error, Line $index: Each input joint set is defined by at least 6 values:
                         Strike
                         Dip
                         Joint Spacing
@@ -90,7 +105,16 @@ object InputProcessor {
           "dip, spacing and, if relevant, persistence.")
         return None
       }
-      JointSet(doubleVals)
+
+      if (doubleVals.length == 6) {
+        JointSet(doubleVals(0), doubleVals(1), doubleVals(2), doubleVals(3), doubleVals(4), doubleVals(5))
+      } else if (doubleVals.length == 9) {
+        JointSet(doubleVals(0), doubleVals(1), doubleVals(2), doubleVals(3), doubleVals(4), doubleVals(5),
+          doubleVals(6), doubleVals(7), doubleVals(8))
+      } else {
+        JointSet(doubleVals(0), doubleVals(1), doubleVals(2), doubleVals(3), doubleVals(4), doubleVals(5),
+          doubleVals(6), doubleVals(7), doubleVals(8), doubleVals(9))
+      }
     }
 
     Some((globalOriginArr, boundingBoxArr, rockVolume, joints))

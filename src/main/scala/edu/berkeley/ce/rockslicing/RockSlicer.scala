@@ -39,11 +39,7 @@ object RockSlicer {
     // Generate a list of initial blocks before RDD-ifying it
     val (seedJoints, remainingJoints) = if (arguments.numProcessors > 1) {
       // Check if at least one of the input joint sets is persistent
-      val persistentCheck = jointSetInputs exists { jointSet =>
-        jointSet.persistence == 100
-      }
-
-      if (!persistentCheck) {
+      if (jointSetInputs.forall(_.persistence != 100.0)) {
         println("ERROR: Input joint sets must contain at least one persistent joint set to run in parallel. Rerun" +
           "analysis in serial if all joint sets are non-persistent.")
         System.exit(-1)
