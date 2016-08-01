@@ -22,7 +22,7 @@ object InputProcessor {
   def readInput(inputSource: Source): Option[ (Array[Double], (Array[Double], Array[Double]),
     Seq[InputFace], Seq[JointSet]) ] = {
     val lines = inputSource.getLines().zipWithIndex.toVector
-    val globalOriginLine = lines.head._1
+    val globalOriginLine = lines(0)._1
     val boundingBoxLine = lines(1)._1
 
     val globalOriginTokens = globalOriginLine.split(" ") map { x => Try(x.toDouble) }
@@ -40,7 +40,7 @@ object InputProcessor {
     val boundingBoxTokens = boundingBoxLine.split(" ") map { x => Try(x.toDouble) }
     val bbErrIndex = boundingBoxTokens.indexWhere(_.isFailure)
     if (bbErrIndex != -1) {
-      println(s"Error, Line 2, Token $errIndex: Invalid double found in definition of bounding box")
+      println(s"Error, Line 2, Token $bbErrIndex: Invalid double found in definition of bounding box")
       return None
     } else if (boundingBoxTokens.length !=  6) {
       println("Error, Line 2: Input file must specify domain as bounding box with 6 double values")

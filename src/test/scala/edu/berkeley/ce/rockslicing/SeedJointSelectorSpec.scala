@@ -3,24 +3,6 @@ package edu.berkeley.ce.rockslicing
 import org.scalatest.FunSuite
 
 class SeedJointSelectorSpec extends FunSuite {
-
-  private def compareJoints(joint1: Joint, joint2: Joint): Boolean = {
-    val norm1 = Array(NumericUtils.roundToTolerance(joint1.a), NumericUtils.roundToTolerance(joint1.b),
-      NumericUtils.roundToTolerance(joint1.c))
-    val norm2 = Array(NumericUtils.roundToTolerance(joint2.a), NumericUtils.roundToTolerance(joint2.b),
-      NumericUtils.roundToTolerance(joint2.c))
-    val center1 = Array(NumericUtils.roundToTolerance(joint1.centerX), NumericUtils.roundToTolerance(joint1.centerY),
-      NumericUtils.roundToTolerance(joint1.centerZ))
-    val center2 = Array(NumericUtils.roundToTolerance(joint2.centerX), NumericUtils.roundToTolerance(joint2.centerY),
-      NumericUtils.roundToTolerance(joint2.centerZ))
-    val origin1 = Array(NumericUtils.roundToTolerance(joint1.localX), NumericUtils.roundToTolerance(joint1.localY),
-      NumericUtils.roundToTolerance(joint1.localZ))
-    val origin2 = Array(NumericUtils.roundToTolerance(joint2.localX), NumericUtils.roundToTolerance(joint2.localY),
-      NumericUtils.roundToTolerance(joint2.localZ))
-
-    (norm1 sameElements norm2) && (center1 sameElements center2) && (origin1 sameElements origin2)
-  }
-
   test("Single joint should be selected as seed joint - should be x-z plane at center of unit cube") {
     val globalOrigin = Array[Double](0.5, 0.5, 0.5)
     val boundingBox = (Array[Double](0.0, 0.0, 0.0), Array[Double](1.0, 1.0, 1.0))
@@ -44,11 +26,9 @@ class SeedJointSelectorSpec extends FunSuite {
         cohesion = 0.0, shape = Vector.empty)
     )
 
-    val jointComparison = expectedJoints.zip(seedJoints) map { case (joint1, joint2) =>
-      compareJoints(joint1, joint2)
-    }
-
-    assert(!jointComparison.contains(false))
+    assert(expectedJoints.zip(seedJoints) forall { case (joint1, joint2) =>
+      joint1.approximateEquals(joint1)
+    })
   }
 
   test("Single joint should be selected as seed joint - should be x-z plane at center of two cube") {
@@ -74,11 +54,9 @@ class SeedJointSelectorSpec extends FunSuite {
         cohesion = 0.0, shape = Vector.empty)
       )
 
-    val jointComparison = expectedJoints.zip(seedJoints) map { case (joint1, joint2) =>
-      compareJoints(joint1, joint2)
-    }
-
-    assert(!jointComparison.contains(false))
+    assert(expectedJoints.zip(seedJoints) forall { case (joint1, joint2) =>
+      joint1.approximateEquals(joint1)
+    })
   }
 
   test("Two seed joints should be selected - x-z planes dividing two cube into thirds") {
@@ -106,11 +84,9 @@ class SeedJointSelectorSpec extends FunSuite {
         cohesion = 0.0, shape = Vector.empty)
     )
 
-    val jointComparison = expectedJoints.zip(seedJoints) map { case (joint1, joint2) =>
-      compareJoints(joint1, joint2)
-    }
-
-    assert(!jointComparison.contains(false))
+    assert(expectedJoints.zip(seedJoints) forall { case (joint1, joint2) =>
+      joint1.approximateEquals(joint1)
+    })
   }
 
   test("Three seed joints should be selected - x-z planes dividing two cube into quarters") {
@@ -140,11 +116,9 @@ class SeedJointSelectorSpec extends FunSuite {
         cohesion = 0.0, shape = Vector.empty)
     )
 
-    val jointComparison = expectedJoints.zip(seedJoints) map { case (joint1, joint2) =>
-      compareJoints(joint1, joint2)
-    }
-
-    assert(!jointComparison.contains(false))
+    assert(expectedJoints.zip(seedJoints) forall { case (joint1, joint2) =>
+      joint1.approximateEquals(joint1)
+    })
   }
 
   test("20 seed joints should be selected - x-z planes dividing two cube") {

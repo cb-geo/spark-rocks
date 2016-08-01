@@ -165,6 +165,8 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
   }
   // Computing the maximum radius of an inscribed sphere is also expensive
   lazy val maxInscribableRadius = findMaxInscribableRadius
+  // Computing the volume is expensive, so only do it when necessary
+  lazy val volume = findVolume
 
   /**
     * Determines whether the input point is outside the input block
@@ -545,7 +547,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     *
     * @return The volume of the block
     */
-  def volume: Double = {
+  def findVolume: Double = {
     val vertices = findVertices
     val mesh = meshFaces(vertices)
 

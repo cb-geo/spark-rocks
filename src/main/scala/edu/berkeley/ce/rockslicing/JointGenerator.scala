@@ -39,6 +39,7 @@ object JointGenerator {
     * @return A sequence of faces that represent the rock volume of interest
     */
   private def findBoundingFaces(globalOrigin: Array[Double], rockVolume: Seq[InputFace]): Seq[Face] = {
+    assert(globalOrigin.length == 3)
     rockVolume map { inputFace =>
       val faceCenter = inputFace.pointInPlane
       val normal = findJointNormal(inputFace.strike, inputFace.dip)
@@ -66,6 +67,8 @@ object JointGenerator {
     */
   private def findMasterJoints(globalOrigin: Array[Double], lowerLeftCorner: Array[Double],
                                jointSets: Seq[JointSet]): Seq[Joint] = {
+    assert(globalOrigin.length == 3)
+    assert(lowerLeftCorner.length == 3)
     val masterJoints = jointSets flatMap { jointSet =>
       if (!jointSet.isStochastic) {
         // TODO: Implement non-persistent joint generator
@@ -98,6 +101,9 @@ object JointGenerator {
   */
 case class JointGenerator(globalOrigin: Array[Double], boundingBox: (Array[Double], Array[Double]),
                           rockVolumeInputs: Seq[InputFace], jointSetData: Seq[JointSet]) {
+  assert(globalOrigin.length == 3)
+  assert(boundingBox._1.length == 3)
+  assert(boundingBox._2.length == 3)
   val origin = globalOrigin
   val lowerLeftCorner = boundingBox._1
   val upperRightCorner = boundingBox._2
@@ -174,6 +180,9 @@ case class JointGenerator(globalOrigin: Array[Double], boundingBox: (Array[Doubl
   private def makePersistentJointSet(joint: Joint, jointProperties: JointSet, diagonalVector: DenseVector[Double],
                                      center: Array[Double], terminationPoint: Array[Double],
                                      jointSet: Seq[Joint] = Seq.empty[Joint]): Seq[Joint] = {
+    assert(diagonalVector.length == 3)
+    assert(center.length == 3)
+    assert(terminationPoint.length == 3)
     val terminationVector = DenseVector[Double](terminationPoint(0) - center(0),
       terminationPoint(1) - center(1),
       terminationPoint(2) - center(2)

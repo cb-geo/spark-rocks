@@ -22,32 +22,25 @@ object SeedJointSelector {
     */
   @tailrec
   def searchJointSets(jointSets: Seq[Seq[Joint]], inputVolume: Block, numProcessors: Int,
-                      remainingJoints: Seq[Seq[Joint]] = Seq.empty[Seq[Joint]]): (Seq[Joint], Seq[Joint]) = {
-    val allJoints = if (remainingJoints.isEmpty) {
-      jointSets
-    } else {
-      remainingJoints
-    }
-
+                      remainingJoints: Seq[Joint] = Seq.empty[Joint]): (Seq[Joint], Seq[Joint]) = {
     if (jointSets.isEmpty) {
       throw new IllegalStateException("ERROR: Unable to find satisfactory seed joints")
     }
+    // Check that joint set is persistent
     if (jointSets.head(0).shape.isEmpty) {
-      // Check that joint set is persistent
       val seedJointOption = findSeedJoints(jointSets.head, inputVolume, numProcessors, inputVolume.volume)
 
       // Check whether joint set yields satisfactory seed joints. If it does not, check next joint set.
       if (seedJointOption.isEmpty) {
-          searchJointSets(jointSets.tail, inputVolume, numProcessors, allJoints)
+          searchJointSets(jointSets.tail, inputVolume, numProcessors, remainingJoints ++ jointSets.head)
       } else {
         val seedJoints = seedJointOption.get
         val remainingFromJointSet = jointSets.head.diff(seedJoints)
-        val allOtherJoints = remainingJoints.take(remainingJoints.length - jointSets.length).flatten ++
-          remainingFromJointSet ++ jointSets.tail.flatten
+        val allOtherJoints = remainingJoints ++ remainingFromJointSet ++ jointSets.tail.flatten
         (seedJoints, allOtherJoints)
       }
     } else {
-      searchJointSets(jointSets.tail, inputVolume, numProcessors, allJoints)
+      searchJointSets(jointSets.tail, inputVolume, numProcessors, remainingJoints ++ jointSets.head)
     }
   }
 

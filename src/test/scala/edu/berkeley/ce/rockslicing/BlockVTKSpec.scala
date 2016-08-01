@@ -87,7 +87,7 @@ class BlockVTKSpec extends FunSuite {
     )
     val vtkBlock = BlockVTK(unitCube)
     assert(vtkBlock.orientedVertices.keys == expectedVertices.keys && vtkBlock.orientedVertices.keys.forall { key =>
-      vtkBlock.orientedVertices.get(key).get.zip(expectedVertices.get(key).get) forall { case (v1, v2) =>
+      vtkBlock.orientedVertices(key).zip(expectedVertices(key)) forall { case (v1, v2) =>
         v1 sameElements v2
       }
     })
@@ -175,7 +175,7 @@ class BlockVTKSpec extends FunSuite {
 
     val connMap = vtkBlock.connectivityMap
     assert(connMap.keySet == faceConnectivities.keySet && connMap.keys.forall { face =>
-      connMap.get(face).get == faceConnectivities.get(face).get
+      connMap(face) == faceConnectivities(face)
     })
   }
 

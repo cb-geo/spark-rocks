@@ -6,19 +6,6 @@ import scala.io.Source
 
 class InputProcessingSpec extends FunSuite {
 
-  def compareInputFaces(face1: InputFace, face2: InputFace): Boolean = {
-    if (face1.strike == face2.strike &&
-      face1.dip == face2.dip &&
-      (face1.pointInPlane sameElements face2.pointInPlane) &&
-      face1.phi == face2.phi &&
-      face1.cohesion == face2.cohesion
-    ) {
-      true
-    } else {
-      false
-    }
-  }
-
   test("Input file without global origin specified should produce error") {
     val inputStr = "0.0 0.0 0.0 2.0 2.0 2.0\n" +
       "0.0 90.0 0.0 0.0 0.0 30.0 0.0\n" +
@@ -255,7 +242,7 @@ class InputProcessingSpec extends FunSuite {
     )
 
     val faceComparison = expectedFaces.zip(rockVolume) forall { case (face1, face2) =>
-        compareInputFaces(face1, face2)
+        face1 == face2
     }
 
     assert((globalOrigin sameElements expectedOrigin) && (boundingBox._1 sameElements expectedBoundingBox._1) &&

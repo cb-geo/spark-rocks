@@ -2,6 +2,7 @@ package edu.berkeley.ce.rockslicing
 
 import breeze.linalg
 import breeze.linalg.{DenseMatrix, DenseVector}
+import breeze.optimize.Tolerance
 import org.apache.commons.lang3.builder.HashCodeBuilder
 
 object Joint {
@@ -314,26 +315,24 @@ case class Joint(normalVec: Array[Double], localOrigin: Array[Double],
       Some(dipDirection), boundingSphere)
   }
 
-  /**
-    * Compare this joint and input block's faces and determines if joint is one of
-    * input block's faces.
-    * @param block Input block
-    * @return True if joint is one of blocks faces, false otherwise
-    */
-  def inBlock(block: Block): Boolean = {
-    val distance = Joint.findDistance(Array(a, b, c), Array(block.centerX, block.centerY, block.centerZ),
-                                      Array(centerX, centerY, centerZ))
-
-    block.faces.exists { face =>
-      ((math.abs(face.a - a) < NumericUtils.EPSILON) &&
-       (math.abs(face.b - b) < NumericUtils.EPSILON) &&
-       (math.abs(face.c - c) < NumericUtils.EPSILON) &&
-       (math.abs(face.d - distance) < NumericUtils.EPSILON)) ||
-      ((math.abs(face.a + a) < NumericUtils.EPSILON) &&
-       (math.abs(face.b + b) < NumericUtils.EPSILON) &&
-       (math.abs(face.c + c) < NumericUtils.EPSILON) &&
-       (math.abs(face.d + distance) < NumericUtils.EPSILON))
-    }
+  def approximateEquals(inputJoint: Joint, tolerance: Double = NumericUtils.EPSILON): Boolean = {
+    math.abs(a - inputJoint.a) < tolerance &&
+      math.abs(b - inputJoint.b) < tolerance &&
+      math.abs(c - inputJoint.c) < tolerance &&
+      math.abs(centerX - inputJoint.centerX) < tolerance &&
+      math.abs(centerY - inputJoint.centerY) < tolerance &&
+      math.abs(centerZ - inputJoint.centerZ) < tolerance &&
+      math.abs(d - inputJoint.d) < tolerance &&
+      math.abs(phi - inputJoint.phi) < tolerance &&
+      math.abs(cohesion - inputJoint.cohesion) < tolerance &&
+      math.abs(dipAngle - inputJoint.dipAngle) < tolerance &&
+      math.abs(dipDirection - inputJoint.dipDirection) < tolerance &&
+      ((shape zip inputJoint.shape) forall { case ((norm1, d1), (norm2, d2)) =>
+        math.abs(norm1(0) - norm2(0)) < tolerance &&
+          math.abs(norm1(1) - norm2(1)) < tolerance &&
+          math.abs(norm1(2) - norm2(2)) < tolerance &&
+          math.abs(d1 - d2) < tolerance
+      })
   }
 
   override def equals(obj: Any): Boolean = {
