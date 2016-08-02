@@ -87,7 +87,7 @@ class BlockVTKSpec extends FunSuite {
     )
     val vtkBlock = BlockVTK(unitCube)
     assert(vtkBlock.orientedVertices.keys == expectedVertices.keys && vtkBlock.orientedVertices.keys.forall { key =>
-      vtkBlock.orientedVertices.get(key).get.zip(expectedVertices.get(key).get) forall { case (v1, v2) =>
+      vtkBlock.orientedVertices(key).zip(expectedVertices(key)) forall { case (v1, v2) =>
         v1 sameElements v2
       }
     })
@@ -129,8 +129,9 @@ class BlockVTKSpec extends FunSuite {
 
   test("List of tuple vertices should flatten into list of doubles") {
     val vtkBlock = BlockVTK(unitCube)
-    val expectedVertices = Seq(1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0,
-                               0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
+
+    val expectedVertices = Seq(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0,
+      1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0)
 
     val verticesDiff = doubleListElementDiff(expectedVertices, vtkBlock.vertices)
     assert(verticesDiff forall (_ < NumericUtils.EPSILON))
@@ -138,9 +139,10 @@ class BlockVTKSpec extends FunSuite {
 
   test("List of tuple vertices should flatten into list of doubles (seven-sided block)") {
     val vtkBlock = BlockVTK(sevenSidedBlock)
-    val expectedVertices = Seq(1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
-                               0.0, 1.0, 0.0, x_intercept, 1.0, 0.0, 1.0, y_intercept, 0.0, 1.0, y_intercept, 1.0,
-                               x_intercept, 1.0, 1.0)
+
+    val expectedVertices = Seq(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0,
+      1.0, y_intercept, 0.0, 1.0, y_intercept, 1.0, x_intercept, 1.0, 0.0, x_intercept, 1.0, 1.0,
+      0.0, 1.0, 1.0, 0.0, 1.0, 0.0)
 
     val verticesDiff = doubleListElementDiff(expectedVertices, vtkBlock.vertices)
     assert(verticesDiff forall (_ < NumericUtils.EPSILON))
@@ -163,38 +165,40 @@ class BlockVTKSpec extends FunSuite {
   test("Connectivities for each face should be in terms of vertex ID's") {
     val vtkBlock = BlockVTK(unitCube)
     val faceConnectivities = Map(
-      face1 -> Seq[Int](7, 6, 5, 4),
-      face2 -> Seq[Int](3, 1, 0, 2),
-      face3 -> Seq[Int](5, 6, 0, 1),
-      face4 -> Seq[Int](7, 4, 3, 2),
-      face5 -> Seq[Int](2, 0, 6, 7),
-      face6 -> Seq[Int](4, 5, 1, 3)
+      face1 -> Seq[Int](7, 1, 3, 6),
+      face2 -> Seq[Int](5, 2, 0, 4),
+      face3 -> Seq[Int](3, 1, 0, 2),
+      face4 -> Seq[Int](7, 6, 5, 4),
+      face5 -> Seq[Int](4, 0, 1, 7),
+      face6 -> Seq[Int](6, 3, 2, 5)
     )
 
     val connMap = vtkBlock.connectivityMap
     assert(connMap.keySet == faceConnectivities.keySet && connMap.keys.forall { face =>
-      connMap.get(face).get == faceConnectivities.get(face).get
+      connMap(face) == faceConnectivities(face)
     })
   }
 
   test("Connectivities for each face should be in terms of vertex ID's (seven-sided block)") {
     val vtkBlock = BlockVTK(sevenSidedBlock)
+
     val faceConnectivities = Map(
-      face1_s7 -> Seq[Int](5, 4, 3, 2),
-      face2_s7 -> Seq[Int](8, 1, 0, 7),
-      face3_s7 -> Seq[Int](3, 4, 0, 1),
-      face4_s7 -> Seq[Int](5, 2, 9, 6),
-      face5_s7 -> Seq[Int](7, 0, 4, 5, 6),
-      face6_s7 -> Seq[Int](9, 2, 3, 1, 8),
-      face7_s7 -> Seq[Int](9, 8, 7, 6)
+      face1_s7 -> Seq[Int](9, 1, 3, 8),
+      face2_s7 -> Seq[Int](5, 2, 0, 4),
+      face3_s7 -> Seq[Int](3, 1, 0, 2),
+      face4_s7 -> Seq[Int](9, 8, 7, 6),
+      face5_s7 -> Seq[Int](4, 0, 1, 9, 6),
+      face6_s7 -> Seq[Int](7, 8, 3, 2, 5),
+      face7_s7 -> Seq[Int](7, 5, 4, 6)
     )
-    val connMap = vtkBlock.connectivityMap
+
     assert(faceConnectivities == vtkBlock.connectivityMap)
   }
 
   test("Connectivity map should flatten into list of integers") {
     val vtkBlock = BlockVTK(unitCube)
-    val faceConnectivities = Seq(7, 6, 5, 4, 7, 4, 3, 2, 3, 1, 0, 2, 5, 6, 0, 1, 4, 5, 1, 3, 2, 0, 6, 7)
+
+    val faceConnectivities = Seq(7, 6, 5, 4, 6, 3, 2, 5, 3, 1, 0, 2, 7, 1, 3, 6, 4, 0, 1, 7, 5, 2, 0, 4)
 
     val connectionsDiff = intListElementDiff(faceConnectivities, vtkBlock.connectivity.toSeq)
     assert(connectionsDiff forall (_ < NumericUtils.EPSILON))
@@ -202,8 +206,9 @@ class BlockVTKSpec extends FunSuite {
 
   test("Connectivity map should flatten into list of integers (seven-sided block)") {
     val vtkBlock = BlockVTK(sevenSidedBlock)
-    val faceConnectivities = List(9, 8, 7, 6, 5, 4, 3, 2, 5, 2, 9, 6, 8, 1, 0, 7, 3, 4, 0, 1, 9, 2, 3,
-                                  1, 8, 7, 0, 4, 5, 6)
+
+    val faceConnectivities = Seq(9, 8, 7, 6, 7, 5, 4, 6, 7, 8, 3, 2, 5, 3, 1, 0, 2, 9, 1, 3, 8,
+      4, 0, 1, 9, 6, 5, 2, 0, 4)
 
     val connectionsDiff = intListElementDiff(faceConnectivities, vtkBlock.connectivity.toSeq)
     assert(connectionsDiff forall (_ < NumericUtils.EPSILON))
@@ -237,12 +242,12 @@ class BlockVTKSpec extends FunSuite {
   test("Normals tuples should flatten into list of integers") {
     val vtkBlock = BlockVTK(unitCube)
     val expectedNormals = Seq[Double](
-      face1.a, face1.b, face1.c,
       face4.a, face4.b, face4.c,
-      face2.a, face2.b, face2.c,
-      face3.a, face3.b, face3.c,
       face6.a, face6.b, face6.c,
-      face5.a, face5.b, face5.c
+      face3.a, face3.b, face3.c,
+      face1.a, face1.b, face1.c,
+      face5.a, face5.b, face5.c,
+      face2.a, face2.b, face2.c
     )
     val normalsDiff = doubleListElementDiff(expectedNormals, vtkBlock.normals)
     assert(normalsDiff forall (_ < NumericUtils.EPSILON))
@@ -251,13 +256,13 @@ class BlockVTKSpec extends FunSuite {
   test("Normals tuples should flatten into list of integers (seven-sided block)") {
     val vtkBlock = BlockVTK(sevenSidedBlock)
     val expectedNormals = Seq[Double](
-      face7_s7.a, face7_s7.b, face7_s7.c,
-      face1_s7.a, face1_s7.b, face1_s7.c,
       face4_s7.a, face4_s7.b, face4_s7.c,
-      face2_s7.a, face2_s7.b, face2_s7.c,
-      face3_s7.a, face3_s7.b, face3_s7.c,
+      face7_s7.a, face7_s7.b, face7_s7.c,
       face6_s7.a, face6_s7.b, face6_s7.c,
-      face5_s7.a, face5_s7.b, face5_s7.c
+      face3_s7.a, face3_s7.b, face3_s7.c,
+      face1_s7.a, face1_s7.b, face1_s7.c,
+      face5_s7.a, face5_s7.b, face5_s7.c,
+      face2_s7.a, face2_s7.b, face2_s7.c
     )
 
     val normals = vtkBlock.normals

@@ -13,12 +13,9 @@ import org.apache.commons.lang3.builder.HashCodeBuilder
   * Accessed as 'd'.
   * @param phi The friction angle (phi) of the face.
   * @param cohesion The cohesion of the face.
-  * @param isProcessorFace Parameter that identifies joint as being artificial joint introduced as part
-  *                        of load balancing
   */
 @SerialVersionUID(1L)
-case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesion: Double,
-                isProcessorFace: Boolean=false) extends Serializable {
+case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesion: Double) extends Serializable {
   assert(normalVec.length == 3)
   val a = normalVec(0)
   val b = normalVec(1)
@@ -36,7 +33,7 @@ case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesio
     val newD = if (math.abs(d) > NumericUtils.EPSILON) d else 0.0
     val newPhi = if (math.abs(phi) > NumericUtils.EPSILON) phi else 0.0
     val newCohesion = if (math.abs(cohesion) > NumericUtils.EPSILON) cohesion else 0.0
-    Face(Array(newA, newB, newC), newD, newPhi, newCohesion, isProcessorFace)
+    Face(Array(newA, newB, newC), newD, newPhi, newCohesion)
   }
 
   /**
@@ -48,7 +45,7 @@ case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesio
   def roundToTolerance(decimalPlaces: Int=6): Face = {
     Face(Array(NumericUtils.roundToTolerance(a, decimalPlaces), NumericUtils.roundToTolerance(b, decimalPlaces),
          NumericUtils.roundToTolerance(c, decimalPlaces)), NumericUtils.roundToTolerance(d, decimalPlaces),
-         phi, cohesion, isProcessorFace)
+         phi, cohesion)
   }
 
   /**
@@ -90,8 +87,7 @@ case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesio
       case f: Face =>
         this.a == f.a && this.b == f.b && this.c == f.c &&
         this.distance == f.distance && this.phi == f.phi &&
-        this.cohesion == f.cohesion &&
-        this.isProcessorFace == f.isProcessorFace
+        this.cohesion == f.cohesion
 
       case _ => false
     }
@@ -105,7 +101,6 @@ case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesio
         .append(distance)
         .append(phi)
         .append(cohesion)
-        .append(isProcessorFace)
         .toHashCode
 }
 
@@ -170,6 +165,8 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
   }
   // Computing the maximum radius of an inscribed sphere is also expensive
   lazy val maxInscribableRadius = findMaxInscribableRadius
+  // Computing the volume is expensive, so only do it when necessary
+  lazy val volume = findVolume
 
   /**
     * Determines whether the input point is outside the input block
@@ -359,17 +356,17 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
         // New origin is guaranteed to lie within joint, so initial d = 0 for all child blocks
         val childBlockA = if (translatedJoint.d < 0.0) {
           Block(Array(newX,newY,newZ), Face(Array(-translatedJoint.a, -translatedJoint.b, -translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces, generation)
+            translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces, generation)
         } else {
           Block(Array(newX,newY,newZ), Face(Array(translatedJoint.a, translatedJoint.b, translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces, generation)
+            translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces, generation)
         }
         val childBlockB = if (translatedJoint.d < 0.0) {
           Block(Array(newX,newY,newZ), Face(Array(translatedJoint.a,translatedJoint.b,translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces, generation)
+            translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces, generation)
         } else {
           Block(Array(newX,newY,newZ), Face(Array(-translatedJoint.a,-translatedJoint.b,-translatedJoint.c), 0.0,
-            translatedJoint.phi, translatedJoint.cohesion, translatedJoint.processorJoint)+:updatedFaces, generation)
+            translatedJoint.phi, translatedJoint.cohesion)+:updatedFaces, generation)
         }
 
         var childBlocks = Vector(childBlockA, childBlockB)
@@ -550,7 +547,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     *
     * @return The volume of the block
     */
-  def volume: Double = {
+  def findVolume: Double = {
     val vertices = findVertices
     val mesh = meshFaces(vertices)
 
@@ -581,7 +578,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
   def updateFaces(localOrigin: Array[Double]): Seq[Face] = {
     assert(localOrigin.length == 3)
 
-    faces.map { case Face(normal, d, phi, cohesion, processorJoint) =>
+    faces.map { case Face(normal, d, phi, cohesion) =>
       val a = normal(0)
       val b = normal(1)
       val c = normal(2)
@@ -604,7 +601,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
       val n = DenseVector[Double](a, b, c)
       // TODO: Need 7 places for unit tests to pass. We should look at this.
       val new_d = NumericUtils.roundToTolerance(-(n dot w) / linalg.norm(n), 7)
-      Face(Array(a, b, c), new_d, phi, cohesion, processorJoint)
+      Face(Array(a, b, c), new_d, phi, cohesion)
     }
   }
 

@@ -1,6 +1,5 @@
 package edu.berkeley.ce.rockslicing
 
-import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.io.Source
@@ -14,8 +13,8 @@ object RockSlicer {
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       // Require all classes to be registered
       .set("spark.kryo.registrationRequired", "true")
-    // Register classes with Kryo using ClassRegistrator
-    conf.set("spark.kryo.registrator", "edu.berkeley.ce.rockslicing.ClassRegistrator")
+      // Register classes with Kryo using ClassRegistrator
+      .set("spark.kryo.registrator", "edu.berkeley.ce.rockslicing.ClassRegistrator")
 
     val sc = new SparkContext(conf)
     val parsedArgs = CommandReader.parseArguments(args)
@@ -33,21 +32,34 @@ object RockSlicer {
       // Error message will already be printed out by InputProcessor
       System.exit(-1)
     }
-    val (globalOrigin, rockVolume, joints) = inputOpt.get
-    val starterBlocks = Seq(Block(globalOrigin, rockVolume))
+    val (globalOrigin, boundingBox, rockVolumeInputs, jointSetInputs) = inputOpt.get
+    val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolumeInputs, jointSetInputs)
+    val starterBlocks = Seq(Block(globalOrigin, generatedInput.rockVolume))
 
     // Generate a list of initial blocks before RDD-ifying it
-    val seedBlocks = if (arguments.numProcessors > 1) {
-      val processorJoints = LoadBalancer.generateProcessorJoints(starterBlocks.head, arguments.numProcessors)
-      processorJoints.foldLeft(starterBlocks) { (currentBlocks, joint) =>
+    val (seedJoints, remainingJoints) = if (arguments.numProcessors > 1) {
+      // Check if at least one of the input joint sets is persistent
+      if (jointSetInputs.forall(_.persistence != 100.0)) {
+        println("ERROR: Input joint sets must contain at least one persistent joint set to run in parallel. Rerun" +
+          "analysis in serial if all joint sets are non-persistent.")
+        System.exit(-1)
+      }
+
+      SeedJointSelector.searchJointSets(generatedInput.jointSets, starterBlocks.head, arguments.numProcessors)
+    } else {
+      (Seq.empty[Joint], generatedInput.jointSets.flatten)
+    }
+
+    val seedBlocks = if (seedJoints.isEmpty) {
+      starterBlocks
+    } else {
+      seedJoints.foldLeft(starterBlocks) { (currentBlocks, joint) =>
         currentBlocks.flatMap(_.cut(joint))
       }
-    } else {
-      starterBlocks
     }
 
     val seedBlockRdd = sc.parallelize(seedBlocks)
-    val broadcastJoints = sc.broadcast(joints)
+    val broadcastJoints = sc.broadcast(remainingJoints)
 
     // Iterate through the discontinuities for each seed block, cutting where appropriate
     val cutBlocks = seedBlockRdd flatMap { seedBlock =>
@@ -79,55 +91,7 @@ object RockSlicer {
       }
     }.cache()
 
-    // Find all blocks that contain processor joints
-    val processorBlocks = nonRedundantBlocks.filter { block =>
-      block.faces.exists(_.isProcessorFace)
-    }
-
-    val mergedBlocks = if (processorBlocks.isEmpty) {
-      nonRedundantBlocks
-    } else {
-      /*
-       * Since we're dealing with RDDs and not Seqs here, we have to adapt
-       * the logic of LoadBalancer.mergeProcessorBlocks
-       */
-      val realBlocks = nonRedundantBlocks.filter { block =>
-        !block.faces.exists(_.isProcessorFace)
-      }
-
-      var orphanBlocks = processorBlocks.map { block =>
-        val globalOrigin = Array(0.0, 0.0, 0.0)
-        // Using same number of decimal places as in LoadBalancer for now
-        Block(globalOrigin, block.updateFaces(globalOrigin).map(_.roundToTolerance(decimalPlaces=4)))
-      }
-      var matchedBlocks: RDD[Block] = sc.emptyRDD[Block]
-
-      /*
-       * We should iterate more than once only in the unlikely event that some
-       * blocks are adjacent to multiple processor joints
-       */
-      while (!orphanBlocks.isEmpty()) {
-        val normVecBlocks = orphanBlocks.groupBy({ block =>
-          val processorFace = block.faces.find(_.isProcessorFace).get
-          // Normal vectors for same joint could be equal and opposite, so use abs
-          ((math.abs(processorFace.a), math.abs(processorFace.b), math.abs(processorFace.c)),
-            math.abs(processorFace.d))
-        }, numPartitions=arguments.numProcessors - 1)
-
-        normVecBlocks.foreach { case (commonJoint, blocks) =>
-          println(s"(${blocks.size})\t$commonJoint")
-        }
-        val mergeResults = normVecBlocks.map { case (commonJoint, blocks) =>
-          LoadBalancer.removeCommonProcessorJoint(commonJoint, blocks.toSeq)
-        }
-        matchedBlocks = matchedBlocks ++ mergeResults.flatMap(_._1)
-        orphanBlocks = mergeResults.flatMap(_._2)
-      }
-
-      realBlocks ++ matchedBlocks
-    }
-
-    val centroidBlocks = mergedBlocks.map { block =>
+    val centroidBlocks = nonRedundantBlocks.map { block =>
       val centroid = block.centroid
       val updatedFaces = block.updateFaces(centroid)
       Block(centroid, updatedFaces)

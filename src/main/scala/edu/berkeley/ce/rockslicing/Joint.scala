@@ -2,6 +2,7 @@ package edu.berkeley.ce.rockslicing
 
 import breeze.linalg
 import breeze.linalg.{DenseMatrix, DenseVector}
+import breeze.optimize.Tolerance
 import org.apache.commons.lang3.builder.HashCodeBuilder
 
 object Joint {
@@ -13,8 +14,8 @@ object Joint {
     * @param center The center of the joint plane. This should be in global coordinates.
     * @return
     */
-  private def findDistance(normalVec: Array[Double], localOrigin: Array[Double],
-                            center: Array[Double]): Double = {
+  def findDistance(normalVec: Array[Double], localOrigin: Array[Double],
+                   center: Array[Double]): Double = {
     assert(normalVec.length == 3 && localOrigin.length == 3 && center.length == 3)
 
     val w = DenseVector.zeros[Double](3)
@@ -224,16 +225,13 @@ object Joint {
   *        This avoids recalculation of a known dip angle.
   * @param dipDirectionParam An optional parameter that can be used to specify the dip direction for
   *        the joint. This avoids recalculation of a known dip direction.
-  * @param processorJoint Parameter that identifies joint as being artificial joint introduced as part
-  *                        of load balancing
   */
 @SerialVersionUID(1L)
 case class Joint(normalVec: Array[Double], localOrigin: Array[Double],
                  center: Array[Double], phi: Double, cohesion: Double,
                  shape: Vector[(Array[Double],Double)], dipAngleParam: Option[Double]=None,
                  dipDirectionParam: Option[Double]=None,
-                 boundingSphereParam: Option[(Array[Double],Double)]=null,
-                 processorJoint: Boolean=false) extends Serializable {
+                 boundingSphereParam: Option[(Array[Double],Double)]=null) extends Serializable {
   assert(normalVec.length == 3 && localOrigin.length == 3 && center.length == 3)
 
   val a = normalVec(0)
@@ -314,29 +312,27 @@ case class Joint(normalVec: Array[Double], localOrigin: Array[Double],
   def updateJoint(blockOrigin: Array[Double]): Joint = {
     assert(blockOrigin.length == 3)
     Joint(normalVec, blockOrigin, center, phi, cohesion, shape, Some(dipAngle),
-      Some(dipDirection), boundingSphere, processorJoint)
+      Some(dipDirection), boundingSphere)
   }
 
-  /**
-    * Compare this joint and input block's faces and determines if joint is one of
-    * input block's faces.
-    * @param block Input block
-    * @return True if joint is one of blocks faces, false otherwise
-    */
-  def inBlock(block: Block): Boolean = {
-    val distance = Joint.findDistance(Array(a, b, c), Array(block.centerX, block.centerY, block.centerZ),
-                                      Array(centerX, centerY, centerZ))
-
-    block.faces.exists { face =>
-      ((math.abs(face.a - a) < NumericUtils.EPSILON) &&
-       (math.abs(face.b - b) < NumericUtils.EPSILON) &&
-       (math.abs(face.c - c) < NumericUtils.EPSILON) &&
-       (math.abs(face.d - distance) < NumericUtils.EPSILON)) ||
-      ((math.abs(face.a + a) < NumericUtils.EPSILON) &&
-       (math.abs(face.b + b) < NumericUtils.EPSILON) &&
-       (math.abs(face.c + c) < NumericUtils.EPSILON) &&
-       (math.abs(face.d + distance) < NumericUtils.EPSILON))
-    }
+  def approximateEquals(inputJoint: Joint, tolerance: Double = NumericUtils.EPSILON): Boolean = {
+    math.abs(a - inputJoint.a) < tolerance &&
+      math.abs(b - inputJoint.b) < tolerance &&
+      math.abs(c - inputJoint.c) < tolerance &&
+      math.abs(centerX - inputJoint.centerX) < tolerance &&
+      math.abs(centerY - inputJoint.centerY) < tolerance &&
+      math.abs(centerZ - inputJoint.centerZ) < tolerance &&
+      math.abs(d - inputJoint.d) < tolerance &&
+      math.abs(phi - inputJoint.phi) < tolerance &&
+      math.abs(cohesion - inputJoint.cohesion) < tolerance &&
+      math.abs(dipAngle - inputJoint.dipAngle) < tolerance &&
+      math.abs(dipDirection - inputJoint.dipDirection) < tolerance &&
+      ((shape zip inputJoint.shape) forall { case ((norm1, d1), (norm2, d2)) =>
+        math.abs(norm1(0) - norm2(0)) < tolerance &&
+          math.abs(norm1(1) - norm2(1)) < tolerance &&
+          math.abs(norm1(2) - norm2(2)) < tolerance &&
+          math.abs(d1 - d2) < tolerance
+      })
   }
 
   override def equals(obj: Any): Boolean = {
@@ -345,7 +341,6 @@ case class Joint(normalVec: Array[Double], localOrigin: Array[Double],
         this.a == j.a && this.b == j.b && this.c == j.c &&
         this.centerX == j.centerX && this.centerY == j.centerY && this.centerZ == j.centerZ &&
         this.dipAngle == j.dipAngle && this.dipDirection == j.dipDirection &&
-        this.processorJoint == j.processorJoint &&
         ((this.shape zip j.shape) forall { case ((norm1, d1), (norm2, d2)) =>
            (norm1 sameElements norm2) && d1 == d2
         })
@@ -362,7 +357,6 @@ case class Joint(normalVec: Array[Double], localOrigin: Array[Double],
     hcBuilder.append(centerZ)
     hcBuilder.append(dipAngle)
     hcBuilder.append(dipDirection)
-    hcBuilder.append(processorJoint)
 
     shape foreach { case (normVec, dist) =>
       hcBuilder.append(normVec(0)).append(normVec(1)).append(normVec(2))
