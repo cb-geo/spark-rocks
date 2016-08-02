@@ -2,7 +2,6 @@ package edu.berkeley.ce.rockslicing
 
 import breeze.linalg
 import breeze.linalg.{DenseMatrix, DenseVector}
-import breeze.optimize.Tolerance
 import org.apache.commons.lang3.builder.HashCodeBuilder
 
 object Joint {

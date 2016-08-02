@@ -547,7 +547,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     *
     * @return The volume of the block
     */
-  def findVolume: Double = {
+  private def findVolume: Double = {
     val vertices = findVertices
     val mesh = meshFaces(vertices)
 

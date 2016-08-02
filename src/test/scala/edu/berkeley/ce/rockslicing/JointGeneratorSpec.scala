@@ -201,11 +201,9 @@ class JointGeneratorSpec extends FunSuite {
         cohesion = 0.0, shape = Vector.empty)
     )
 
-    val jointComparison = expectedJoints.zip(generatedInput.masterJoints) forall { case (joint1, joint2) =>
-        joint1.approximateEquals(joint1)
-    }
-
-    assert(jointComparison)
+    assert(expectedJoints.zip(generatedInput.masterJoints) forall { case (joint1, joint2) =>
+      joint1.approximateEquals(joint1)
+    })
   }
 
   test("Generated joint set should be x-z plane, spaced 0.5 apart") {
@@ -237,14 +235,12 @@ class JointGeneratorSpec extends FunSuite {
           cohesion = 0.0, shape = Vector.empty))
     )
 
-    val jointComparison = expectedJoints.head.zip(generatedInput.jointSets.head) forall { case (joint1, joint2) =>
-      joint1.approximateEquals(joint1)
-    }
-
     assert((expectedOrigin sameElements generatedInput.origin) &&
       (expectedLowerLeftCorner sameElements generatedInput.lowerLeftCorner) &&
       (expectedUpperRightCorner sameElements generatedInput.upperRightCorner) &&
-      jointComparison)
+      expectedJoints.head.zip(generatedInput.jointSets.head).forall { case (joint1, joint2) =>
+        joint1.approximateEquals(joint1)
+      })
   }
 
   test("Generated joint set should be pi planes, spaced sqrt(3.0)/2.0 apart") {
@@ -277,14 +273,12 @@ class JointGeneratorSpec extends FunSuite {
           Array(0.0, 0.0, 0.0), phi = 30.0, cohesion = 0.0, shape = Vector.empty))
     )
 
-    val jointComparison = expectedJoints.head.zip(generatedInput.jointSets.head) forall { case (joint1, joint2) =>
-      joint1.approximateEquals(joint1)
-    }
-
     assert((expectedOrigin sameElements generatedInput.origin) &&
       (expectedLowerLeftCorner sameElements generatedInput.lowerLeftCorner) &&
       (expectedUpperRightCorner sameElements generatedInput.upperRightCorner) &&
-      jointComparison)
+      expectedJoints.head.zip(generatedInput.jointSets.head).forall { case (joint1, joint2) =>
+        joint1.approximateEquals(joint1)
+      })
   }
 
   test("Generated joint set should be pi planes rotated 90 degrees CCW, spaced sqrt(3.0)/2.0 apart") {
@@ -317,13 +311,11 @@ class JointGeneratorSpec extends FunSuite {
           Array(1.0, 0.0, 0.0), phi = 30.0, cohesion = 0.0, shape = Vector.empty))
     )
 
-    val jointComparison = expectedJoints.head.zip(generatedInput.jointSets.head) forall { case (joint1, joint2) =>
-      joint1.approximateEquals(joint1)
-    }
-
     assert((expectedOrigin sameElements generatedInput.origin) &&
       (expectedLowerLeftCorner sameElements generatedInput.lowerLeftCorner) &&
       (expectedUpperRightCorner sameElements generatedInput.upperRightCorner) &&
-      jointComparison)
+      expectedJoints.head.zip(generatedInput.jointSets.head).forall { case (joint1, joint2) =>
+        joint1.approximateEquals(joint1)
+      })
   }
 }
