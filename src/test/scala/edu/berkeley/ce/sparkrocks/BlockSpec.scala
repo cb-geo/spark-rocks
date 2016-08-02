@@ -1,6 +1,7 @@
-package edu.berkeley.ce.rockslicing
+package edu.berkeley.ce.sparkrocks
 
 import org.scalatest._
+
 import scala.math.sqrt
 
 class BlockSpec extends FunSuite {

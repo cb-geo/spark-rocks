@@ -1,4 +1,4 @@
-package edu.berkeley.ce.rockslicing
+package edu.berkeley.ce.sparkrocks
 
 /**
   * Represents input joint set - allows for pattern matching to easily and clearly extract joint set fields

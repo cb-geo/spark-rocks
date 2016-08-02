@@ -1,6 +1,7 @@
-package edu.berkeley.ce.rockslicing
+package edu.berkeley.ce.sparkrocks
 
 import org.scalatest._
+
 import scala.math.sqrt
 
 class BlockVTKSpec extends FunSuite {
@@ -105,7 +106,7 @@ class BlockVTKSpec extends FunSuite {
     )
     val vtkBlock = BlockVTK(sevenSidedBlock)
     assert(vtkBlock.orientedVertices.keys == expectedVertices.keys && vtkBlock.orientedVertices.keys.forall { key =>
-      vtkBlock.orientedVertices.get(key).get.zip(expectedVertices.get(key).get) forall { case (v1, v2) =>
+      vtkBlock.orientedVertices(key).zip(expectedVertices(key)) forall { case (v1, v2) =>
         v1 sameElements v2
       }
     })

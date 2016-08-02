@@ -1,6 +1,7 @@
-package edu.berkeley.ce.rockslicing
+package edu.berkeley.ce.sparkrocks
 
 import org.scalatest.FunSuite
+
 import scala.math.sqrt
 
 class JointGeneratorSpec extends FunSuite {

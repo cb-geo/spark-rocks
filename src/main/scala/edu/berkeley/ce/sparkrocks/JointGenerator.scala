@@ -1,7 +1,8 @@
-package edu.berkeley.ce.rockslicing
+package edu.berkeley.ce.sparkrocks
 
 import breeze.linalg
 import breeze.linalg.DenseVector
+
 import scala.annotation.tailrec
 
 object JointGenerator {

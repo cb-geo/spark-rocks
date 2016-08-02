@@ -1,4 +1,4 @@
-package edu.berkeley.ce.rockslicing
+package edu.berkeley.ce.sparkrocks
 
 import org.apache.commons.lang3.builder.HashCodeBuilder
 

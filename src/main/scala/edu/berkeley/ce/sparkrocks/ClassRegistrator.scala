@@ -1,4 +1,4 @@
-package edu.berkeley.ce.rockslicing
+package edu.berkeley.ce.sparkrocks
 
 import com.esotericsoftware.kryo.Kryo
 import com.twitter.chill.SingletonSerializer

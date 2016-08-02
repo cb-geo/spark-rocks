@@ -1,11 +1,6 @@
-package edu.berkeley.ce.rockslicing
+package edu.berkeley.ce.sparkrocks
 
-import play.api.libs.json.JsNumber
-import play.api.libs.json.Format
-import play.api.libs.json.JsSuccess
-import play.api.libs.json.JsValue
-import play.api.libs.json.JsObject
-import play.api.libs.json.{Json => PlayJson}
+import play.api.libs.json.{Format, JsNumber, JsObject, JsSuccess, JsValue, Json => PlayJson}
 
 /**
   * Defines functions to convert rock block data to JSON format that can easily be converted to VTK format

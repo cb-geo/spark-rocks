@@ -1,5 +1,6 @@
-package edu.berkeley.ce.rockslicing
-// THIS IS CODE IS OPEN SOURCE AND CAN BE FOUND AT: 
+package edu.berkeley.ce.sparkrocks
+
+// THIS IS CODE IS OPEN SOURCE AND CAN BE FOUND AT:
 // https://github.com/mdda/DelaunayScala
 
 import scala.language.postfixOps

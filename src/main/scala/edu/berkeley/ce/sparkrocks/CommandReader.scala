@@ -1,4 +1,4 @@
-package edu.berkeley.ce.rockslicing
+package edu.berkeley.ce.sparkrocks
 
 /**
  * A simple wrapper for parsing command line inputs
