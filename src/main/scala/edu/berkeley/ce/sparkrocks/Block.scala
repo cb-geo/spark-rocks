@@ -599,8 +599,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
       }
 
       val n = DenseVector[Double](a, b, c)
-      // TODO: Need 7 places for unit tests to pass. We should look at this.
-      val new_d = NumericUtils.roundToTolerance(-(n dot w) / linalg.norm(n), 7)
+      val new_d = NumericUtils.roundToTolerance(-(n dot w) / linalg.norm(n))
       Face(Array(a, b, c), new_d, phi, cohesion)
     }
   }
