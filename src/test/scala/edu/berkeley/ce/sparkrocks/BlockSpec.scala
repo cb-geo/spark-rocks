@@ -412,9 +412,6 @@ class BlockSpec extends FunSuite {
     val face6 = Face(Array(0.0, 0.0, -1.0), 1.0, phi=0, cohesion=0)
     val block = Block(Array(0.0, 0.0, 0.0), List(face1, face2, face3, face4, face5, face6))
     val centroid = block.centroid
-    println("THIS IS THE CENTROID:")
-    centroid.foreach(println)
-    println(s"This is the volume: ${block.volume}")
     val expectedCentroid = Array(0.0, 0.0, 0.0)
     assert(centroidDifference(centroid, expectedCentroid) <= NumericUtils.EPSILON)
   }
@@ -429,9 +426,6 @@ class BlockSpec extends FunSuite {
     val block = Block(Array(0.5, 0.5, 0.5), List(face1, face2, face3, face4, face5, face6))
     val centroid = block.centroid
     val expectedCentroid = Array(0.5, 0.5, 1.0)
-    println("THIS IS THE CENTROID:")
-    centroid.foreach(println)
-    println(s"This is the volume: ${block.volume}")
     assert(centroidDifference(centroid, expectedCentroid) < NumericUtils.EPSILON)
   }
 

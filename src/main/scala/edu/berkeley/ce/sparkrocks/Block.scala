@@ -151,9 +151,9 @@ object Block {
   private def ccwCompare(pointA: Array[Double], pointB: Array[Double],
                          center: Array[Double]): Boolean = {
     // Check that points are in the same x-y plane
-    if (math.abs(NumericUtils.roundToTolerance(pointA(2), 5) -
-      NumericUtils.roundToTolerance(pointB(2), 5)) > NumericUtils.EPSILON) {
-      throw new IllegalArgumentException("ERROR: Input to BlockVTK.ccwCompare: "+
+    if (math.abs(NumericUtils.roundToTolerance(pointA(2)) -
+      NumericUtils.roundToTolerance(pointB(2))) > NumericUtils.EPSILON) {
+      throw new IllegalArgumentException("ERROR: Input to Block.ccwCompare: " +
         "Input points are not in the same plane")
     }
 
@@ -206,47 +206,6 @@ object Block {
     Array(vertices.map(_(0)).sum / vertices.length.toDouble,
       vertices.map(_(1)).sum / vertices.length.toDouble,
       vertices.map(_(2)).sum / vertices.length.toDouble)
-  }
-
-  /**
-    * Arranges the vertices of each of the faces of the input block such that they are in a counter-
-    * clockwise orientation relative their face's unit normal
-    *
-    * @param block A rock block
-    * @return A mapping from each face of the block to a Seq of vertices for that face arranged in counter-
-    *         clockwise order relative to its unit normal
-    */
-  private def orientVertices(block: Block): Map[Face, Seq[Array[Double]]] = {
-    val faceVertices = block.calcVertices
-    faceVertices.keys.zip(
-      faceVertices.map { case (face, vertices) =>
-        // Rotate vertices to all be in x-y plane
-        val R = Block.rotationMatrix(face.normalVec, Array(0.0, 0.0, 1.0))
-        val rotatedVerts = vertices map { vertex =>
-          val rotatedVertex = R * DenseVector[Double](vertex)
-          Array(rotatedVertex(0), rotatedVertex(1), rotatedVertex(2))
-        }
-        // Order vertices in counter-clockwise orientation
-        val center = Block.findCenter(rotatedVerts)
-        val orderedVerts = {
-          if (face.normalVec(2) < -NumericUtils.EPSILON) {
-            // If z-component of normal vector points in negative z-direction, orientation
-            // needs to be reversed otherwise points will be ordered clockwise
-            rotatedVerts.sortWith(Block.ccwCompare(_, _, center)).reverse
-          }
-          else {
-            rotatedVerts.sortWith(Block.ccwCompare(_, _, center))
-          }
-        }
-        // Rotate vertices back to original orientation
-        val invR = R.t // Inverse of rotation matrix is equal to its transpose
-        orderedVerts map { vertex =>
-          val orderedVertex = (invR * DenseVector[Double](vertex)).map {
-            NumericUtils.roundToTolerance(_) }
-          Array(orderedVertex(0), orderedVertex(1), orderedVertex(2))
-        }
-      }
-    ).toMap
   }
 }
 
@@ -563,7 +522,35 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     *         This function should only be called once all redundant faces have been removed.
     */
   def orientedVertices: Map[Face, Seq[Array[Double]]] = {
-    Block.orientVertices(this)
+    val faceVertices = calcVertices
+    faceVertices.keys.zip(
+      faceVertices.map { case (face, vertices) =>
+        // Rotate vertices to all be in x-y plane
+        val R = Block.rotationMatrix(face.normalVec, Array(0.0, 0.0, 1.0))
+        val rotatedVerts = vertices map { vertex =>
+          val rotatedVertex = R * DenseVector[Double](vertex)
+          Array(rotatedVertex(0), rotatedVertex(1), rotatedVertex(2))
+        }
+        // Order vertices in counter-clockwise orientation
+        val center = Block.findCenter(rotatedVerts)
+        val orderedVerts =
+          if (face.normalVec(2) < -NumericUtils.EPSILON) {
+              // If z-component of normal vector points in negative z-direction, orientation
+            // needs to be reversed otherwise points will be ordered clockwise
+            rotatedVerts.sortWith(Block.ccwCompare(_, _, center)).reverse
+          }
+          else {
+            rotatedVerts.sortWith(Block.ccwCompare(_, _, center))
+          }
+        // Rotate vertices back to original orientation
+        val invR = R.t // Inverse of rotation matrix is equal to its transpose
+        orderedVerts map { vertex =>
+          val orderedVertex = (invR * DenseVector[Double](vertex)).map {
+            NumericUtils.roundToTolerance(_) }
+          Array(orderedVertex(0), orderedVertex(1), orderedVertex(2))
+        }
+      }
+    ).toMap
   }
 
   /**
@@ -584,46 +571,33 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
         allVertices.map { v => v(2) }.sum / allVertices.size
       )
     } else {
-      val increments: Seq[(Double, Double, Double)] = faces.flatMap { face =>
-        vertices(face).map { faceVertex =>
-          val vertexIndex = vertices(face).indexOf(faceVertex)
+      val increments = faces.flatMap { face =>
+        // First vertex of face used in all iterations
+        val anchorVertex = vertices(face)(0)
 
-          // Tetrahedra are constructed using three vertices at a time, so stop
-          // mapping beyond 3 to last vertex
-          if ( vertexIndex < vertices(face).size - 2 ) {
-            val Jacobian = DenseMatrix.zeros[Double](3, 3)
-            // Translate vertex coordinates from global to local where center of mass is local origin
-            val vertex1 = DenseVector[Double](vertices(face)(0)(0) - centerX,
-              vertices(face)(0)(1) - centerY,
-              vertices(face)(0)(2) - centerZ)
-            val vertex2 = DenseVector[Double](vertices(face)(vertexIndex + 1)(0) - centerX,
-              vertices(face)(vertexIndex + 1)(1) - centerY,
-              vertices(face)(vertexIndex + 1)(2) - centerZ)
-            val vertex3 = DenseVector[Double](vertices(face)(vertexIndex + 2)(0) - centerX,
-              vertices(face)(vertexIndex + 2)(1) - centerY,
-              vertices(face)(vertexIndex + 2)(2) - centerZ)
+        // Tetrahedra are constructed using three vertices at a time
+        vertices(face).takeRight(vertices(face).length - 1).sliding(2).map { faceVertices =>
+          // Translate vertex coordinates from global to local where center of mass is local origin
+          val vertex1 = Array[Double](anchorVertex(0) - centerX,
+            anchorVertex(1) - centerY,
+            anchorVertex(2) - centerZ)
+          val vertex2 = Array[Double](faceVertices(0)(0) - centerX,
+            faceVertices(0)(1) - centerY,
+            faceVertices(0)(2) - centerZ)
+          val vertex3 = Array[Double](faceVertices(1)(0) - centerX,
+            faceVertices(1)(1) - centerY,
+            faceVertices(1)(2) - centerZ)
 
-            // Initialize Jacobian
-            Jacobian(0, 0) = vertex1(0)
-            Jacobian(0, 1) = vertex1(1)
-            Jacobian(0, 2) = vertex1(2)
-            Jacobian(1, 0) = vertex2(0)
-            Jacobian(1, 1) = vertex2(1)
-            Jacobian(1, 2) = vertex2(2)
-            Jacobian(2, 0) = vertex3(0)
-            Jacobian(2, 1) = vertex3(1)
-            Jacobian(2, 2) = vertex3(2)
+          // Initialize Jacobian
+          val Jacobian = DenseMatrix(vertex1, vertex2, vertex3)
 
-            val JacobianDet = linalg.det(Jacobian)
+          val JacobianDet = linalg.det(Jacobian)
 
-            // Calculate x, y and z centroid increments
-            ( (vertex1(0) + vertex2(0) + vertex3(0)) * JacobianDet,
-              (vertex1(1) + vertex2(1) + vertex3(1)) * JacobianDet,
-              (vertex1(2) + vertex2(2) + vertex3(2)) * JacobianDet
-              )
-          } else {
-            (0.0, 0.0, 0.0)
-          }
+          // Calculate x, y and z centroid increments
+          ( (vertex1(0) + vertex2(0) + vertex3(0)) * JacobianDet,
+            (vertex1(1) + vertex2(1) + vertex3(1)) * JacobianDet,
+            (vertex1(2) + vertex2(2) + vertex3(2)) * JacobianDet
+            )
         }
       }
 
@@ -647,36 +621,16 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     val vertices = orientedVertices
 
     val volIncrements = faces.flatMap { face =>
-      vertices(face).map { faceVertex =>
-        val vertexIndex = vertices(face).indexOf(faceVertex)
+      // Tetrahedra are constructed using three vertices at a time
+      vertices(face).sliding(3).map { vertexTuples =>
+        // Initialize Jacobian matrix
+        val Jacobian = DenseMatrix( (1.0, centerX, centerY, centerZ),
+          ( 1.0, vertexTuples(0)(0), vertexTuples(0)(1), vertexTuples(0)(2) ),
+          ( 1.0, vertexTuples(1)(0), vertexTuples(1)(1), vertexTuples(1)(2) ),
+          ( 1.0, vertexTuples(2)(0), vertexTuples(2)(1), vertexTuples(2)(2) ))
 
-        // Tetrahedra are constructed using three vertices at a time, so stop
-        // mapping beyond 3 to last vertex
-        if ( vertexIndex < vertices(face).size - 2 ) {
-          val Jacobian = DenseMatrix.zeros[Double](4,4)
-          // Initialize Jacobian matrix
-          Jacobian(0, 0) = 1.0
-          Jacobian(1, 0) = 1.0
-          Jacobian(2, 0) = 1.0
-          Jacobian(3, 0) = 1.0
-          Jacobian(0, 1) = centerX
-          Jacobian(1, 1) = faceVertex(0)
-          Jacobian(2, 1) = vertices(face)(vertexIndex + 1)(0)
-          Jacobian(3, 1) = vertices(face)(vertexIndex + 2)(0)
-          Jacobian(0, 2) = centerY
-          Jacobian(1, 2) = faceVertex(1)
-          Jacobian(2, 2) = vertices(face)(vertexIndex + 1)(1)
-          Jacobian(3, 2) = vertices(face)(vertexIndex + 2)(1)
-          Jacobian(0, 3) = centerZ
-          Jacobian(1, 3) = faceVertex(2)
-          Jacobian(2, 3) = vertices(face)(vertexIndex + 1)(2)
-          Jacobian(3, 3) = vertices(face)(vertexIndex + 2)(2)
-
-          // Calculate determinant of Jacobian
-          linalg.det(Jacobian)
-        } else {
-          0.0
-        }
+        // Calculate determinant of Jacobian
+        linalg.det(Jacobian)
       }
     }
 

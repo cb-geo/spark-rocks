@@ -14,7 +14,7 @@ object RockSlicer {
       // Require all classes to be registered
       .set("spark.kryo.registrationRequired", "true")
       // Register classes with Kryo using ClassRegistrator
-      .set("spark.kryo.registrator", "edu.berkeley.ce.rockslicing.ClassRegistrator")
+      .set("spark.kryo.registrator", "edu.berkeley.ce.sparkrocks.ClassRegistrator")
 
     val sc = new SparkContext(conf)
     val parsedArgs = CommandReader.parseArguments(args)
