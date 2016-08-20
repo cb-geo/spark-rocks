@@ -138,6 +138,75 @@ object Block {
       DenseMatrix.eye[Double](3)
     }
   }
+
+  /**
+    * Compares pointA to pointB. If pointA is first relative to pointB rotating counter-clockwise about center,
+    * the method returns true. Input vectors should have same z-coordinate - comparison is based in 2-D
+    *
+    * @param pointA Point of interest
+    * @param pointB Point of comparison
+    * @param center Reference point for comparison
+    * @return Returns TRUE if pointA is first relative to pointB, FALSE otherwise
+    */
+  private def ccwCompare(pointA: Array[Double], pointB: Array[Double],
+                         center: Array[Double]): Boolean = {
+    // Check that points are in the same x-y plane
+    if (math.abs(NumericUtils.roundToTolerance(pointA(2)) -
+      NumericUtils.roundToTolerance(pointB(2))) > NumericUtils.EPSILON) {
+      throw new IllegalArgumentException("ERROR: Input to Block.ccwCompare: " +
+        "Input points are not in the same plane")
+    }
+
+    // Starts counter-clockwise comparison from 12 o'clock. Center serves as origin and 12 o'clock is along
+    // vertical line running through this center.
+    // Check if points are on opposite sides of the center. Points left of center will be before points
+    // right of the center
+    if ((pointA(0) - center(0) < -NumericUtils.EPSILON) && (pointB(0) - center(0) >= NumericUtils.EPSILON)) {
+      return true
+    }
+    else if ((pointA(0) - center(0) >= NumericUtils.EPSILON) && (pointB(0) - center(0) < -NumericUtils.EPSILON)) {
+      return false
+    }
+
+    // Compares points that fall on the x = center._1 line.
+    if ((math.abs(pointA(0) - center(0)) < NumericUtils.EPSILON) &&
+      (math.abs(pointB(0) - center(0)) < NumericUtils.EPSILON)) {
+      // Points furthest away from the center will be before points that are closer to the center
+      if ((pointA(1) - center(1) >= NumericUtils.EPSILON) || (pointB(1) - center(1) >= NumericUtils.EPSILON)) {
+        return pointA(1) > pointB(1)
+      } else {
+        return pointB(1) > pointA(1)
+      }
+    }
+
+    // The cross product of vectors (pointA - center) and (pointB - center) in determinant form. Since it's
+    // in 2-D we're only interested in the sign of the resulting z-vector.
+    val det = (pointA(0) - center(0)) * (pointB(1) - center(1)) -
+      (pointB(0) - center(0)) * (pointA(1) - center(1))
+    // If resulting vector points in positive z-direction, pointA is before pointB
+    if (det > NumericUtils.EPSILON) {
+      true
+    } else if (det < -NumericUtils.EPSILON) {
+      false
+    } else {
+      // pointA and pointB are on the same line from the center, so check which one is closer to the center
+      val d1 = (pointA(0) - center(0)) * (pointA(0) - center(0)) + (pointA(1) - center(1)) * (pointA(1) - center(1))
+      val d2 = (pointB(0) - center(0)) * (pointB(0) - center(0)) + (pointB(1) - center(1)) * (pointB(1) - center(1))
+      d1 > d2
+    }
+  }
+
+  /**
+    * Finds the center of a list of vertices - defined as the average coordinate of all the vertices in the list
+    *
+    * @param vertices List of vertices
+    * @return Coordinate of center of vertices
+    */
+  private def findCenter(vertices: Seq[Array[Double]]): Array[Double] = {
+    Array(vertices.map(_(0)).sum / vertices.length.toDouble,
+      vertices.map(_(1)).sum / vertices.length.toDouble,
+      vertices.map(_(2)).sum / vertices.length.toDouble)
+  }
 }
 
 /**
@@ -416,7 +485,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     * @return A mapping from each face of the block to a Seq of vertices for that face
     * This function should only be called once all redundant faces have been removed.
     */
-  def findVertices: Map[Face, Seq[Array[Double]]] = {
+  def calcVertices: Map[Face, Seq[Array[Double]]] = {
     faces.zip (
       faces map { f1 =>
         val n1 = DenseVector[Double](f1.a, f1.b, f1.c)
@@ -446,127 +515,123 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
   }
 
   /**
-    * Mesh the faces using Delaunay triangulation. This meshing is done
-    * in order to calculate the volume and centroid of the block
+    * Get the counter-clockwise oriented vertices of each face of the block
     *
-    * @return A Seq of seqs that give the local to global mapping for the
-    * triangulation of each of the faces.
+    * @return A mapping from each face of the block to a Seq of vertices for that face
+    *         in a counter-clockwise orientation.
+    *         This function should only be called once all redundant faces have been removed.
     */
-  def meshFaces(vertices: Map[Face, Seq[Array[Double]]]): Map[Face, Seq[Array[Int]]] =
-    // Determine rotation matrix to rotate faces perpendicular to z-axis. This way all vertices
-    // are only in the x-y plane which makes triangulation easier.
-    faces.zip (
-      faces.map { face =>
-        val R = Block.rotationMatrix(face.normalVec, Array(0.0, 0.0, 1.0))
-        val rotatedVertices = vertices(face).map { vertex =>
-          val rotatedVertex = R * DenseVector(vertex)
-          Delaunay.Vector2(rotatedVertex(0), rotatedVertex(1))
-        }.distinct.toList
-        assert(rotatedVertices.nonEmpty)
-        // If normal is -z-axis, order needs to be reversed to maintain clockwise orientation since
-        // rotation matrix is identity matrix in this case - vectors are parallel. Rotation matrix
-        // takes care of all other cases.
-        if (math.abs(face.c + 1.0) < NumericUtils.EPSILON) {
-          Delaunay.Triangulation(rotatedVertices).map { vert =>
-            Array(vert._3, vert._2, vert._1)
-          }
-        } else {
-          Delaunay.Triangulation(rotatedVertices).map { vert =>
-            Array(vert._1, vert._2, vert._3)
-          }
-        }
+  def orientedVertices: Map[Face, Seq[Array[Double]]] = {
+    val faceVertices = calcVertices
+    faceVertices.transform { case (face, vertices) =>
+      // Rotate vertices to all be in x-y plane
+      val R = Block.rotationMatrix(face.normalVec, Array(0.0, 0.0, 1.0))
+      val rotatedVerts = vertices map { vertex =>
+        val rotatedVertex = R * DenseVector[Double](vertex)
+        Array(rotatedVertex(0), rotatedVertex(1), rotatedVertex(2))
       }
-    ).toMap
-
-  /**
-    * Calculates the centroid of the block.
-    * See http://wwwf.imperial.ac.uk/~rn/centroid.pdf for theoretical background.
-    *
-    * @return The centroid of the block, (centerX, centerY, centerZ).
-    */
-  def centroid: Array[Double] = {
-    val vertices = findVertices
-    val mesh = meshFaces(vertices)
-
-    val increments = faces.flatMap { face =>
-      mesh(face).map { m =>
-        // Access triangulation entries backwards so they are in counterclockwise order
-        val a_vals = vertices(face)(m(2))
-        val b_vals = vertices(face)(m(1))
-        val c_vals = vertices(face)(m(0))
-        val a = DenseVector[Double](a_vals(0), a_vals(1), a_vals(2))
-        val b = DenseVector[Double](b_vals(0), b_vals(1), b_vals(2))
-        val c = DenseVector[Double](c_vals(0), c_vals(1), c_vals(2))
-
-        val n = linalg.cross(b - a, c - a)
-        val volIncrement = a dot n
-
-        val basisVectors = Vector(
-          DenseVector[Double](1.0, 0.0, 0.0),
-          DenseVector[Double](0.0, 1.0, 0.0),
-          DenseVector[Double](0.0, 0.0, 1.0)
-        )
-        val centroidIncrement = basisVectors map { vec =>
-          1 / 24.0 * ((n dot vec) * (
-            math.pow((a + b) dot vec, 2) +
-            math.pow((b + c) dot vec, 2) +
-            math.pow((c + a) dot vec, 2)
-          ))
+      // Order vertices in counter-clockwise orientation
+      val center = Block.findCenter(rotatedVerts)
+      val orderedVerts =
+        if (face.normalVec(2) < -NumericUtils.EPSILON) {
+          // If z-component of normal vector points in negative z-direction, orientation
+          // needs to be reversed otherwise points will be ordered clockwise
+          rotatedVerts.sortWith(Block.ccwCompare(_, _, center)).reverse
         }
-        (volIncrement, (centroidIncrement(0), centroidIncrement(1), centroidIncrement(2)))
+        else {
+          rotatedVerts.sortWith(Block.ccwCompare(_, _, center))
+        }
+      // Rotate vertices back to original orientation
+      val invR = R.t // Inverse of rotation matrix is equal to its transpose
+      orderedVerts map { vertex =>
+        val orderedVertex = (invR * DenseVector[Double](vertex)).map {
+          NumericUtils.roundToTolerance(_) }
+        Array(orderedVertex(0), orderedVertex(1), orderedVertex(2))
       }
-    }
-
-    val (totalVolume, (centroidX, centroidY, centroidZ)) = increments.fold (0.0, (0.0,0.0,0.0)) {
-      case ((volInc1, (centX1, centY1, centZ1)),  (volInc2, (centX2, centY2, centZ2))) =>
-        (volInc1 + volInc2, (centX1 + centX2, centY1 + centY2, centZ1 + centZ2))
-    }
-
-    // Check if block is extremely small
-    if (totalVolume <= NumericUtils.EPSILON) {
-      // If volume is essentially 0.0, return average of all vertices as centroid
-      val allVertices = vertices.values.flatten
-      Array[Double](
-        allVertices.map { v => v(0) }.sum / allVertices.size,
-        allVertices.map { v => v(1) }.sum / allVertices.size,
-        allVertices.map { v => v(2) }.sum / allVertices.size
-      )
-    } else {
-      Array(
-        // Factor of 3 comes from: centroid / (2.0 * (volume/6.0))
-        3.0 * centroidX / totalVolume,
-        3.0 * centroidY / totalVolume,
-        3.0 * centroidZ / totalVolume
-      )
     }
   }
 
   /**
-    * Calculates the volume of the block
-    * See http://wwwf.imperial.ac.uk/~rn/centroid.pdf for theoretical background.
+    * Calculates the centroid of the block using simplex integration.
+    *
+    * @return The centroid of the block, (centerX, centerY, centerZ).
+    */
+  def centroid: Array[Double] = {
+    val faceVertexMap = orientedVertices
+
+    // Check if block is extremely small
+    if (volume <= NumericUtils.EPSILON) {
+      // If volume is essentially 0.0, return average of all vertices as centroid
+      val allVertices = faceVertexMap.values.flatten
+      Array[Double](
+        allVertices.map(_(0)).sum / allVertices.size,
+        allVertices.map(_(1)).sum / allVertices.size,
+        allVertices.map(_(2)).sum / allVertices.size
+      )
+    } else {
+      val increments = faceVertexMap.flatMap { case (face, faceVertices) =>
+        // First vertex of face used in all iterations
+        val anchorVertex = faceVertices(0)
+
+        // Tetrahedra are constructed using three vertices at a time
+        faceVertices.drop(1).sliding(2).map { case Seq(firstVertex, secondVertex) =>
+          // Translate vertex coordinates from global to local where center of mass is local origin
+          val vertex1 = Array[Double](anchorVertex(0) - centerX,
+            anchorVertex(1) - centerY,
+            anchorVertex(2) - centerZ)
+          val vertex2 = Array[Double](firstVertex(0) - centerX,
+            firstVertex(1) - centerY,
+            firstVertex(2) - centerZ)
+          val vertex3 = Array[Double](secondVertex(0) - centerX,
+            secondVertex(1) - centerY,
+            secondVertex(2) - centerZ)
+
+          // Initialize Jacobian
+          val Jacobian = DenseMatrix(vertex1, vertex2, vertex3)
+
+          val JacobianDet = linalg.det(Jacobian)
+
+          // Calculate x, y and z centroid increments
+          ( (vertex1(0) + vertex2(0) + vertex3(0)) * JacobianDet,
+            (vertex1(1) + vertex2(1) + vertex3(1)) * JacobianDet,
+            (vertex1(2) + vertex2(2) + vertex3(2)) * JacobianDet )
+        }
+      }
+
+      val (centroidX, centroidY, centroidZ) = increments.fold (0.0, 0.0, 0.0) {
+        case ((centX1, centY1, centZ1),  (centX2, centY2, centZ2)) =>
+          (centX1 + centX2, centY1 + centY2, centZ1 + centZ2)
+      }
+
+      Array(centroidX / (volume * 24.0) + centerX,
+        centroidY / (volume * 24.0) + centerY,
+        centroidZ / (volume * 24.0) + centerZ)
+    }
+  }
+
+  /**
+    * Calculates the volume of the block using simplex integration
     *
     * @return The volume of the block
     */
   private def findVolume: Double = {
-    val vertices = findVertices
-    val mesh = meshFaces(vertices)
+    val faceVertexMap = orientedVertices
 
-    val volIncrements = faces.flatMap { face =>
-      mesh(face).map { m =>
-        // Access triangulation entries backwards so they are in counterclockwise order
-        val a_vals = vertices(face)(m(2))
-        val b_vals = vertices(face)(m(1))
-        val c_vals = vertices(face)(m(0))
-        val a = DenseVector[Double](a_vals(0), a_vals(1), a_vals(2))
-        val b = DenseVector[Double](b_vals(0), b_vals(1), b_vals(2))
-        val c = DenseVector[Double](c_vals(0), c_vals(1), c_vals(2))
+    val volIncrements = faceVertexMap.flatMap { case (face, faceVertices) =>
+      // Tetrahedra are constructed using three vertices at a time
+      faceVertices.sliding(3).map { case Seq(vertex1, vertex2, vertex3) =>
+        // Initialize Jacobian matrix
+        val Jacobian = DenseMatrix( (1.0, centerX, centerY, centerZ),
+          ( 1.0, vertex1(0), vertex1(1), vertex1(2) ),
+          ( 1.0, vertex2(0), vertex2(1), vertex2(2) ),
+          ( 1.0, vertex3(0), vertex3(1), vertex3(2) ))
 
-        val n = linalg.cross(b - a, c - a)
-        a dot n
+        // Calculate determinant of Jacobian
+        linalg.det(Jacobian)
       }
     }
 
-    volIncrements.sum/6.0
+    volIncrements.sum / 6.0
   }
 
   /**

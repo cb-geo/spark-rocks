@@ -362,7 +362,7 @@ class BlockSpec extends FunSuite {
       face3 -> face3Verts,
       face4 -> face4Verts
     )
-    val vertices = block.findVertices
+    val vertices = block.calcVertices
     assert(vertices.keys == expectedIntersection.keys && vertices.keys.forall { key =>
       vertices.get(key).get.zip(expectedIntersection.get(key).get) forall { case (v1, v2) => v1 sameElements v2 }
     })
@@ -381,7 +381,7 @@ class BlockSpec extends FunSuite {
       face2 -> face2Verts,
       face3 -> face3Verts
     )
-    val vertices = block.findVertices
+    val vertices = block.calcVertices
     assert(vertices.keys == expectedIntersection.keys && vertices.keys.forall { key =>
       vertices.get(key).get.zip(expectedIntersection.get(key).get) forall { case (v1, v2) => v1 sameElements v2 }
     })
@@ -397,27 +397,10 @@ class BlockSpec extends FunSuite {
       face2 -> List.empty[Array[Double]],
       face3 -> List.empty[Array[Double]]
     )
-    val vertices = block.findVertices
+    val vertices = block.calcVertices
     assert(vertices.keys == expectedIntersection.keys && vertices.keys.forall { key =>
       vertices.get(key).get.zip(expectedIntersection.get(key).get) forall { case (v1, v2) => v1 sameElements v2 }
     })
-  }
-
-  test("There should be three entries in the triangulation list ordered in a clockwise fashion") {
-    val face1 = Face(Array(1.0, 0.0, 0.0), 1.0, phi=0, cohesion=0)
-    val face2 = Face(Array(0.0, 1.0, 0.0), 1.0, phi=0, cohesion=0)
-    val face3 = Face(Array(0.0, 0.0, 1.0), 1.0, phi=0, cohesion=0)
-    val face4 = Face(Array(-1/sqrt(2.0), -1/sqrt(2.0), 0.0), 1/sqrt(2.0), phi=0, cohesion=0)
-    val block = Block(Array(1.0, 1.0, 1.0), List(face1, face2, face3, face4))
-
-    val vertices = block.findVertices
-    val mesh = block.meshFaces(vertices)
-    val expectedVertices = List(Delaunay.Vector2(1.0, 1.0), Delaunay.Vector2(1.0, 0.0), Delaunay.Vector2(0.0, 1.0))
-
-    val triangulationTriples = Delaunay.Triangulation(expectedVertices)
-    val triangulationArrays = List(Array(triangulationTriples.head._1, triangulationTriples.head._2,
-                                        triangulationTriples.head._3))
-    assert(mesh(face3).zip(triangulationArrays) forall { case (v1, v2) => v1 sameElements v2 })
   }
 
   test("Centroid should be at Array(0.0, 0.0, 0.0)") {
