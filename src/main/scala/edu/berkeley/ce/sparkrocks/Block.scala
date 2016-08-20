@@ -532,20 +532,19 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
       }
       // Order vertices in counter-clockwise orientation
       val center = Block.findCenter(rotatedVerts)
-      val orderedVerts =
-        if (face.normalVec(2) < -NumericUtils.EPSILON) {
-          // If z-component of normal vector points in negative z-direction, orientation
-          // needs to be reversed otherwise points will be ordered clockwise
-          rotatedVerts.sortWith(Block.ccwCompare(_, _, center)).reverse
-        }
-        else {
-          rotatedVerts.sortWith(Block.ccwCompare(_, _, center))
-        }
+      val orderedVerts = if (face.normalVec(2) < -NumericUtils.EPSILON) {
+        // If z-component of normal vector points in negative z-direction, orientation
+        // needs to be reversed otherwise points will be ordered clockwise
+        rotatedVerts.sortWith(Block.ccwCompare(_, _, center)).reverse
+      }
+      else {
+        rotatedVerts.sortWith(Block.ccwCompare(_, _, center))
+      }
+
       // Rotate vertices back to original orientation
       val invR = R.t // Inverse of rotation matrix is equal to its transpose
       orderedVerts map { vertex =>
-        val orderedVertex = (invR * DenseVector[Double](vertex)).map {
-          NumericUtils.roundToTolerance(_) }
+        val orderedVertex = (invR * DenseVector[Double](vertex)).map(NumericUtils.roundToTolerance(_))
         Array(orderedVertex(0), orderedVertex(1), orderedVertex(2))
       }
     }
@@ -588,7 +587,6 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
 
           // Initialize Jacobian
           val Jacobian = DenseMatrix(vertex1, vertex2, vertex3)
-
           val JacobianDet = linalg.det(Jacobian)
 
           // Calculate x, y and z centroid increments
@@ -621,10 +619,12 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
       // Tetrahedra are constructed using three vertices at a time
       faceVertices.sliding(3).map { case Seq(vertex1, vertex2, vertex3) =>
         // Initialize Jacobian matrix
-        val Jacobian = DenseMatrix( (1.0, centerX, centerY, centerZ),
+        val Jacobian = DenseMatrix(
+          (1.0, centerX, centerY, centerZ),
           ( 1.0, vertex1(0), vertex1(1), vertex1(2) ),
           ( 1.0, vertex2(0), vertex2(1), vertex2(2) ),
-          ( 1.0, vertex3(0), vertex3(1), vertex3(2) ))
+          ( 1.0, vertex3(0), vertex3(1), vertex3(2) )
+        )
 
         // Calculate determinant of Jacobian
         linalg.det(Jacobian)
