@@ -9,8 +9,8 @@ object CommandReader {
     numProcessors: Int = 25,
     minRadius: Double = 0.0,
     maxAspectRatio: Double = Double.PositiveInfinity,
-    toVTK: Boolean = false,
-    toInequalities: Boolean = false
+    vtkOut: String = "",
+    jsonOut: String = ""
   )
 
   private val parser = new scopt.OptionParser[Config]("SparkRocks") {
@@ -39,18 +39,18 @@ object CommandReader {
       if (x > 0.0) success else failure("Maximum aspect ratio must be positive")
     } text "The maximum acceptable aspect ratio of child blocks"
 
-    opt[Unit]("toVTK") action { (_, c) =>
-      c.copy(toVTK = true)
-    } text "Generate output that can be converted to VTK format by rockProcessor"
+    opt[String]("vtkOut") action { (x, c) =>
+      c.copy(vtkOut = x)
+    } text "Output file for block VTK data"
 
-    opt[Unit]("toIE") action { (_, c) =>
-      c.copy(toInequalities = true)
-    } text "Generate JSON output that uses inequalities to represent rock blocks along with the blocks' centroids"
+    opt[String]("jsonOut") action { (x, c) =>
+      c.copy(jsonOut = x)
+    } text "Output file for block JSON data"
 
     help("help") text "Prints this usage text"
 
     checkConfig { c =>
-      if (!c.toVTK && !c.toInequalities) failure("Must specify at least one of toVTK or toIE") else success
+      if (c.vtkOut == "" && c.jsonOut == "") failure("Must specify at least one of vtkOut or jsonOut") else success
     }
   }
 
