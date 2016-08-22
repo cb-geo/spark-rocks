@@ -25,7 +25,7 @@ object BlockVTK {
     * @return Sequence of tuples representing normals of all the block faces
     */
   private def normals(faces: Seq[Face]): Seq[(Double, Double, Double)] = {
-    faces map { case face => (face.a, face.b, face.c) }
+    faces map { face => (face.a, face.b, face.c) }
   }
 
   /**
