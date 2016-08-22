@@ -1,7 +1,5 @@
 package edu.berkeley.ce.sparkrocks
 
-import breeze.linalg.DenseVector
-
 object BlockVTK {
 
   /**
