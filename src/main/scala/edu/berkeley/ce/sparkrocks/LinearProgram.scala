@@ -9,14 +9,14 @@ import scala.collection.mutable
 
 object LinearProgram {
   // Scala's enumerations suck, so we have to do this
-  sealed trait Operator { def value: String }
-  case object LE extends Operator { val value = "<=" }
-  case object EQ extends Operator { val value = "==" }
-  case object GE extends Operator { val value = ">=" }
+  sealed trait Operator
+  case object LE extends Operator
+  case object EQ extends Operator
+  case object GE extends Operator
 
-  sealed trait ObjectiveType { def value: String }
-  case object MIN extends ObjectiveType { val value = "Minimize" }
-  case object MAX extends ObjectiveType { val value = "Maximize" }
+  sealed trait ObjectiveType
+  case object MIN extends ObjectiveType
+  case object MAX extends ObjectiveType
 }
 
 /**
@@ -26,7 +26,7 @@ object LinearProgram {
   * @constructor Initialize a new linear program.
   * @param numVars The number of variables in the linear program.
   */
-class LinearProgram(val numVars: Int) {
+class LinearProgram(numVars: Int) {
   val constraints = mutable.ArrayBuffer.empty[LinearConstraint]
   var objectiveFunction: Option[LinearObjectiveFunction] = None
   var goalType: Option[GoalType] = None
