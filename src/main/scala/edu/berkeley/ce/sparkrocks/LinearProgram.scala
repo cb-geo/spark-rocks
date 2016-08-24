@@ -1,6 +1,11 @@
 package edu.berkeley.ce.sparkrocks
 
-import lpsolve._
+import org.apache.commons.math3.exception.TooManyIterationsException
+import org.apache.commons.math3.optim.linear._
+import org.apache.commons.math3.optim.nonlinear.scalar.GoalType
+
+import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 object LinearProgram {
   // Scala's enumerations suck, so we have to do this
@@ -22,8 +27,9 @@ object LinearProgram {
   * @param numVars The number of variables in the linear program.
   */
 class LinearProgram(val numVars: Int) {
-  val solver = LpSolve.makeLp(0, numVars)
-  solver.setVerbose(LpSolve.IMPORTANT)
+  val constraints = mutable.ArrayBuffer.empty[LinearConstraint]
+  var objectiveFunction: Option[LinearObjectiveFunction] = None
+  var goalType: Option[GoalType] = None
 
   private def sanitizeCoefficients(coeffs: Array[Double]): Array[Double] =
     if (coeffs.length > numVars) {
@@ -44,15 +50,11 @@ class LinearProgram(val numVars: Int) {
     */
   def setObjFun(coeffs: Array[Double], objType: LinearProgram.ObjectiveType): Unit = {
     val sanitizedCoeffs = sanitizeCoefficients(coeffs)
-    solver.strSetObjFn(sanitizedCoeffs.mkString(" "))
-    objType match {
-      case LinearProgram.MIN => solver.setMinim()
-      case LinearProgram.MAX => solver.setMaxim()
+    objectiveFunction = Some(new LinearObjectiveFunction(sanitizedCoeffs, 0))
+    goalType = objType match {
+      case LinearProgram.MIN => Some(GoalType.MINIMIZE)
+      case LinearProgram.MAX => Some(GoalType.MAXIMIZE)
     }
-
-     // Variables are always unbounded for our purposes. Users can always
-     // express variable bounds as constraints with one coefficient anyways.
-    (1 to numVars) foreach solver.setUnbounded
   }
 
   /**
@@ -66,13 +68,13 @@ class LinearProgram(val numVars: Int) {
     */
   def addConstraint(coeffs: Array[Double], operator: LinearProgram.Operator, rhs: Double): Unit = {
     val sanitizedCoeffs = sanitizeCoefficients(coeffs)
-    val op = operator match {
-      case LinearProgram.LE => LpSolve.LE
-      case LinearProgram.EQ => LpSolve.EQ
-      case LinearProgram.GE => LpSolve.GE
+    val rel = operator match {
+      case LinearProgram.LE => Relationship.LEQ
+      case LinearProgram.EQ => Relationship.EQ
+      case LinearProgram.GE => Relationship.GEQ
     }
 
-    solver.strAddConstraint(sanitizedCoeffs.mkString(" "), op, rhs)
+    constraints.append(new LinearConstraint(sanitizedCoeffs, rel, rhs))
   }
 
   /**
@@ -84,14 +86,15 @@ class LinearProgram(val numVars: Int) {
     */
   def solve(): Option[(Array[Double], Double)] = {
     try {
-      solver.solve()
-      val objectiveValue = solver.getObjective
-      val variableSettings = solver.getPtrVariables
-      Some((variableSettings, objectiveValue))
+      val solver = new SimplexSolver()
+      if (objectiveFunction.isEmpty || constraints.isEmpty) {
+        throw new IllegalStateException("Must specify both objective and constraints for LP")
+      }
+
+      val soln = solver.optimize(objectiveFunction.get, new LinearConstraintSet(constraints.asJava), goalType.get)
+      Some((soln.getFirst, soln.getSecond))
     } catch {
-      case _: LpSolveException => None
-    } finally {
-      solver.deleteLp()
+      case e: TooManyIterationsException => None
     }
   }
 }
