@@ -94,7 +94,7 @@ class LinearProgram(val numVars: Int) {
       val soln = solver.optimize(objectiveFunction.get, new LinearConstraintSet(constraints.asJava), goalType.get)
       Some((soln.getFirst, soln.getSecond))
     } catch {
-      case e: TooManyIterationsException => None
+      case _: TooManyIterationsException => None
     }
   }
 }
