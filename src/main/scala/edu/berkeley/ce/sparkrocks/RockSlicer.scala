@@ -36,6 +36,7 @@ object RockSlicer {
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolumeInputs, jointSetInputs)
     val starterBlocks = Seq(Block(globalOrigin, generatedInput.rockVolume))
 
+    val startTime = System.nanoTime()
     // Generate a list of initial blocks before RDD-ifying it
     val (seedJoints, remainingJoints) = if (arguments.numProcessors > 1) {
       // Check if at least one of the input joint sets is persistent
@@ -102,6 +103,10 @@ object RockSlicer {
     val squeakyClean = centroidBlocks.map { case Block(center, faces, _) =>
       Block(center, faces.map(_.applyTolerance))
     }
+
+    val totalNumBlocks = squeakyClean.count()
+    val endTime = System.nanoTime()
+    println(s"Cut $totalNumBlocks in ${(endTime - startTime) / 1.0e6} msec.")
 
     // Convert list of rock blocks to requested output
     if (arguments.jsonOut != "") {
