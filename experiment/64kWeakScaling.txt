@@ -1,0 +1,13 @@
+1 c3.xlarge node, 64K Blocks, n = 100, max V = 24160, min V = 160, time = 582304
+1 c3.xlarge node, 64K Blocks, n = 8, max V = 27200, min V = 1600, time = 1265080
+1 c3.xlarge node, 64K Blocks, n= 32, max V = 4000, min V = 1600, time = 1080667
+1 c3.xlarge node, 64K Blocks, n = 200, max V = 16160, min V = 160, time = 211489
+1 c3.xlarge node, 64K Blocks, n = 400, max V = 160, min V = 160, time = 346990
+
+1 m3.xlarge node, 64K Blocks, n = 100, max V = 24160, 160, time = 617331
+1 m3.xlarge node, 64K Blocks, n = 8, max V = 27200, 1600, time = 1357969
+1 m3.xlarge node, 64K Blocks, n = 32, max V = 4000, min V = 1600, time = 1089026
+1 m3.xlarge node, 64K Blocks, n = 200, max V = 16160, min V = 160, time = 223157
+1 m3.xlarge node, 64K Blocks, n = 400, max V = 160, min V = 160, time = 346774
+
+
