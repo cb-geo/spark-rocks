@@ -10,4 +10,8 @@
 1 m3.xlarge node, 64K Blocks, n = 200, max V = 16160, min V = 160, time = 223157
 1 m3.xlarge node, 64K Blocks, n = 400, max V = 160, min V = 160, time = 346774
 
+2 c3.xlarge nodes, 128K Blocks, n = 200, max V = 32320, min V = 320, time = 264351
+2 c3.xlarge nodes, 128K Blocks, n = 100, max V = 48320, min V = 320, time = 1025769
 
+4 c3.xlarge nodes, 256K Blocks, n = 200, max V = 64640, min V = 640, time = 299892
+4 c3.xlarge nodes, 256K Blocks, n = 100, max V = 96640, min V = 640, time = 1923906
