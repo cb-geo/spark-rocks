@@ -22,7 +22,8 @@ object SeedJointSelector {
     */
   @tailrec
   def searchJointSets(jointSets: Seq[Seq[Joint]], inputVolume: Block, numProcessors: Int,
-                      remainingJoints: Seq[Joint] = Seq.empty[Joint]): (Seq[Joint], Seq[Joint]) = {
+                      remainingJoints: Seq[Joint] = Seq.empty[Joint],
+                      seedJoints: Seq[Joint] = Seq.empty[Joint]): (Seq[Joint], Seq[Joint]) = {
     if (jointSets.isEmpty) {
       throw new IllegalStateException("ERROR: Unable to find satisfactory seed joints")
     }
@@ -31,16 +32,25 @@ object SeedJointSelector {
       val seedJointOption = findSeedJoints(jointSets.head, inputVolume, numProcessors, inputVolume.volume)
 
       // Check whether joint set yields satisfactory seed joints. If it does not, check next joint set.
+      // No seed joints found
       if (seedJointOption.isEmpty) {
-          searchJointSets(jointSets.tail, inputVolume, numProcessors, remainingJoints ++ jointSets.head)
+          searchJointSets(jointSets.tail, inputVolume, numProcessors, remainingJoints ++ jointSets.head, seedJoints)
+      // Not enough seed joints found
+      } else if (seedJointOption.get.length < numProcessors - 1) {
+        val newSeedJoints = seedJoints ++ seedJointOption.get
+        val remainingFromJointSet = jointSets.head.diff(seedJointOption.get)
+        searchJointSets(jointSets.tail, inputVolume, numProcessors - newSeedJoints.length,
+          remainingJoints ++ remainingFromJointSet, newSeedJoints)
+      // Sufficient seed joints found
       } else {
-        val seedJoints = seedJointOption.get
-        val remainingFromJointSet = jointSets.head.diff(seedJoints)
+        val newSeedJoints = seedJoints ++ seedJointOption.get
+        val remainingFromJointSet = jointSets.head.diff(seedJointOption.get)
         val allOtherJoints = remainingJoints ++ remainingFromJointSet ++ jointSets.tail.flatten
-        (seedJoints, allOtherJoints)
+        (newSeedJoints, allOtherJoints)
       }
+    // Joint set non-persistent, move on to next joint set
     } else {
-      searchJointSets(jointSets.tail, inputVolume, numProcessors, remainingJoints ++ jointSets.head)
+      searchJointSets(jointSets.tail, inputVolume, numProcessors, remainingJoints ++ jointSets.head, seedJoints)
     }
   }
 
@@ -219,7 +229,7 @@ object SeedJointSelector {
 
       // Return joint that gives volume closest to desired volume.
       // When less than 50% of the total volume remains, begin loosening constraints on joint selected until
-      // a sufficient number of joints have been found. When more than TOLERANCE of the total volume still remains,
+      // a sufficient number of joints have been found. When more than THRESHOLD of the total volume still remains,
       // seed joints are chosen when one of the input joints yields a block smaller than the desired volume and
       // the other yields a block larger then the desired volume. The joint yielding a block with volume closest
       // to the desired volume is selected.
