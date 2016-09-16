@@ -3,53 +3,53 @@ package edu.berkeley.ce.sparkrocks
 import org.scalatest.FunSuite
 
 class SeedJointSelectorSpec extends FunSuite {
-  test("Single joint should be selected as seed joint - should be x-z plane at center of unit cube") {
-    val globalOrigin = Array[Double](0.5, 0.5, 0.5)
-    val boundingBox = (Array[Double](0.0, 0.0, 0.0), Array[Double](1.0, 1.0, 1.0))
-    val rockVolume = Seq[InputFace](
-      InputFace(0.0, 90.0, Array(0.0, 0.0, 0.0), 30.0, 0.0),
-      InputFace(0.0, 90.0, Array(0.0, 1.0, 0.0), 30.0, 0.0),
-      InputFace(90.0, 90.0, Array(0.0, 0.0, 0.0), 30.0, 0.0),
-      InputFace(90.0, 90.0, Array(1.0, 0.0, 0.0), 30.0, 0.0),
-      InputFace(0.0, 0.0, Array(0.0, 0.0, 0.0), 30.0, 0.0),
-      InputFace(0.0, 0.0, Array(0.0, 0.0, 1.0), 30.0, 0.0)
-    )
-    val jointData = Seq[JointSet](
-      JointSet(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
-    )
-    val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
-    val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
-    val (seedBlocks, _) = SeedJointSelector.generateSeedBlocks(generatedInput.jointSets, initialBlock, 2)
-
-    assert(seedBlocks.length == 2)
-    assert(seedBlocks forall { block =>
-      math.abs(block.volume - 0.5) < NumericUtils.EPSILON
-    })
-  }
-
-  test("Single joint should be selected as seed joint - should be x-z plane at center of two cube") {
-    val globalOrigin = Array[Double](0.5, 0.5, 0.5)
-    val boundingBox = (Array[Double](0.0, 0.0, 0.0), Array[Double](2.0, 2.0, 2.0))
-    val rockVolume = Seq[InputFace](
-      InputFace(0.0, 90.0, Array(0.0, 0.0, 0.0), 30.0, 0.0),
-      InputFace(0.0, 90.0, Array(0.0, 2.0, 0.0), 30.0, 0.0),
-      InputFace(90.0, 90.0, Array(0.0, 0.0, 0.0), 30.0, 0.0),
-      InputFace(90.0, 90.0, Array(2.0, 0.0, 0.0), 30.0, 0.0),
-      InputFace(0.0, 0.0, Array(0.0, 0.0, 0.0), 30.0, 0.0),
-      InputFace(0.0, 0.0, Array(0.0, 0.0, 2.0), 30.0, 0.0)
-    )
-    val jointData = Seq[JointSet](
-      JointSet(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
-    )
-    val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
-    val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
-    val (seedBlocks, _) = SeedJointSelector.generateSeedBlocks(generatedInput.jointSets, initialBlock, 2)
-
-    assert(seedBlocks.length == 2)
-    assert(seedBlocks forall { block =>
-      math.abs(block.volume - 4.0) < NumericUtils.EPSILON
-    })
-  }
+//  test("Single joint should be selected as seed joint - should be x-z plane at center of unit cube") {
+//    val globalOrigin = Array[Double](0.5, 0.5, 0.5)
+//    val boundingBox = (Array[Double](0.0, 0.0, 0.0), Array[Double](1.0, 1.0, 1.0))
+//    val rockVolume = Seq[InputFace](
+//      InputFace(0.0, 90.0, Array(0.0, 0.0, 0.0), 30.0, 0.0),
+//      InputFace(0.0, 90.0, Array(0.0, 1.0, 0.0), 30.0, 0.0),
+//      InputFace(90.0, 90.0, Array(0.0, 0.0, 0.0), 30.0, 0.0),
+//      InputFace(90.0, 90.0, Array(1.0, 0.0, 0.0), 30.0, 0.0),
+//      InputFace(0.0, 0.0, Array(0.0, 0.0, 0.0), 30.0, 0.0),
+//      InputFace(0.0, 0.0, Array(0.0, 0.0, 1.0), 30.0, 0.0)
+//    )
+//    val jointData = Seq[JointSet](
+//      JointSet(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
+//    )
+//    val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
+//    val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
+//    val (seedBlocks, _) = SeedJointSelector.generateSeedBlocks(generatedInput.jointSets, initialBlock, 2)
+//
+//    assert(seedBlocks.length == 2)
+//    assert(seedBlocks forall { block =>
+//      math.abs(block.volume - 0.5) < NumericUtils.EPSILON
+//    })
+//  }
+//
+//  test("Single joint should be selected as seed joint - should be x-z plane at center of two cube") {
+//    val globalOrigin = Array[Double](0.5, 0.5, 0.5)
+//    val boundingBox = (Array[Double](0.0, 0.0, 0.0), Array[Double](2.0, 2.0, 2.0))
+//    val rockVolume = Seq[InputFace](
+//      InputFace(0.0, 90.0, Array(0.0, 0.0, 0.0), 30.0, 0.0),
+//      InputFace(0.0, 90.0, Array(0.0, 2.0, 0.0), 30.0, 0.0),
+//      InputFace(90.0, 90.0, Array(0.0, 0.0, 0.0), 30.0, 0.0),
+//      InputFace(90.0, 90.0, Array(2.0, 0.0, 0.0), 30.0, 0.0),
+//      InputFace(0.0, 0.0, Array(0.0, 0.0, 0.0), 30.0, 0.0),
+//      InputFace(0.0, 0.0, Array(0.0, 0.0, 2.0), 30.0, 0.0)
+//    )
+//    val jointData = Seq[JointSet](
+//      JointSet(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
+//    )
+//    val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
+//    val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
+//    val (seedBlocks, _) = SeedJointSelector.generateSeedBlocks(generatedInput.jointSets, initialBlock, 2)
+//
+//    assert(seedBlocks.length == 2)
+//    assert(seedBlocks forall { block =>
+//      math.abs(block.volume - 4.0) < NumericUtils.EPSILON
+//    })
+//  }
 
   test("Two seed joints should be selected - x-z planes dividing two cube into thirds") {
     val globalOrigin = Array[Double](0.5, 0.5, 0.5)
@@ -66,6 +66,7 @@ class SeedJointSelectorSpec extends FunSuite {
       JointSet(0.0, 90.0, 0.5, 100.0, 30.0, 0.0)
     )
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
+    println(s"Input joint set size: ${generatedInput.jointSets(0).length}")
     val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
     val (seedBlocks, _) = SeedJointSelector.generateSeedBlocks(generatedInput.jointSets, initialBlock, 3)
 
