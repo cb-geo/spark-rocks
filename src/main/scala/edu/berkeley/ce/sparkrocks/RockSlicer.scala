@@ -38,7 +38,7 @@ object RockSlicer {
 
     val startTime = System.nanoTime()
     // Generate a list of initial blocks before RDD-ifying it
-    val (seedJoints, remainingJoints) = if (arguments.numProcessors > 1) {
+    val (seedBlocks, remainingJoints) = if (arguments.numProcessors > 1) {
       // Check if at least one of the input joint sets is persistent
       if (jointSetInputs.forall(_.persistence != 100.0)) {
         println("ERROR: Input joint sets must contain at least one persistent joint set to run in parallel. Rerun" +
@@ -46,17 +46,9 @@ object RockSlicer {
         System.exit(-1)
       }
 
-      SeedJointSelector.searchJointSets(generatedInput.jointSets, starterBlocks.head, arguments.numProcessors)
+      SeedJointSelector.generateSeedBlocks(generatedInput.jointSets, starterBlocks.head, arguments.numProcessors)
     } else {
-      (Seq.empty[Joint], generatedInput.jointSets.flatten)
-    }
-
-    val seedBlocks = if (seedJoints.isEmpty) {
-      starterBlocks
-    } else {
-      seedJoints.foldLeft(starterBlocks) { (currentBlocks, joint) =>
-        currentBlocks.flatMap(_.cut(joint))
-      }
+      (starterBlocks, generatedInput.jointSets.flatten)
     }
 
     val seedBlockRdd = sc.parallelize(seedBlocks)
