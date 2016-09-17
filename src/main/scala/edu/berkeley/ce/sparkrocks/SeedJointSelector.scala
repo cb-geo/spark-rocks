@@ -26,8 +26,15 @@ object SeedJointSelector {
       val (partitionBlocks, leftOverJoints) = findSeedBlocks(jointSets, inputVolume, numPartitions, jointSetSpan)
       // Sufficient partitions found
       if (partitionBlocks.length >= numPartitions) {
+        val volumes = partitionBlocks.map(_.volume)
+        val avgVolume = volumes.foldLeft(0.0)(_ + _) / volumes.length
+        println("\nLoad Balance Info:")
+        println(s"Number of partitions: ${volumes.length}")
+        println(s"Average Volume: $avgVolume")
+        println(s"Max volume: ${volumes.max}")
+        println(s"Min volume: ${volumes.min}")
         (partitionBlocks, leftOverJoints)
-        // Unable to find sufficient partitions, run with greater span
+      // Unable to find sufficient partitions, run with greater span
       } else {
         generateSeedBlocks(jointSets, inputVolume, numPartitions, jointSetSpan + 1, partitionBlocks, leftOverJoints)
       }
@@ -92,10 +99,8 @@ object SeedJointSelector {
       val jointOption = testVolumes(jointSet(0), jointSet(1), initialVolume, volumePerPiece)
       // Joint did not meet criteria
       if (jointOption.isEmpty) {
-        println("JOINT DID NOT MEET CRITERIA")
         findSeedJoints(jointSet.tail, initialVolume, totalVolume, volumePerPiece, selectedJoints)
       } else {
-        println("JOINT MEETS CRITERIA!!!!")
         // Joint meets criteria
         val (seedJoint, remainingVolume) = jointOption.get
         // Remaining volume small enough, return
@@ -106,23 +111,25 @@ object SeedJointSelector {
           findSeedJoints(jointSet.tail, remainingVolume, totalVolume, volumePerPiece, selectedJoints :+ seedJoint)
         }
       }
-      // Only one joint in input set
-    } else {
+    // Only one joint in input set
+    // Continue subdividing
+    } else if (initialVolume.volume > volumePerPiece) {
       val lastBlocks = initialVolume cut jointSet.head
       // Joint does not intersect volume
       if (lastBlocks.length == 1) {
-        println("DOESN'T INTERSECT VOLUME!")
         selectedJoints
         // Joint intersects volume
       } else {
-        println("LAST JOINT INTERSECTS VOLUME!")
         selectedJoints :+ jointSet.head
       }
+    // Sufficiently subdivided  
+    } else {
+      selectedJoints
     }
   }
 
   def testVolumes(joint1: Joint, joint2: Joint, initialVolume: Block, desiredVolume: Double):
-  Option[(Joint, Block)] = {
+      Option[(Joint, Block)] = {
     val blockSet1 = initialVolume cut joint1
     val blockSet2 = initialVolume cut joint2
 
@@ -143,7 +150,7 @@ object SeedJointSelector {
       if (sortedBlocks2.length == 1) {
         None
         // joint2 sufficiently divides block, remaining volume should still be further subdivided
-      } else if (sortedBlocks2(0).volume >= desiredVolume) {
+      } else if (sortedBlocks2(0).volume <= desiredVolume && sortedBlocks2(1).volume >= desiredVolume) {
         Some(joint2, sortedBlocks2(1))
         // joint2 sufficiently divides block, remaining volume requires no further subdivision
       } else if (sortedBlocks2(1).volume <= desiredVolume) {
@@ -155,7 +162,7 @@ object SeedJointSelector {
       // joint 2 does not intersect the block
     } else if (sortedBlocks2.length == 1) {
       // joint1 sufficiently divides block, remaining volume should still be further subdivided
-      if (sortedBlocks1(0).volume >= desiredVolume) {
+      if (sortedBlocks1(0).volume <= desiredVolume && sortedBlocks1(1).volume >= desiredVolume) {
         Some(joint1, sortedBlocks1(1))
         // joint1 sufficiently divides block, remaining volume requires no further subdivision
       } else if (sortedBlocks1(1).volume <= desiredVolume) {
@@ -173,21 +180,28 @@ object SeedJointSelector {
     // Remaining volume not very small
     } else {
       // Compare volumes to desired volumes
-      val volumeDiff1 = sortedBlocks1(0).volume - desiredVolume
-      val volumeDiff2 = sortedBlocks2(0).volume - desiredVolume
+      val joint1VolumeDiff1 = sortedBlocks1(0).volume - desiredVolume
+      val joint2VolumeDiff1 = sortedBlocks2(0).volume - desiredVolume
+      val joint1VolumeDiff2 = sortedBlocks1(1).volume - desiredVolume
+      val joint2VolumeDiff2 = sortedBlocks2(1).volume - desiredVolume
 
       // Return joint that gives volume closest to desired volume.
-      // When less than 50% of the total volume remains, begin loosening constraints on joint selected until
-      // a sufficient number of joints have been found. When more than THRESHOLD of the total volume still remains,
-      // seed joints are chosen when one of the input joints yields a block smaller than the desired volume and
-      // the other yields a block larger then the desired volume. The joint yielding a block with volume closest
-      // to the desired volume is selected.
-      if (volumeDiff1 <= 0.0 && volumeDiff2 >= 0.0) {
-        if (math.abs(volumeDiff1) >= math.abs(volumeDiff2)) {
-          Some(joint2, sortedBlocks2(1))
+      if (joint1VolumeDiff1 <= 0.0 && joint1VolumeDiff2 >= 0.0) {
+        // Both joints could be satisfactory
+        if (joint2VolumeDiff1 <= 0.0 && joint2VolumeDiff2 >= 0.0) {
+          if (math.abs(joint1VolumeDiff1) < math.abs(joint2VolumeDiff1)) {
+            Some(joint1, sortedBlocks1(1))
+          } else {
+            Some(joint2, sortedBlocks2(1))
+          }
+        // Joint 1 satisfactory  
         } else {
           Some(joint1, sortedBlocks1(1))
         }
+      // Joint 2 satisfactory  
+      } else if (joint2VolumeDiff1 <= 0.0 && joint2VolumeDiff2 >= 0.0) {
+        Some(joint2, sortedBlocks2(1))
+      // Neither joint satisfactory  
       } else {
         None
       }
