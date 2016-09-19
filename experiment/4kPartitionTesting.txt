@@ -1,9 +1,0 @@
-c3.8xlarge (maximized) (1 node)
-Not partitioned:
-n = 10: Cut 128000 in 47675.845627 msec. (All volumes equal: 12800.00)
-Partitioned (2*n):
-n = 10: Cut 128000 in 47933.851478 msec. (All volumes equal: 12800.00)
-Partioned (4*n):
-n = 10: Cut 128000 in 48231.042445 msec. (All volumes equal: 12800.00)
-Partioned (10*n):
-n = 10: Cut 128000 in 48598.985249 msec. (All volumes equal: 12800.00)
