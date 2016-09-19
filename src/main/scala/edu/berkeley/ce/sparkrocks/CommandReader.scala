@@ -6,11 +6,12 @@ package edu.berkeley.ce.sparkrocks
 object CommandReader {
   case class Config(
     inputFile: String = "",
-    numProcessors: Int = 25,
+    numPartitions: Int = 25,
     minRadius: Double = 0.0,
     maxAspectRatio: Double = Double.PositiveInfinity,
     vtkOut: String = "",
-    jsonOut: String = ""
+    jsonOut: String = "",
+    forcePartition: Boolean = false
   )
 
   private val parser = new scopt.OptionParser[Config]("SparkRocks") {
@@ -20,11 +21,11 @@ object CommandReader {
       c.copy(inputFile = x)
     } text "File that contains input information on the rock volume of interest and joint sets"
 
-    opt[Int]('n', "numProcessors") required() action { (x, c) =>
-      c.copy(numProcessors = x)
+    opt[Int]('n', "numPartitions") required() action { (x, c) =>
+      c.copy(numPartitions = x)
     } validate { x =>
-      if (x >= 1) success else failure("Number of processors must be greater than or equal to 1")
-    } text "Integer that specifies the number of processors that will be used in the analysis."+
+      if (x >= 1) success else failure("Number of partitions must be greater than or equal to 1")
+    } text "Integer that specifies the number of partitions that will be used in the analysis."+
            " Used to maintain balanced load across nodes"
 
     opt[Double]("minRadius") action { (x, c) =>
@@ -46,6 +47,10 @@ object CommandReader {
     opt[String]("jsonOut") action { (x, c) =>
       c.copy(jsonOut = x)
     } text "Output file for block JSON data"
+
+    opt[Unit]('f', "forcePartition") action { (_, c) =>
+      c.copy(forcePartition = true)
+    } text "Flag to force analysis to continue if specified number of partitions is not found"
 
     help("help") text "Prints this usage text"
 

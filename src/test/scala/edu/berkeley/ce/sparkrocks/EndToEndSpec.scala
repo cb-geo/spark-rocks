@@ -19,9 +19,9 @@ class EndToEndSpec extends FunSuite {
     val initialBlocks = Seq(Block(globalOrigin, generatedInputs.rockVolume))
 
     // Generate seed joints
-    val numProcessors = 2
+    val numPartitions = 2
     val (seedBlocks, nonSeedJoints) =
-      SeedJointSelector.generateSeedBlocks(generatedInputs.jointSets, initialBlocks.head, numProcessors)
+      SeedJointSelector.generateSeedBlocks(generatedInputs.jointSets, initialBlocks.head, numPartitions)
 
     // Iterate through joints, cutting blocks where appropriate
     val cutBlocks = seedBlocks flatMap { block =>
