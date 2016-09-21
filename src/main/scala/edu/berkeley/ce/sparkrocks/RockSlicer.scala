@@ -107,7 +107,7 @@ object RockSlicer {
 
     val totalNumBlocks = squeakyClean.count()
     val endTime = System.nanoTime()
-    println(s"Cut $totalNumBlocks in ${(endTime - startTime) / 1.0e6} msec.")
+    println(s"Cut $totalNumBlocks blocks in ${(endTime - startTime) / 1.0e6} msec.")
 
     // Convert list of rock blocks to requested output
     if (arguments.jsonOut != "") {
