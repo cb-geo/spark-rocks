@@ -25,7 +25,7 @@ object CommandReader {
       c.copy(numPartitions = x)
     } validate { x =>
       if (x >= 1) success else failure("Number of partitions must be greater than or equal to 1")
-    } text "Integer that specifies the number of partitions that will be used in the analysis."+
+    } text "Integer that specifies the minimum number of partitions that will be used in the analysis."+
            " Used to maintain balanced load across nodes"
 
     opt[Double]("minRadius") action { (x, c) =>

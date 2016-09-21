@@ -52,10 +52,10 @@ object RockSlicer {
     }
 
     // If running without forcePartition flag, check if specified number of partitions was found
-    if (!arguments.forcePartition && seedBlocks.length != arguments.numPartitions) {
+    if (!arguments.forcePartition && seedBlocks.length < arguments.numPartitions) {
       println(
         s"""ERROR: Unable to find ${arguments.numPartitions} partitions. Found
-        ${seedBlocks.length} partitions. If this is satisfactory, rerun analysis with
+          ${seedBlocks.length} partitions. If this is satisfactory, rerun analysis with
           "forcePartitions" flag """)
       System.exit(-1)
     }

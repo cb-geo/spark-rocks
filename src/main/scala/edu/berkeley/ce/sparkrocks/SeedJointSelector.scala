@@ -29,8 +29,8 @@ object SeedJointSelector {
     // Find joints that cut input volume into approximately equal pieces
     val (partitionBlocks, leftOverJoints) = findSeedBlocks(jointSets, inputVolume, numPartitions, jointSetSpan)
 
-    // Sufficient partitions found OR joint set span at maximum
-    if (partitionBlocks.length == numPartitions || jointSetSpan == jointSets.length) {
+    if (partitionBlocks.length >= numPartitions || jointSetSpan == jointSets.length) {
+      // Sufficient partitions found OR joint set span at maximum
       val volumes = partitionBlocks.map(_.volume)
       val avgVolume = volumes.sum / volumes.length
       println("\nLoad Balance Info:")
@@ -39,8 +39,8 @@ object SeedJointSelector {
       println(s"Max volume: %.2f".format(volumes.max))
       println(s"Min volume: %.2f".format(volumes.min))
       (partitionBlocks, leftOverJoints ++ jointSets.tail.flatten)
-    // Unable to find sufficient partitions, run with greater span
     } else {
+      // Unable to find sufficient partitions, run with greater span
       generateSeedBlocks(jointSets, inputVolume, numPartitions, jointSetSpan + 1)
     }
   }
@@ -63,24 +63,24 @@ object SeedJointSelector {
   def findSeedBlocks(jointSets: Seq[Seq[Joint]], inputVolume: Block, numPartitions: Int, jointSetSpan: Int,
                      seedBlocks: Seq[Block] = Seq.empty[Block], remainingJoints: Seq[Joint] = Seq.empty[Joint]):
                     (Seq[Block], Seq[Joint]) = {
-    // All joint sets checked or span too large
     if (jointSets.isEmpty || jointSetSpan > jointSets.length) {
+      // All joint sets checked or span too large
       (seedBlocks, remainingJoints)
     } else if (jointSets.head(0).shape.isEmpty) {
       val (seedJoints, leftOverJoints) = searchJointSets(jointSets, inputVolume, numPartitions, jointSetSpan)
       val partitioning = seedJoints.foldLeft(Seq(inputVolume)) { (currentBlocks, joint) =>
         currentBlocks.flatMap(_.cut(joint))
       }
-      // Insufficient partitions found
       if (partitioning.length < numPartitions) {
+        // Insufficient partitions found
         findSeedBlocks(jointSets.tail, inputVolume, numPartitions, jointSetSpan, partitioning,
           remainingJoints ++ jointSets.head)
-      // Sufficient partitions, return
       } else {
+        // Sufficient partitions, return
         (partitioning, remainingJoints ++ leftOverJoints)
       }
-    // Joint set non-persistent, check next one
     } else {
+      // Joint set non-persistent, check next one
       findSeedBlocks(jointSets.tail, inputVolume, numPartitions, jointSetSpan, seedBlocks, remainingJoints)
     }
   }
@@ -104,17 +104,19 @@ object SeedJointSelector {
   def searchJointSets(jointSets: Seq[Seq[Joint]], inputVolume: Block, numPartitions: Int, jointSetSpan: Int,
                       spanCount: Int = 1, seedJoints: Seq[Joint] = Seq.empty[Joint],
                       remainingJoints: Seq[Joint] = Seq.empty[Joint]): (Seq[Joint], Seq[Joint]) = {
-    // Checked specified span of joint sets, return
     if (spanCount > jointSetSpan) {
+      // Checked specified span of joint sets, return
       (seedJoints, remainingJoints)
     } else {
+      /*
+       * Determine remaining partitions that need to be found. It is not possible to know before hand how many
+       * joints will cross each other when selecting seed joints from multiple joint sets, making it difficult
+       * to determine exactly how many partitions are yet to found. This approach essentially divides the number
+       * of partitions required equally among the number of joint sets. In most cases this will lead to a
+       * greater number of partitions, but tries to ensure that at least the number of partitions requested
+       * is found.
+       */
       val totalVolume = inputVolume.volume
-      // Determine remaining partitions that need to be found. It is not possible to know before hand how many
-      // joints will cross each other when selecting seed joints from multiple joint sets, making it difficult
-      // to determine exactly how many partitions are yet to found. This approach essentially divides the number
-      // of partitions required equally among the number of joint sets. In most cases this will lead to a
-      // greater number of partitions, but tries to ensure that at least the number of partitions requested
-      // is found.
       val remainingPartitions = numPartitions / jointSetSpan
       val volumePerPiece = totalVolume / remainingPartitions
       val (newSeedJoints, remainingFromJointSet) = findSeedJoints(jointSets.head, inputVolume,
@@ -141,38 +143,37 @@ object SeedJointSelector {
   def findSeedJoints(jointSet: Seq[Joint], initialVolume: Block, totalVolume: Double, volumePerPiece: Double,
                      selectedJoints: Seq[Joint] = Seq.empty[Joint],
                      remainingJoints: Seq[Joint] = Seq.empty[Joint]): (Seq[Joint], Seq[Joint]) = {
-    // More than one joint in input joint set
     if (jointSet.length > 1) {
+      // More than one joint in input joint set
       val jointOption = testVolumes(jointSet(0), initialVolume, volumePerPiece)
-      // Joint did not meet criteria
       if (jointOption.isEmpty) {
+        // Joint did not meet criteria
         findSeedJoints(jointSet.tail, initialVolume, totalVolume, volumePerPiece, selectedJoints,
           remainingJoints :+ jointSet(0))
-      // Joint meets criteria
       } else {
+        // Joint meets criteria
         val remainingVolume = jointOption.get
-        // Remaining volume small enough, return
         if (remainingVolume.volume <= volumePerPiece) {
+          // Remaining volume small enough, return
           (selectedJoints :+ jointSet(0), remainingJoints)
-        // Large volume still remains, keep cycling
         } else {
+          // Large volume still remains, keep cycling
           findSeedJoints(jointSet.tail, remainingVolume, totalVolume, volumePerPiece,
             selectedJoints :+ jointSet(0), remainingJoints)
         }
       }
-    // Only one joint in input set
-    // Continue subdividing
     } else if (initialVolume.volume > volumePerPiece) {
+      // Continue subdividing using single joint
       val lastBlocks = initialVolume cut jointSet(0)
-      // Joint does not intersect volume
       if (lastBlocks.length == 1) {
+        // Joint does not intersect volume
         (selectedJoints, remainingJoints :+ jointSet(0))
-        // Joint intersects volume
       } else {
+        // Joint intersects volume
         (selectedJoints :+ jointSet.head, remainingJoints)
       }
-    // Sufficiently subdivided  
     } else {
+      // Sufficiently subdivided
       (selectedJoints, remainingJoints :+ jointSet(0))
     }
   }
@@ -195,20 +196,20 @@ object SeedJointSelector {
     // Sort generated blocks based on volume
     val sortedBlocks = nonRedundantBlocks.sortWith(_.volume < _.volume)
 
-    // Joint does not intersect the block
     if (sortedBlocks.length == 1) {
+      // Joint does not intersect the block
       None
     } else {
       val smallBlockDiff = math.abs(sortedBlocks(0).volume - desiredVolume) / desiredVolume
 
-      // Joint satisfactory, large volume remaining
       if (smallBlockDiff <= THRESHOLD) {
+        // Joint satisfactory, large volume remaining
         Some(sortedBlocks(1))
-      // Small volume remaining, select joint  
       } else if (sortedBlocks(1).volume <= desiredVolume) {
+        // Small volume remaining, select joint
         Some(sortedBlocks(1))
-      // Joint not satisfactory  
       } else {
+        // Joint not satisfactory
         None
       }
     }
