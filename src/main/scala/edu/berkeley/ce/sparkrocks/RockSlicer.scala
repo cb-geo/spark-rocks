@@ -36,8 +36,9 @@ object RockSlicer {
     val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolumeInputs, jointSetInputs)
     val starterBlocks = Seq(Block(globalOrigin, generatedInput.rockVolume))
 
+    val startTime = System.nanoTime()
     // Generate a list of initial blocks before RDD-ifying it
-    val (seedJoints, remainingJoints) = if (arguments.numProcessors > 1) {
+    val (seedBlocks, remainingJoints) = if (arguments.numPartitions > 1) {
       // Check if at least one of the input joint sets is persistent
       if (jointSetInputs.forall(_.persistence != 100.0)) {
         println("ERROR: Input joint sets must contain at least one persistent joint set to run in parallel. Rerun" +
@@ -45,17 +46,18 @@ object RockSlicer {
         System.exit(-1)
       }
 
-      SeedJointSelector.searchJointSets(generatedInput.jointSets, starterBlocks.head, arguments.numProcessors)
+      SeedJointSelector.generateSeedBlocks(generatedInput.jointSets, starterBlocks.head, arguments.numPartitions)
     } else {
-      (Seq.empty[Joint], generatedInput.jointSets.flatten)
+      (starterBlocks, generatedInput.jointSets.flatten)
     }
 
-    val seedBlocks = if (seedJoints.isEmpty) {
-      starterBlocks
-    } else {
-      seedJoints.foldLeft(starterBlocks) { (currentBlocks, joint) =>
-        currentBlocks.flatMap(_.cut(joint))
-      }
+    // If running without forcePartition flag, check if specified number of partitions was found
+    if (!arguments.forcePartition && seedBlocks.length < arguments.numPartitions) {
+      println(
+        s"""ERROR: Unable to find ${arguments.numPartitions} partitions. Found
+          ${seedBlocks.length} partitions. If this is satisfactory, rerun analysis with
+          "forcePartitions" flag """)
+      System.exit(-1)
     }
 
     val seedBlockRdd = sc.parallelize(seedBlocks)
@@ -102,6 +104,10 @@ object RockSlicer {
     val squeakyClean = centroidBlocks.map { case Block(center, faces, _) =>
       Block(center, faces.map(_.applyTolerance))
     }
+
+    val totalNumBlocks = squeakyClean.count()
+    val endTime = System.nanoTime()
+    println(s"Cut $totalNumBlocks blocks in ${(endTime - startTime) / 1.0e6} msec.")
 
     // Convert list of rock blocks to requested output
     if (arguments.jsonOut != "") {

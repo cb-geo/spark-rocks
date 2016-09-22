@@ -1,6 +1,7 @@
 package edu.berkeley.ce.sparkrocks
 
 import org.apache.commons.math3.exception.TooManyIterationsException
+import org.apache.commons.math3.optim.MaxIter
 import org.apache.commons.math3.optim.linear._
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType
 
@@ -91,10 +92,19 @@ class LinearProgram(numVars: Int) {
         throw new IllegalStateException("Must specify both objective and constraints for LP")
       }
 
-      val soln = solver.optimize(objectiveFunction.get, new LinearConstraintSet(constraints.asJava), goalType.get)
+      val soln = solver.optimize(objectiveFunction.get, new LinearConstraintSet(constraints.asJava),
+                                 goalType.get, new NonNegativeConstraint(false), MaxIter.unlimited())
       Some((soln.getFirst, soln.getSecond))
     } catch {
-      case _: TooManyIterationsException => None
+      case e: TooManyIterationsException =>
+        println("Too many iterations: " + e.getMax)
+        None
+      case e: UnboundedSolutionException =>
+        println("Unbounded solution")
+        None
+      case e: NoFeasibleSolutionException =>
+        println("No feasible solution")
+        None
     }
   }
 }
