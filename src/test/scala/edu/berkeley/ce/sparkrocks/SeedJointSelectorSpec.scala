@@ -187,7 +187,7 @@ class SeedJointSelectorSpec extends FunSuite {
     assert(seedBlocks.length >=4)
   }
 
-  test("Generate at least 8 partitions from multiple joint sets") {
+  test("Generate at least 8 partitions from two joint sets") {
     val globalOrigin = Array[Double](0.5, 0.5, 0.5)
     val boundingBox = (Array[Double](0.0, 0.0, 0.0), Array[Double](2.0, 2.0, 2.0))
     val rockVolume = Seq[InputFace](
@@ -211,7 +211,7 @@ class SeedJointSelectorSpec extends FunSuite {
     assert(seedBlocks.length >= 8)
   }
 
-  test("Select seed joints from multiple joint sets") {
+  test("Select seed joints from two joint sets") {
     val globalOrigin = Array[Double](0.5, 0.5, 0.5)
     val boundingBox = (Array[Double](0.0, 0.0, 0.0), Array[Double](2.0, 2.0, 2.0))
     val rockVolume = Seq[InputFace](
