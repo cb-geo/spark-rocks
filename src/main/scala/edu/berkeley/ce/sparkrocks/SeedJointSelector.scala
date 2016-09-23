@@ -38,7 +38,7 @@ object SeedJointSelector {
       println(s"Average Volume: %.2f".format(avgVolume))
       println(s"Max volume: %.2f".format(volumes.max))
       println(s"Min volume: %.2f".format(volumes.min))
-      (partitionBlocks, leftOverJoints ++ jointSets.tail.flatten)
+      (partitionBlocks, leftOverJoints ++ jointSets.drop(jointSetSpan).flatten)
     } else {
       // Unable to find sufficient partitions, run with greater span
       generateSeedBlocks(jointSets, inputVolume, numPartitions, jointSetSpan + 1)
@@ -81,7 +81,8 @@ object SeedJointSelector {
       }
     } else {
       // Joint set non-persistent, check next one
-      findSeedBlocks(jointSets.tail, inputVolume, numPartitions, jointSetSpan, seedBlocks, remainingJoints)
+      findSeedBlocks(jointSets.tail, inputVolume, numPartitions, jointSetSpan, seedBlocks,
+        remainingJoints ++ jointSets.head)
     }
   }
 
@@ -155,7 +156,7 @@ object SeedJointSelector {
         val remainingVolume = jointOption.get
         if (remainingVolume.volume <= volumePerPiece) {
           // Remaining volume small enough, return
-          (selectedJoints :+ jointSet(0), remainingJoints)
+          (selectedJoints :+ jointSet(0), remainingJoints ++ jointSet.tail)
         } else {
           // Large volume still remains, keep cycling
           findSeedJoints(jointSet.tail, remainingVolume, totalVolume, volumePerPiece,
@@ -170,7 +171,7 @@ object SeedJointSelector {
         (selectedJoints, remainingJoints :+ jointSet(0))
       } else {
         // Joint intersects volume
-        (selectedJoints :+ jointSet.head, remainingJoints)
+        (selectedJoints :+ jointSet(0), remainingJoints)
       }
     } else {
       // Sufficiently subdivided
