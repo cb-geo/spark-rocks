@@ -73,8 +73,14 @@ object SeedJointSelector {
       }
       if (partitioning.length < numPartitions) {
         // Insufficient partitions found
-        findSeedBlocks(jointSets.tail, inputVolume, numPartitions, jointSetSpan, partitioning,
-          remainingJoints ++ jointSets.head)
+        if (jointSetSpan == jointSets.length) {
+          // Joint span will exceed joint set length on next recursion
+          (partitioning, remainingJoints ++ leftOverJoints)
+        } else {
+          // Joint span won't exceed joint set length on next recursion
+          findSeedBlocks(jointSets.tail, inputVolume, numPartitions, jointSetSpan, partitioning,
+            remainingJoints ++ jointSets.head)
+        }
       } else {
         // Sufficient partitions, return
         (partitioning, remainingJoints ++ leftOverJoints)
