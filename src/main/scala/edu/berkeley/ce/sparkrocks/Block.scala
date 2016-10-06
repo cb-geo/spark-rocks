@@ -630,7 +630,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
         linalg.det(Jacobian)
       }
     }
-
+    assert(volIncrements.sum >= 0.0)
     volIncrements.sum / 6.0
   }
 

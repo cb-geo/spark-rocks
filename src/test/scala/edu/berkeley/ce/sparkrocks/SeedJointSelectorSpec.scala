@@ -163,6 +163,31 @@ class SeedJointSelectorSpec extends FunSuite {
     assert(seedBlocks.length >= 3)
   }
 
+  test("Seed joint test on all Spaulding joint set") {
+    val globalOrigin = Array[Double](0.0, 0.0, 0.0)
+    val boundingBox = (Array[Double](-5.0, -5.0, -5.0), Array[Double](5.0, 5.0, 5.0))
+    val rockVolume = Seq[InputFace](
+      InputFace(90.0, 90.0, Array(4.0, 0.0, 0.0), 30.0, 0.0),
+      InputFace(0.0, 90.0, Array(0.0, 4.0, 0.0), 30.0, 0.0),
+      InputFace(0.0, 0.0, Array(0.0, 0.0, 4.0), 30.0, 0.0),
+      InputFace(90.0, 90.0, Array(-4.0, 0.0, 0.0), 30.0, 0.0),
+      InputFace(0.0, 90.0, Array(0.0, -4.0, 0.0), 30.0, 0.0),
+      InputFace(0.0, 0.0, Array(0.0, 0.0, -4.0), 30.0, 0.0)
+    )
+    val jointData = Seq[JointSet](
+    JointSet(60.0, 25.0, 0.5, 100.0, 30.0, 0.0),
+    JointSet(132.0, 30.0, 0.5, 100.0, 30.0, 0.0),
+    JointSet(315.0, 67.0, 1.0, 100.0, 30.0, 0.0),
+    JointSet(45.0, 73.0, 1.0, 100.0, 30.0, 0.0),
+    JointSet(225.0, 85.0, 1.3, 100.0, 30.0, 0.0)
+    )
+    val generatedInput = JointGenerator(globalOrigin, boundingBox, rockVolume, jointData)
+    val initialBlock = Block(generatedInput.origin, generatedInput.rockVolume)
+    val (seedBlocks, _) = SeedJointSelector.generateSeedBlocks(generatedInput.jointSets, initialBlock, 10)
+
+    assert(seedBlocks.length >= 3)
+  }
+
   test("Select 2 seed joints from multiple joint sets") {
     val globalOrigin = Array[Double](0.5, 0.5, 0.5)
     val boundingBox = (Array[Double](0.0, 0.0, 0.0), Array[Double](2.0, 2.0, 2.0))
