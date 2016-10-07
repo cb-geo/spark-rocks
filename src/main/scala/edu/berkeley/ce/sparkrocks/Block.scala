@@ -181,11 +181,8 @@ object Block {
 
     // The cross product of vectors (pointA - center) and (pointB - center) in determinant form. Since it's
     // in 2-D we're only interested in the sign of the resulting z-vector.
-//    val det = (pointA(0) - center(0)) * (pointB(1) - center(1)) -
-//      (pointB(0) - center(0)) * (pointA(1) - center(1))
-    val vector1 = DenseVector[Double](pointA(0) - center(0), pointA(1) - center(1), pointA(2) - center(2))
-    val vector2 = DenseVector[Double](pointB(0) - center(0), pointB(1) - center(1), pointB(2) - center(2))
-    val det = linalg.det(linalg.cross(vector1, vector2))
+    val det = (pointA(0) - center(0)) * (pointB(1) - center(1)) -
+      (pointB(0) - center(0)) * (pointA(1) - center(1))
     // If resulting vector points in positive z-direction, pointA is before pointB
     if (det > NumericUtils.EPSILON) {
       true
@@ -489,13 +486,12 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     * This function should only be called once all redundant faces have been removed.
     */
   def calcVertices: Map[Face, Seq[Array[Double]]] = {
-    val relevantFaces = nonRedundantFaces
-    relevantFaces.zip (
-      relevantFaces map { f1 =>
+    faces.zip (
+      faces map { f1 =>
         val n1 = DenseVector[Double](f1.a, f1.b, f1.c)
-        relevantFaces flatMap { f2 =>
+        faces flatMap { f2 =>
           val n2 = DenseVector[Double](f2.a, f2.b, f2.c)
-          relevantFaces flatMap { f3 =>
+          faces flatMap { f3 =>
             val n3 = DenseVector[Double](f3.a, f3.b, f3.c)
             // Check if normals of faces are coplanar, if not find intersection
             if (math.abs(n1 dot linalg.cross(n2, n3)) > NumericUtils.EPSILON) {
@@ -536,12 +532,11 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
       }
       // Order vertices in counter-clockwise orientation
       val center = Block.findCenter(rotatedVerts)
-      val orderedVerts = if (face.normalVec(2) < -NumericUtils.EPSILON) {
+      val orderedVerts = if (face.normalVec(2) + 1.0 < NumericUtils.EPSILON) {
         // If z-component of normal vector points in negative z-direction, orientation
         // needs to be reversed otherwise points will be ordered clockwise
         rotatedVerts.sortWith(Block.ccwCompare(_, _, center)).reverse
-      }
-      else {
+      } else {
         rotatedVerts.sortWith(Block.ccwCompare(_, _, center))
       }
 
@@ -634,20 +629,6 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
         linalg.det(Jacobian)
       }
     }
-    if (volIncrements.sum < 0.0) {
-      println(s"\nVolume increments sum: ${volIncrements.sum}")
-      println("Volume Increments:")
-      volIncrements.foreach(println(_))
-      println("Face vertex map:")
-      faceVertexMap.foreach { case (face, faceVertices) =>
-        println(s"Face normal: ${face.a}, ${face.b}, ${face.c}")
-        println("Face vertices:")
-        faceVertices.foreach { vertex =>
-          println(s"${vertex(0)}, ${vertex(1)}, ${vertex(2)}")
-        }
-      }
-    }
-    assert(volIncrements.sum >= 0.0)
     volIncrements.sum / 6.0
   }
 
