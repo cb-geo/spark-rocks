@@ -532,12 +532,11 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
       }
       // Order vertices in counter-clockwise orientation
       val center = Block.findCenter(rotatedVerts)
-      val orderedVerts = if (face.normalVec(2) < -NumericUtils.EPSILON) {
+      val orderedVerts = if (face.normalVec(2) + 1.0 < NumericUtils.EPSILON) {
         // If z-component of normal vector points in negative z-direction, orientation
         // needs to be reversed otherwise points will be ordered clockwise
         rotatedVerts.sortWith(Block.ccwCompare(_, _, center)).reverse
-      }
-      else {
+      } else {
         rotatedVerts.sortWith(Block.ccwCompare(_, _, center))
       }
 
@@ -630,7 +629,6 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
         linalg.det(Jacobian)
       }
     }
-
     volIncrements.sum / 6.0
   }
 

@@ -8,7 +8,8 @@ import scala.annotation.tailrec
   */
 object SeedJointSelector {
   // Threshold for joint acceptance
-  val THRESHOLD = 0.1
+  val THRESHOLD = 0.35
+  val LOWER_BOUND = 0.65
 
   /**
     * Generate specified number of partitions using input joint sets
@@ -31,7 +32,11 @@ object SeedJointSelector {
 
     if (partitionBlocks.length >= numPartitions || jointSetSpan == jointSets.length) {
       // Sufficient partitions found OR joint set span at maximum
-      val volumes = partitionBlocks.map(_.volume)
+      val nonRedundantPartitions = partitionBlocks.map { case block @ Block(center, _, _) =>
+          Block(center, block.nonRedundantFaces)
+      }
+      val volumes = nonRedundantPartitions.map(_.volume)
+
       val avgVolume = volumes.sum / volumes.length
       println("\nLoad Balance Info:")
       println(s"Number of partitions: ${volumes.length}")
@@ -160,12 +165,14 @@ object SeedJointSelector {
       } else {
         // Joint meets criteria
         val remainingVolume = jointOption.get
-        if (remainingVolume.volume <= volumePerPiece) {
+        val nonRedundantVolume = Block(remainingVolume.center, remainingVolume.nonRedundantFaces)
+        if (nonRedundantVolume.volume <= volumePerPiece &&
+            nonRedundantVolume.volume >= LOWER_BOUND * volumePerPiece) {
           // Remaining volume small enough, return
           (selectedJoints :+ jointSet(0), remainingJoints ++ jointSet.tail)
         } else {
           // Large volume still remains, keep cycling
-          findSeedJoints(jointSet.tail, remainingVolume, totalVolume, volumePerPiece,
+          findSeedJoints(jointSet.tail, nonRedundantVolume, totalVolume, volumePerPiece,
             selectedJoints :+ jointSet(0), remainingJoints)
         }
       }
@@ -212,7 +219,7 @@ object SeedJointSelector {
       if (smallBlockDiff <= THRESHOLD) {
         // Joint satisfactory, large volume remaining
         Some(sortedBlocks(1))
-      } else if (sortedBlocks(1).volume <= desiredVolume) {
+      } else if (sortedBlocks(1).volume <= desiredVolume && sortedBlocks(1).volume >= LOWER_BOUND * desiredVolume) {
         // Small volume remaining, select joint
         Some(sortedBlocks(1))
       } else {
