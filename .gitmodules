@@ -1,3 +1,6 @@
 [submodule "rockProcessor"]
 	path = rockProcessor
 	url = https://github.com/shellshocked2003/rockProcessor
+[submodule "visual-rocks"]
+	path = visual-rocks
+	url = git@github.com:cb-geo/visual-rocks.git
