@@ -1,11 +1,11 @@
-# SparkRocks - Parallel rock slicing implementation on Apache Spark.
+# SparkRocks - Parallel rock slicing implementation on Apache Spark
 > Cambridge Berkeley - Geomechanics
 
 [![License](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://raw.githubusercontent.com/cb-geo/spark-rocks/master/LICENSE.md)
 
 # Overview
 
-SparkRocks is a parallel fractured rock mass generator that runs on Apache
+`SparkRocks` is a parallel fractured rock mass generator that runs on Apache
 Spark. The block cutting algorithm is based on a subdivision approach and linear
 programming optimization as described in *A new rock slicing method based on
 linear programming* by Boon et al. (2015). It can be run both locally or on the
@@ -13,7 +13,7 @@ cloud and on any operating system.
 
 # Usage
 
-SparkRocks is run on Apache Spark by submitting the SparkRocks
+`SparkRocks` is run on Apache Spark by submitting the `SparkRocks`
 `sparkRocks-assembly-1.0.jar` to Spark. Spark manages the execution and
 deployment of SparkRocks so the user does not need to do any additional work to
 scale analyses to larger scale problems. Documentation on how to deploy Spark
@@ -23,7 +23,7 @@ The examples that follow assume SparkRocks is being run on Amazon EMR.
 
 ## Command line arguments
 
-SparkRocks is run from the command line using only a few, straightforward
+`SparkRocks` is run from the command line using only a few, straightforward
 arguments as follows:
 
 ```
