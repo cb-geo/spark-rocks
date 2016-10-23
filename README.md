@@ -32,8 +32,9 @@ spark-submit path/to/sparkRocks-assembly-1.0.jar [required inputs] [optional inp
 '''
 
 The required inputs are:
- '-i [path/to/input/file]' This provides the path the input file that is described below
- '-n [integer number of partitions]' 
+
+'-i [path/to/input/file]'            This provides the path the input file that is described below
+'-n [integer number of partitions]'  
  
 ## Input
 
