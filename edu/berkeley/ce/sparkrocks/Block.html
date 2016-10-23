@@ -1,0 +1,876 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>Block - edu.berkeley.ce.sparkrocks.Block</title>
+          <meta name="description" content="Block - edu.berkeley.ce.sparkrocks.Block" />
+          <meta name="keywords" content="Block edu.berkeley.ce.sparkrocks.Block" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../../index.html';
+            var hash = 'edu.berkeley.ce.sparkrocks.Block';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="type">
+      <div id="definition">
+        <a href="Block$.html" title="See companion object"><img alt="Class/Object" src="../../../../lib/class_to_object_big.png" /></a>
+        <p id="owner"><a href="../../../package.html" class="extype" name="edu">edu</a>.<a href="../../package.html" class="extype" name="edu.berkeley">berkeley</a>.<a href="../package.html" class="extype" name="edu.berkeley.ce">ce</a>.<a href="package.html" class="extype" name="edu.berkeley.ce.sparkrocks">sparkrocks</a></p>
+        <h1><a href="Block$.html" title="See companion object">Block</a></h1><h3><span class="morelinks"><div>
+            Related Docs:
+            <a href="Block$.html" title="See companion object">object Block</a>
+            | <a href="package.html" class="extype" name="edu.berkeley.ce.sparkrocks">package sparkrocks</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Block</span><span class="params">(<span name="center">center: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="faces">faces: <span class="extype" name="scala.Seq">Seq</span>[<a href="Face.html" class="extype" name="edu.berkeley.ce.sparkrocks.Face">Face</a>]</span>, <span name="generation">generation: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">0</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span> with <span class="extype" name="scala.Product">Product</span></span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A rock block.
+</p></div><dl class="paramcmts block"><dt class="param">center</dt><dd class="cmt"><p>Cartesian coordinates for the center of the rock block. The individual
+components can be accessed as 'centerX', 'centerY', and 'centerZ'.</p></dd><dt class="param">faces</dt><dd class="cmt"><p>The faces that define the boundaries of the rock block.</p></dd><dt class="param">generation</dt><dd class="cmt"><p>An integer identifying the joint that caused this rock block to be cut
+                  from its parent. The generation is used to avoid unnecessary checks
+                  for geometrically redundant faces, but it can be safely left as its
+                  default value of 0.</p></dd></dl><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@SerialVersionUID</span><span class="args">()</span>
+              
+        </dd></dl><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><span class="extype" name="scala.Product">Product</span>, <span class="extype" name="scala.Equals">Equals</span>, <span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+        </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="edu.berkeley.ce.sparkrocks.Block"><span>Block</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show All</span></li>
+            </ol>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        <div id="constructors" class="members">
+              <h3>Instance Constructors</h3>
+              <ol><li name="edu.berkeley.ce.sparkrocks.Block#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="&lt;init&gt;(center:Array[Double],faces:Seq[edu.berkeley.ce.sparkrocks.Face],generation:Int):edu.berkeley.ce.sparkrocks.Block"></a>
+      <a id="&lt;init&gt;:Block"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">new</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Block</span><span class="params">(<span name="center">center: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="faces">faces: <span class="extype" name="scala.Seq">Seq</span>[<a href="Face.html" class="extype" name="edu.berkeley.ce.sparkrocks.Face">Face</a>]</span>, <span name="generation">generation: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">0</span></span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@&lt;init&gt;(center:Array[Double],faces:Seq[edu.berkeley.ce.sparkrocks.Face],generation:Int):edu.berkeley.ce.sparkrocks.Block" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Create a new rock block</p><div class="fullcomment"><div class="comment cmt"><p>Create a new rock block</p></div><dl class="paramcmts block"><dt class="param">center</dt><dd class="cmt"><p>Cartesian coordinates for the center of the rock block. The individual
+components can be accessed as 'centerX', 'centerY', and 'centerZ'.</p></dd><dt class="param">faces</dt><dd class="cmt"><p>The faces that define the boundaries of the rock block.</p></dd><dt class="param">generation</dt><dd class="cmt"><p>An integer identifying the joint that caused this rock block to be cut
+                  from its parent. The generation is used to avoid unnecessary checks
+                  for geometrically redundant faces, but it can be safely left as its
+                  default value of 0.</p></dd></dl></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="!=(x$1:Any):Boolean"></a>
+      <a id="!=(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="##():Int"></a>
+      <a id="##():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@##():Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="==(x$1:Any):Boolean"></a>
+      <a id="==(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#approximateEquals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="approximateEquals(inputBlock:edu.berkeley.ce.sparkrocks.Block,tolerance:Double):Boolean"></a>
+      <a id="approximateEquals(Block,Double):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">approximateEquals</span><span class="params">(<span name="inputBlock">inputBlock: <a href="" class="extype" name="edu.berkeley.ce.sparkrocks.Block">Block</a></span>, <span name="tolerance">tolerance: <span class="extype" name="scala.Double">Double</span> = <span class="symbol"><span class="name"><a href="NumericUtils$.html">NumericUtils.EPSILON</a></span></span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@approximateEquals(inputBlock:edu.berkeley.ce.sparkrocks.Block,tolerance:Double):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Compare this block and input block for approximate equality within specified tolerance
+</p><div class="fullcomment"><div class="comment cmt"><p>Compare this block and input block for approximate equality within specified tolerance
+</p></div><dl class="paramcmts block"><dt class="param">inputBlock</dt><dd class="cmt"><p>Input block</p></dd><dt>returns</dt><dd class="cmt"><p>True if blocks are equal, otherwise false</p></dd></dl></div>
+    </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="asInstanceOf[T0]:T0"></a>
+      <a id="asInstanceOf[T0]:T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#calcVertices" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="calcVertices:Map[edu.berkeley.ce.sparkrocks.Face,Seq[Array[Double]]]"></a>
+      <a id="calcVertices:Map[Face,Seq[Array[Double]]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">calcVertices</span><span class="result">: <span class="extype" name="scala.Predef.Map">Map</span>[<a href="Face.html" class="extype" name="edu.berkeley.ce.sparkrocks.Face">Face</a>, <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@calcVertices:Map[edu.berkeley.ce.sparkrocks.Face,Seq[Array[Double]]]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Calculate the vertices of each face of the block
+</p><div class="fullcomment"><div class="comment cmt"><p>Calculate the vertices of each face of the block
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>A mapping from each face of the block to a Seq of vertices for that face
+This function should only be called once all redundant faces have been removed.</p></dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#center" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="center:Array[Double]"></a>
+      <a id="center:Array[Double]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">center</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@center:Array[Double]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Cartesian coordinates for the center of the rock block.</p><div class="fullcomment"><div class="comment cmt"><p>Cartesian coordinates for the center of the rock block. The individual
+components can be accessed as 'centerX', 'centerY', and 'centerZ'.</p></div></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#centerX" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="centerX:Double"></a>
+      <a id="centerX:Double"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">centerX</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@centerX:Double" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#centerY" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="centerY:Double"></a>
+      <a id="centerY:Double"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">centerY</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@centerY:Double" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#centerZ" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="centerZ:Double"></a>
+      <a id="centerZ:Double"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">centerZ</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@centerZ:Double" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#centroid" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="centroid:Array[Double]"></a>
+      <a id="centroid:Array[Double]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">centroid</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@centroid:Array[Double]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Calculates the centroid of the block using simplex integration.</p><div class="fullcomment"><div class="comment cmt"><p>Calculates the centroid of the block using simplex integration.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>The centroid of the block, (centerX, centerY, centerZ).</p></dd></dl></div>
+    </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="clone():Object"></a>
+      <a id="clone():AnyRef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@clone():Object" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#cut" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="cut(joint:edu.berkeley.ce.sparkrocks.Joint,minSize:Double,maxAspectRatio:Double,generation:Int):Seq[edu.berkeley.ce.sparkrocks.Block]"></a>
+      <a id="cut(Joint,Double,Double,Int):Seq[Block]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">cut</span><span class="params">(<span name="joint">joint: <a href="Joint.html" class="extype" name="edu.berkeley.ce.sparkrocks.Joint">Joint</a></span>, <span name="minSize">minSize: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">0.0</span></span>, <span name="maxAspectRatio">maxAspectRatio: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">Double.PositiveInfinity</span></span>, <span name="generation">generation: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">0</span></span>)</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="" class="extype" name="edu.berkeley.ce.sparkrocks.Block">Block</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@cut(joint:edu.berkeley.ce.sparkrocks.Joint,minSize:Double,maxAspectRatio:Double,generation:Int):Seq[edu.berkeley.ce.sparkrocks.Block]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Divide this block into two child blocks if a joint intersects this block.</p><div class="fullcomment"><div class="comment cmt"><p>Divide this block into two child blocks if a joint intersects this block.
+</p></div><dl class="paramcmts block"><dt class="param">joint</dt><dd class="cmt"><p>A joint that may or may not divide this block.</p></dd><dt class="param">minSize</dt><dd class="cmt"><p>The minimum radius of a sphere that can be inscribed in the child blocks.
+               If either child block falls below this minimum, no cut is performed.</p></dd><dt class="param">maxAspectRatio</dt><dd class="cmt"><p>The maximum ratio of a child block's bounding sphere to the radius
+                      of the largest sphere that can be inscribed in the block. If either
+                      child falls above this minimum, no cut is performed.</p></dd><dt class="param">generation</dt><dd class="cmt"><p>The generation of any child blocks cut from this joint (see Block constructor
+                  documentation for a description of the generation field).</p></dd><dt>returns</dt><dd class="cmt"><p>A Seq of Block objects, containing the two child blocks divided by
+the joint if it intersects this block and any minimum requirements for radius
+or aspect ratio are met. Otherwise, returns a one-item Seq containing
+only this block.</p></dd></dl></div>
+    </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="eq(x$1:AnyRef):Boolean"></a>
+      <a id="eq(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="equals(obj:Any):Boolean"></a>
+      <a id="equals(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">equals</span><span class="params">(<span name="obj">obj: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@equals(obj:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="edu.berkeley.ce.sparkrocks.Block">Block</a> → Equals → AnyRef → Any</dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#faces" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="faces:Seq[edu.berkeley.ce.sparkrocks.Face]"></a>
+      <a id="faces:Seq[Face]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">faces</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="Face.html" class="extype" name="edu.berkeley.ce.sparkrocks.Face">Face</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@faces:Seq[edu.berkeley.ce.sparkrocks.Face]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The faces that define the boundaries of the rock block.</p>
+    </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="finalize():Unit"></a>
+      <a id="finalize():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="symbol">classOf[java.lang.Throwable]</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#generation" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="generation:Int"></a>
+      <a id="generation:Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">generation</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@generation:Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">An integer identifying the joint that caused this rock block to be cut
+                  from its parent.</p><div class="fullcomment"><div class="comment cmt"><p>An integer identifying the joint that caused this rock block to be cut
+                  from its parent. The generation is used to avoid unnecessary checks
+                  for geometrically redundant faces, but it can be safely left as its
+                  default value of 0.</p></div></div>
+    </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getClass():Class[_]"></a>
+      <a id="getClass():Class[_]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="hashCode():Int"></a>
+      <a id="hashCode():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="edu.berkeley.ce.sparkrocks.Block">Block</a> → AnyRef → Any</dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#intersects" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="intersects(joint:edu.berkeley.ce.sparkrocks.Joint):Option[Array[Double]]"></a>
+      <a id="intersects(Joint):Option[Array[Double]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">intersects</span><span class="params">(<span name="joint">joint: <a href="Joint.html" class="extype" name="edu.berkeley.ce.sparkrocks.Joint">Joint</a></span>)</span><span class="result">: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@intersects(joint:edu.berkeley.ce.sparkrocks.Joint):Option[Array[Double]]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Determine whether or not a joint intersects this rock block.</p><div class="fullcomment"><div class="comment cmt"><p>Determine whether or not a joint intersects this rock block.
+</p></div><dl class="paramcmts block"><dt class="param">joint</dt><dd class="cmt"><p>The joint to check for intersection.</p></dd><dt>returns</dt><dd class="cmt"><p>None if the joint does not intersect this block, or Some((x,y,z))
+where (x,y,z) is the point of intersection.</p></dd></dl></div>
+    </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#maxInscribableRadius" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="maxInscribableRadius:Double"></a>
+      <a id="maxInscribableRadius:Double"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">lazy val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">maxInscribableRadius</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@maxInscribableRadius:Double" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ne(x$1:AnyRef):Boolean"></a>
+      <a id="ne(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#nonRedundantFaces" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="nonRedundantFaces:Seq[edu.berkeley.ce.sparkrocks.Face]"></a>
+      <a id="nonRedundantFaces:Seq[Face]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">nonRedundantFaces</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="Face.html" class="extype" name="edu.berkeley.ce.sparkrocks.Face">Face</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@nonRedundantFaces:Seq[edu.berkeley.ce.sparkrocks.Face]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Compute the faces of the rock block that are not geometrically redundant.</p><div class="fullcomment"><div class="comment cmt"><p>Compute the faces of the rock block that are not geometrically redundant.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>A list of faces that uniquely determine this rock block and are not
+geometrically redundant.</p></dd></dl></div>
+    </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notify():Unit"></a>
+      <a id="notify():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@notify():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notifyAll():Unit"></a>
+      <a id="notifyAll():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#orientedVertices" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="orientedVertices:Map[edu.berkeley.ce.sparkrocks.Face,Seq[Array[Double]]]"></a>
+      <a id="orientedVertices:Map[Face,Seq[Array[Double]]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">orientedVertices</span><span class="result">: <span class="extype" name="scala.Predef.Map">Map</span>[<a href="Face.html" class="extype" name="edu.berkeley.ce.sparkrocks.Face">Face</a>, <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@orientedVertices:Map[edu.berkeley.ce.sparkrocks.Face,Seq[Array[Double]]]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Get the counter-clockwise oriented vertices of each face of the block
+</p><div class="fullcomment"><div class="comment cmt"><p>Get the counter-clockwise oriented vertices of each face of the block
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>A mapping from each face of the block to a Seq of vertices for that face
+        in a counter-clockwise orientation.
+        This function should only be called once all redundant faces have been removed.</p></dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#sphereCenterX" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="sphereCenterX:Double"></a>
+      <a id="sphereCenterX:Double"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">lazy val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">sphereCenterX</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@sphereCenterX:Double" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#sphereCenterY" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="sphereCenterY:Double"></a>
+      <a id="sphereCenterY:Double"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">lazy val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">sphereCenterY</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@sphereCenterY:Double" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#sphereCenterZ" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="sphereCenterZ:Double"></a>
+      <a id="sphereCenterZ:Double"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">lazy val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">sphereCenterZ</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@sphereCenterZ:Double" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#sphereRadius" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="sphereRadius:Double"></a>
+      <a id="sphereRadius:Double"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">lazy val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">sphereRadius</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@sphereRadius:Double" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
+      <a id="synchronized[T0](⇒T0):T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#updateFaces" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="updateFaces(localOrigin:Array[Double]):Seq[edu.berkeley.ce.sparkrocks.Face]"></a>
+      <a id="updateFaces(Array[Double]):Seq[Face]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">updateFaces</span><span class="params">(<span name="localOrigin">localOrigin: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="Face.html" class="extype" name="edu.berkeley.ce.sparkrocks.Face">Face</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@updateFaces(localOrigin:Array[Double]):Seq[edu.berkeley.ce.sparkrocks.Face]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Calculates the distances of the joints relative to a new origin
+</p><div class="fullcomment"><div class="comment cmt"><p>Calculates the distances of the joints relative to a new origin
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>List of faces with updated distances</p></dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.Block#volume" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="volume:Double"></a>
+      <a id="volume:Double"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">lazy val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">volume</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@volume:Double" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait():Unit"></a>
+      <a id="wait():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@wait():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long,x$2:Int):Unit"></a>
+      <a id="wait(Long,Int):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long):Unit"></a>
+      <a id="wait(Long):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.Block@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="scala.Product">
+              <h3>Inherited from <span class="extype" name="scala.Product">Product</span></h3>
+            </div><div class="parent" name="scala.Equals">
+              <h3>Inherited from <span class="extype" name="scala.Equals">Equals</span></h3>
+            </div><div class="parent" name="scala.Serializable">
+              <h3>Inherited from <span class="extype" name="scala.Serializable">Serializable</span></h3>
+            </div><div class="parent" name="java.io.Serializable">
+              <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
+            </div><div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>

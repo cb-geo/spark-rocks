@@ -1,0 +1,636 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>SeedJointSelector - edu.berkeley.ce.sparkrocks.SeedJointSelector</title>
+          <meta name="description" content="SeedJointSelector - edu.berkeley.ce.sparkrocks.SeedJointSelector" />
+          <meta name="keywords" content="SeedJointSelector edu.berkeley.ce.sparkrocks.SeedJointSelector" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../../index.html';
+            var hash = 'edu.berkeley.ce.sparkrocks.SeedJointSelector$';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Object" src="../../../../lib/object_big.png" />
+        <p id="owner"><a href="../../../package.html" class="extype" name="edu">edu</a>.<a href="../../package.html" class="extype" name="edu.berkeley">berkeley</a>.<a href="../package.html" class="extype" name="edu.berkeley.ce">ce</a>.<a href="package.html" class="extype" name="edu.berkeley.ce.sparkrocks">sparkrocks</a></p>
+        <h1>SeedJointSelector</h1><h3><span class="morelinks"><div>Related Doc:
+            <a href="package.html" class="extype" name="edu.berkeley.ce.sparkrocks">package sparkrocks</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <span class="name">SeedJointSelector</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Selects joints from the input joint set that will be used to seed the RDD in order to
+maintain approximately balanced loads among processors.
+</p></div><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+        </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="edu.berkeley.ce.sparkrocks.SeedJointSelector"><span>SeedJointSelector</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show All</span></li>
+            </ol>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="!=(x$1:Any):Boolean"></a>
+      <a id="!=(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="##():Int"></a>
+      <a id="##():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@##():Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="==(x$1:Any):Boolean"></a>
+      <a id="==(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.SeedJointSelector#LOWER_BOUND" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="LOWER_BOUND:Double"></a>
+      <a id="LOWER_BOUND:Double"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">LOWER_BOUND</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@LOWER_BOUND:Double" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="edu.berkeley.ce.sparkrocks.SeedJointSelector#THRESHOLD" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="THRESHOLD:Double"></a>
+      <a id="THRESHOLD:Double"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">THRESHOLD</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@THRESHOLD:Double" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="asInstanceOf[T0]:T0"></a>
+      <a id="asInstanceOf[T0]:T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="clone():Object"></a>
+      <a id="clone():AnyRef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@clone():Object" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="eq(x$1:AnyRef):Boolean"></a>
+      <a id="eq(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="equals(x$1:Any):Boolean"></a>
+      <a id="equals(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="finalize():Unit"></a>
+      <a id="finalize():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="symbol">classOf[java.lang.Throwable]</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.SeedJointSelector#findSeedBlocks" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="findSeedBlocks(jointSets:Seq[Seq[edu.berkeley.ce.sparkrocks.Joint]],inputVolume:edu.berkeley.ce.sparkrocks.Block,numPartitions:Int,jointSetSpan:Int,seedBlocks:Seq[edu.berkeley.ce.sparkrocks.Block],remainingJoints:Seq[edu.berkeley.ce.sparkrocks.Joint]):(Seq[edu.berkeley.ce.sparkrocks.Block],Seq[edu.berkeley.ce.sparkrocks.Joint])"></a>
+      <a id="findSeedBlocks(Seq[Seq[Joint]],Block,Int,Int,Seq[Block],Seq[Joint]):(Seq[Block],Seq[Joint])"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">findSeedBlocks</span><span class="params">(<span name="jointSets">jointSets: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Seq">Seq</span>[<a href="Joint.html" class="extype" name="edu.berkeley.ce.sparkrocks.Joint">Joint</a>]]</span>, <span name="inputVolume">inputVolume: <a href="Block.html" class="extype" name="edu.berkeley.ce.sparkrocks.Block">Block</a></span>, <span name="numPartitions">numPartitions: <span class="extype" name="scala.Int">Int</span></span>, <span name="jointSetSpan">jointSetSpan: <span class="extype" name="scala.Int">Int</span></span>, <span name="seedBlocks">seedBlocks: <span class="extype" name="scala.Seq">Seq</span>[<a href="Block.html" class="extype" name="edu.berkeley.ce.sparkrocks.Block">Block</a>] = <span class="symbol">Seq.empty[Block]</span></span>, <span name="remainingJoints">remainingJoints: <span class="extype" name="scala.Seq">Seq</span>[<a href="Joint.html" class="extype" name="edu.berkeley.ce.sparkrocks.Joint">Joint</a>] = <span class="symbol">Seq.empty[Joint]</span></span>)</span><span class="result">: (<span class="extype" name="scala.Seq">Seq</span>[<a href="Block.html" class="extype" name="edu.berkeley.ce.sparkrocks.Block">Block</a>], <span class="extype" name="scala.Seq">Seq</span>[<a href="Joint.html" class="extype" name="edu.berkeley.ce.sparkrocks.Joint">Joint</a>])</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@findSeedBlocks(jointSets:Seq[Seq[edu.berkeley.ce.sparkrocks.Joint]],inputVolume:edu.berkeley.ce.sparkrocks.Block,numPartitions:Int,jointSetSpan:Int,seedBlocks:Seq[edu.berkeley.ce.sparkrocks.Block],remainingJoints:Seq[edu.berkeley.ce.sparkrocks.Joint]):(Seq[edu.berkeley.ce.sparkrocks.Block],Seq[edu.berkeley.ce.sparkrocks.Joint])" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Find specified number of seed blocks by cycling through persistent joint sets, searching for
+joints that divide input volume into approximately equal volumes.</p><div class="fullcomment"><div class="comment cmt"><p>Find specified number of seed blocks by cycling through persistent joint sets, searching for
+joints that divide input volume into approximately equal volumes.
+</p></div><dl class="paramcmts block"><dt class="param">jointSets</dt><dd class="cmt"><p>Seq of Seq's of Joints representing input joint sets</p></dd><dt class="param">inputVolume</dt><dd class="cmt"><p>Block representing input rock volume</p></dd><dt class="param">numPartitions</dt><dd class="cmt"><p>Number of partitions desired</p></dd><dt class="param">jointSetSpan</dt><dd class="cmt"><p>Number of joint sets to search at a time for partition generation</p></dd><dt class="param">seedBlocks</dt><dd class="cmt"><p>Blocks that will serve as partitions</p></dd><dt class="param">remainingJoints</dt><dd class="cmt"><p>Seq of joints that were not used in seed block generation</p></dd><dt>returns</dt><dd class="cmt"><p>Returns a tuple containing a Seq of blocks and a Seq of joints. The Seq of blocks
+        are the the desired partitions. The Seq of joints are the remaining joints that were
+        not used to generate the partitions.</p></dd></dl><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@tailrec</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.SeedJointSelector#findSeedJoints" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="findSeedJoints(jointSet:Seq[edu.berkeley.ce.sparkrocks.Joint],initialVolume:edu.berkeley.ce.sparkrocks.Block,totalVolume:Double,volumePerPiece:Double,selectedJoints:Seq[edu.berkeley.ce.sparkrocks.Joint],remainingJoints:Seq[edu.berkeley.ce.sparkrocks.Joint]):(Seq[edu.berkeley.ce.sparkrocks.Joint],Seq[edu.berkeley.ce.sparkrocks.Joint])"></a>
+      <a id="findSeedJoints(Seq[Joint],Block,Double,Double,Seq[Joint],Seq[Joint]):(Seq[Joint],Seq[Joint])"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">findSeedJoints</span><span class="params">(<span name="jointSet">jointSet: <span class="extype" name="scala.Seq">Seq</span>[<a href="Joint.html" class="extype" name="edu.berkeley.ce.sparkrocks.Joint">Joint</a>]</span>, <span name="initialVolume">initialVolume: <a href="Block.html" class="extype" name="edu.berkeley.ce.sparkrocks.Block">Block</a></span>, <span name="totalVolume">totalVolume: <span class="extype" name="scala.Double">Double</span></span>, <span name="volumePerPiece">volumePerPiece: <span class="extype" name="scala.Double">Double</span></span>, <span name="selectedJoints">selectedJoints: <span class="extype" name="scala.Seq">Seq</span>[<a href="Joint.html" class="extype" name="edu.berkeley.ce.sparkrocks.Joint">Joint</a>] = <span class="symbol">Seq.empty[Joint]</span></span>, <span name="remainingJoints">remainingJoints: <span class="extype" name="scala.Seq">Seq</span>[<a href="Joint.html" class="extype" name="edu.berkeley.ce.sparkrocks.Joint">Joint</a>] = <span class="symbol">Seq.empty[Joint]</span></span>)</span><span class="result">: (<span class="extype" name="scala.Seq">Seq</span>[<a href="Joint.html" class="extype" name="edu.berkeley.ce.sparkrocks.Joint">Joint</a>], <span class="extype" name="scala.Seq">Seq</span>[<a href="Joint.html" class="extype" name="edu.berkeley.ce.sparkrocks.Joint">Joint</a>])</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@findSeedJoints(jointSet:Seq[edu.berkeley.ce.sparkrocks.Joint],initialVolume:edu.berkeley.ce.sparkrocks.Block,totalVolume:Double,volumePerPiece:Double,selectedJoints:Seq[edu.berkeley.ce.sparkrocks.Joint],remainingJoints:Seq[edu.berkeley.ce.sparkrocks.Joint]):(Seq[edu.berkeley.ce.sparkrocks.Joint],Seq[edu.berkeley.ce.sparkrocks.Joint])" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Cycles through persistent joint set to find joints that approximately balances load across processes
+</p><div class="fullcomment"><div class="comment cmt"><p>Cycles through persistent joint set to find joints that approximately balances load across processes
+</p></div><dl class="paramcmts block"><dt class="param">jointSet</dt><dd class="cmt"><p>Seq of Joints representing a persistent joint set</p></dd><dt class="param">initialVolume</dt><dd class="cmt"><p>Block representing input rock volume that should be divided into approximately equal pieces
+                     for each process to operate on</p></dd><dt class="param">totalVolume</dt><dd class="cmt"><p>Total volume of rock volume in analysis</p></dd><dt class="param">volumePerPiece</dt><dd class="cmt"><p>Ideal volume per partition for load balance</p></dd><dt class="param">selectedJoints</dt><dd class="cmt"><p>Seq of joints that have been identified as seed joints</p></dd><dt class="param">remainingJoints</dt><dd class="cmt"><p>Seq of joints that were not selected as seed joints</p></dd><dt>returns</dt><dd class="cmt"><p>Tuple containing two Seq's of joints. The first Seq contains joints that divide initial block into
+        approximately equal volumes. The second Seq is the joints remaining from the input joint set.</p></dd></dl><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@tailrec</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.SeedJointSelector#generateSeedBlocks" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="generateSeedBlocks(jointSets:Seq[Seq[edu.berkeley.ce.sparkrocks.Joint]],inputVolume:edu.berkeley.ce.sparkrocks.Block,numPartitions:Int,jointSetSpan:Int):(Seq[edu.berkeley.ce.sparkrocks.Block],Seq[edu.berkeley.ce.sparkrocks.Joint])"></a>
+      <a id="generateSeedBlocks(Seq[Seq[Joint]],Block,Int,Int):(Seq[Block],Seq[Joint])"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">generateSeedBlocks</span><span class="params">(<span name="jointSets">jointSets: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Seq">Seq</span>[<a href="Joint.html" class="extype" name="edu.berkeley.ce.sparkrocks.Joint">Joint</a>]]</span>, <span name="inputVolume">inputVolume: <a href="Block.html" class="extype" name="edu.berkeley.ce.sparkrocks.Block">Block</a></span>, <span name="numPartitions">numPartitions: <span class="extype" name="scala.Int">Int</span></span>, <span name="jointSetSpan">jointSetSpan: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>)</span><span class="result">: (<span class="extype" name="scala.Seq">Seq</span>[<a href="Block.html" class="extype" name="edu.berkeley.ce.sparkrocks.Block">Block</a>], <span class="extype" name="scala.Seq">Seq</span>[<a href="Joint.html" class="extype" name="edu.berkeley.ce.sparkrocks.Joint">Joint</a>])</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@generateSeedBlocks(jointSets:Seq[Seq[edu.berkeley.ce.sparkrocks.Joint]],inputVolume:edu.berkeley.ce.sparkrocks.Block,numPartitions:Int,jointSetSpan:Int):(Seq[edu.berkeley.ce.sparkrocks.Block],Seq[edu.berkeley.ce.sparkrocks.Joint])" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Generate specified number of partitions using input joint sets
+</p><div class="fullcomment"><div class="comment cmt"><p>Generate specified number of partitions using input joint sets
+</p></div><dl class="paramcmts block"><dt class="param">jointSets</dt><dd class="cmt"><p>Seq of Seq's of Joints representing input joint sets</p></dd><dt class="param">inputVolume</dt><dd class="cmt"><p>Block representing input rock volume</p></dd><dt class="param">numPartitions</dt><dd class="cmt"><p>Number of partitions desired</p></dd><dt class="param">jointSetSpan</dt><dd class="cmt"><p>Number of joint sets to search at a time for partition generation</p></dd><dt>returns</dt><dd class="cmt"><p>Returns a tuple containing a Seq of blocks and a Seq of joints. The Seq of blocks
+        are the the desired partitions. The Seq of joints are the remaining joints that were
+        not used to generate the partitions.</p></dd></dl><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@tailrec</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getClass():Class[_]"></a>
+      <a id="getClass():Class[_]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="hashCode():Int"></a>
+      <a id="hashCode():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ne(x$1:AnyRef):Boolean"></a>
+      <a id="ne(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notify():Unit"></a>
+      <a id="notify():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@notify():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notifyAll():Unit"></a>
+      <a id="notifyAll():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.SeedJointSelector#searchJointSets" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="searchJointSets(jointSets:Seq[Seq[edu.berkeley.ce.sparkrocks.Joint]],inputVolume:edu.berkeley.ce.sparkrocks.Block,numPartitions:Int,jointSetSpan:Int,spanCount:Int,seedJoints:Seq[edu.berkeley.ce.sparkrocks.Joint],remainingJoints:Seq[edu.berkeley.ce.sparkrocks.Joint]):(Seq[edu.berkeley.ce.sparkrocks.Joint],Seq[edu.berkeley.ce.sparkrocks.Joint])"></a>
+      <a id="searchJointSets(Seq[Seq[Joint]],Block,Int,Int,Int,Seq[Joint],Seq[Joint]):(Seq[Joint],Seq[Joint])"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">searchJointSets</span><span class="params">(<span name="jointSets">jointSets: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Seq">Seq</span>[<a href="Joint.html" class="extype" name="edu.berkeley.ce.sparkrocks.Joint">Joint</a>]]</span>, <span name="inputVolume">inputVolume: <a href="Block.html" class="extype" name="edu.berkeley.ce.sparkrocks.Block">Block</a></span>, <span name="numPartitions">numPartitions: <span class="extype" name="scala.Int">Int</span></span>, <span name="jointSetSpan">jointSetSpan: <span class="extype" name="scala.Int">Int</span></span>, <span name="spanCount">spanCount: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="seedJoints">seedJoints: <span class="extype" name="scala.Seq">Seq</span>[<a href="Joint.html" class="extype" name="edu.berkeley.ce.sparkrocks.Joint">Joint</a>] = <span class="symbol">Seq.empty[Joint]</span></span>, <span name="remainingJoints">remainingJoints: <span class="extype" name="scala.Seq">Seq</span>[<a href="Joint.html" class="extype" name="edu.berkeley.ce.sparkrocks.Joint">Joint</a>] = <span class="symbol">Seq.empty[Joint]</span></span>)</span><span class="result">: (<span class="extype" name="scala.Seq">Seq</span>[<a href="Joint.html" class="extype" name="edu.berkeley.ce.sparkrocks.Joint">Joint</a>], <span class="extype" name="scala.Seq">Seq</span>[<a href="Joint.html" class="extype" name="edu.berkeley.ce.sparkrocks.Joint">Joint</a>])</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@searchJointSets(jointSets:Seq[Seq[edu.berkeley.ce.sparkrocks.Joint]],inputVolume:edu.berkeley.ce.sparkrocks.Block,numPartitions:Int,jointSetSpan:Int,spanCount:Int,seedJoints:Seq[edu.berkeley.ce.sparkrocks.Joint],remainingJoints:Seq[edu.berkeley.ce.sparkrocks.Joint]):(Seq[edu.berkeley.ce.sparkrocks.Joint],Seq[edu.berkeley.ce.sparkrocks.Joint])" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Search input joint sets for joints that divide input volume into approximately equal volumes
+based on desired number of partitions.</p><div class="fullcomment"><div class="comment cmt"><p>Search input joint sets for joints that divide input volume into approximately equal volumes
+based on desired number of partitions.
+</p></div><dl class="paramcmts block"><dt class="param">jointSets</dt><dd class="cmt"><p>Seq of Seq's of Joints representing input joint sets</p></dd><dt class="param">inputVolume</dt><dd class="cmt"><p>Block representing input rock volume</p></dd><dt class="param">numPartitions</dt><dd class="cmt"><p>Number of partitions desired</p></dd><dt class="param">jointSetSpan</dt><dd class="cmt"><p>Number of joint sets to search at a time for partition generation</p></dd><dt class="param">spanCount</dt><dd class="cmt"><p>Number or joint sets to search for seed joints</p></dd><dt class="param">seedJoints</dt><dd class="cmt"><p>Seq of joints that were not used in seed block generation</p></dd><dt class="param">remainingJoints</dt><dd class="cmt"><p>Seq of joints that were not selected seed joints</p></dd><dt>returns</dt><dd class="cmt"><p>Returns a tuple containing two Seq's of Joints. The first Seq contains the seed joints that
+        best divide the input volume. The second Seq contains the joints that remain from the joint
+        sets that have been checked.</p></dd></dl><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@tailrec</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
+      <a id="synchronized[T0](⇒T0):T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="edu.berkeley.ce.sparkrocks.SeedJointSelector#testVolumes" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="testVolumes(joint:edu.berkeley.ce.sparkrocks.Joint,initialVolume:edu.berkeley.ce.sparkrocks.Block,desiredVolume:Double):Option[edu.berkeley.ce.sparkrocks.Block]"></a>
+      <a id="testVolumes(Joint,Block,Double):Option[Block]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">testVolumes</span><span class="params">(<span name="joint">joint: <a href="Joint.html" class="extype" name="edu.berkeley.ce.sparkrocks.Joint">Joint</a></span>, <span name="initialVolume">initialVolume: <a href="Block.html" class="extype" name="edu.berkeley.ce.sparkrocks.Block">Block</a></span>, <span name="desiredVolume">desiredVolume: <span class="extype" name="scala.Double">Double</span></span>)</span><span class="result">: <span class="extype" name="scala.Option">Option</span>[<a href="Block.html" class="extype" name="edu.berkeley.ce.sparkrocks.Block">Block</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@testVolumes(joint:edu.berkeley.ce.sparkrocks.Joint,initialVolume:edu.berkeley.ce.sparkrocks.Block,desiredVolume:Double):Option[edu.berkeley.ce.sparkrocks.Block]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Test whether input joint divides initial volume into blocks of approximately the desired volume
+</p><div class="fullcomment"><div class="comment cmt"><p>Test whether input joint divides initial volume into blocks of approximately the desired volume
+</p></div><dl class="paramcmts block"><dt class="param">joint</dt><dd class="cmt"><p>Joint to test</p></dd><dt class="param">initialVolume</dt><dd class="cmt"><p>Volume that is to be subdivided</p></dd><dt class="param">desiredVolume</dt><dd class="cmt"><p>Desired volume of subdivision</p></dd><dt>returns</dt><dd class="cmt"><p>If joint satisfactorily subdivides initial volume, returns remaining volume that is to
+        be further subdivided. Otherwise, returns None.</p></dd></dl></div>
+    </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="toString():String"></a>
+      <a id="toString():String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@toString():String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait():Unit"></a>
+      <a id="wait():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@wait():Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long,x$2:Int):Unit"></a>
+      <a id="wait(Long,Int):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long):Unit"></a>
+      <a id="wait(Long):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#edu.berkeley.ce.sparkrocks.SeedJointSelector$@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>
