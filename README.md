@@ -2,6 +2,7 @@
 > Cambridge Berkeley - Geomechanics
 
 [![License](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://raw.githubusercontent.com/cb-geo/spark-rocks/master/LICENSE.md)
+[![Scaladoc](http://javadoc-badge.appspot.com/com.github.nscala-time/nscala-time_2.11.svg?label=scaladoc)](https://cb-geo.github.io/gh-pages)
 
 # Overview
 
