@@ -30,28 +30,40 @@ arguments as follows:
 spark-submit path/to/sparkRocks-assembly-1.0.jar [required inputs] [optional inputs]
 ```
 
-Required inputs:
+* Required inputs:
 
 `-i <path/to/input/file>`
+
 This provides the path the input file that is described below
 
 `-n <integer number of partitions>`
+
 Number of partitions to divide the input rock volume into before initiating parallel computations.
 
-One or both of: `--vtkOut <path/to/output>` `--jsonOut <path/to/output>`
+One or both of:
+`--vtkOut <path/to/output>` `--jsonOut <path/to/output>`
+
 These flags specify which outputs are desired and the directory where to save them. `SparkRocks`
 can output either in `JSON` or an intermediate format that is easily converted to `VTK` using
 [`VisualRocks`](https://github.com/cb-geo/visual-rocks).
 
-Optional inputs:
+* Optional inputs:
 
-`--minRadius <value>` Minimum inscribed radius of blocks that should be generated
+`--minRadius <value>`
 
-`--maxAspectRatio <value>` Maximum aspect ratio of blocks that should be generated
+Minimum inscribed radius of blocks that should be generated
 
-`-f` Flag to force analysis to continue if specified number of partitions is not found
+`--maxAspectRatio <value>`
 
-`--help` Prints usage text
+Maximum aspect ratio of blocks that should be generated
+
+`-f`
+
+Flag to force analysis to continue if specified number of partitions is not found
+
+`--help`
+
+Prints usage text
  
 ## Input
 
