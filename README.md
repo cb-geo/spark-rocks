@@ -3,6 +3,8 @@
 
 [![License](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://raw.githubusercontent.com/cb-geo/spark-rocks/master/LICENSE.md)
 [![Scaladoc](http://javadoc-badge.appspot.com/com.github.nscala-time/nscala-time_2.11.svg?label=scaladoc)](https://cb-geo.github.io/spark-rocks)
+[![](https://img.shields.io/github/issues-raw/cb-geo/spark-rocks.svg)](https://github.com/cb-geo/spark-rocks/issues)
+(https://forum.cb-geo.com/c/dem)
 
 # Overview
 
