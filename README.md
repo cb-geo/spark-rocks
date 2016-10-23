@@ -5,7 +5,7 @@
 [![Scaladoc](http://javadoc-badge.appspot.com/com.github.nscala-time/nscala-time_2.11.svg?label=scaladoc)](https://cb-geo.github.io/spark-rocks)
 [![](https://img.shields.io/github/issues-raw/cb-geo/spark-rocks.svg)](https://github.com/cb-geo/spark-rocks/issues)
 
-[DEM Forum](https://forum.cb-geo.com/c/dem)
+Please post any general questions about using the code to the [DEM Forum](https://forum.cb-geo.com/c/dem)
 
 # Overview
 
