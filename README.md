@@ -4,6 +4,7 @@
 [![License](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://raw.githubusercontent.com/cb-geo/spark-rocks/master/LICENSE.md)
 [![Scaladoc](http://javadoc-badge.appspot.com/com.github.nscala-time/nscala-time_2.11.svg?label=scaladoc)](https://cb-geo.github.io/spark-rocks)
 [![](https://img.shields.io/github/issues-raw/cb-geo/spark-rocks.svg)](https://github.com/cb-geo/spark-rocks/issues)
+[![Build status](https://api.travis-ci.org/cb-geo/spark-rocks.svg)](https://travis-ci.org/cb-geo/spark-rocks/builds)
 
 Please post any general questions about using the code to the [DEM Forum](https://forum.cb-geo.com/c/dem)
 
