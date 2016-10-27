@@ -74,7 +74,7 @@ object SeedJointSelector {
     } else if (jointSets.head(0).shape.isEmpty) {
       val (seedJoints, leftOverJoints) = searchJointSets(jointSets, inputVolume, numPartitions, jointSetSpan)
       val partitioning = seedJoints.foldLeft(Seq(inputVolume)) { (currentBlocks, joint) =>
-        currentBlocks.flatMap(_.cut(joint))
+        currentBlocks.flatMap(_.cut(joint, minSize = 0.0, maxAspectRatio = Double.PositiveInfinity))
       }
       if (partitioning.length < numPartitions) {
         // Insufficient partitions found
@@ -178,7 +178,7 @@ object SeedJointSelector {
       }
     } else if (initialVolume.volume > volumePerPiece) {
       // Continue subdividing using single joint
-      val lastBlocks = initialVolume cut jointSet(0)
+      val lastBlocks = initialVolume.cut(jointSet(0), minSize = 0.0, maxAspectRatio = Double.PositiveInfinity)
       if (lastBlocks.length == 1) {
         // Joint does not intersect volume
         (selectedJoints, remainingJoints :+ jointSet(0))
@@ -202,7 +202,7 @@ object SeedJointSelector {
     *         be further subdivided. Otherwise, returns None.
     */
   def testVolumes(joint: Joint, initialVolume: Block, desiredVolume: Double): Option[Block] = {
-    val blocks = initialVolume cut joint
+    val blocks = initialVolume.cut(joint, minSize = 0.0, maxAspectRatio = Double.PositiveInfinity)
     val nonRedundantBlocks = blocks map { case block @ Block(blockCenter, _, _) =>
       Block(blockCenter, block.nonRedundantFaces)
     }
