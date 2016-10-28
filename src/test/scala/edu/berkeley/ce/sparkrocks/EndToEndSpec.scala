@@ -26,7 +26,7 @@ class EndToEndSpec extends FunSuite {
     // Iterate through joints, cutting blocks where appropriate
     val cutBlocks = seedBlocks flatMap { block =>
       nonSeedJoints.foldLeft(Seq(block)) { (currentBlocks, joint) =>
-        currentBlocks.flatMap(_.cut(joint, minSize = 0.0, maxAspectRatio = Double.PositiveInfinity))
+        currentBlocks.flatMap(_.cut(joint))
       }
     }
 

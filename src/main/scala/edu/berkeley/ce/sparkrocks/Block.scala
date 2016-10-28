@@ -105,6 +105,8 @@ case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesio
 }
 
 object Block {
+  val REDUNDANCY_TOLERANCE = 1.0e-7
+
   /**
     * Calculates the rotation matrix to rotate the input plane (specified by its normal)
     * to the desired orientation (specified by the desired normal)
@@ -328,8 +330,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     linProg.setObjFun(Array(0.0, 0.0, 0.0, 1.0), LinearProgram.MAX)
     faces foreach { face =>
       val coeffs = Array(face.a, face.b, face.c, 1.0)
-      linProg.addConstraint(coeffs, LinearProgram.LE,
-                            face.d)
+      linProg.addConstraint(coeffs, LinearProgram.LE, face.d)
     }
     linProg.solve().get._2
   }
@@ -407,7 +408,8 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     * or aspect ratio are met. Otherwise, returns a one-item Seq containing
     * only this block.
     */
-  def cut(joint: Joint, minSize: Double, maxAspectRatio: Double, generation: Int=0): Seq[Block] = {
+  def cut(joint: Joint, minSize: Double = 0.0, maxAspectRatio: Double = Double.PositiveInfinity,
+          generation: Int=0): Seq[Block] = {
     val translatedJoint = joint.updateJoint(Array(centerX, centerY, centerZ))
     this.intersects(translatedJoint) match {
       case None => Vector(this)
@@ -474,7 +476,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
         linProg.addConstraint(faceCoeffs, LinearProgram.LE, rhs)
       }
       val s = linProg.solve().get._2
-      math.abs(s - face.d) < NumericUtils.EPSILON / 10.0
+      math.abs(s - face.d) < Block.REDUNDANCY_TOLERANCE
     }
 
   /**
@@ -484,14 +486,12 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     * This function should only be called once all redundant faces have been removed.
     */
   def calcVertices: Map[Face, Seq[Array[Double]]] = {
-    val relevantFaces = nonRedundantFaces
-
-    relevantFaces.zip (
-      relevantFaces map { f1 =>
+    faces.zip (
+      faces map { f1 =>
         val n1 = DenseVector[Double](f1.a, f1.b, f1.c)
-        relevantFaces flatMap { f2 =>
+        faces flatMap { f2 =>
           val n2 = DenseVector[Double](f2.a, f2.b, f2.c)
-          relevantFaces flatMap { f3 =>
+          faces flatMap { f3 =>
             val n3 = DenseVector[Double](f3.a, f3.b, f3.c)
             // Check if normals of faces are coplanar, if not find intersection
             if (math.abs(n1 dot linalg.cross(n2, n3)) > NumericUtils.EPSILON) {

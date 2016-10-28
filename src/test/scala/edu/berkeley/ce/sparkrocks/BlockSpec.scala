@@ -394,6 +394,7 @@ class BlockSpec extends FunSuite {
     val block = Block(Array(1.0, 1.0, 1.0), List(face1, face2, face3))
     val expectedIntersection = Map(
       face1 -> List.empty[Array[Double]],
+      face2 -> List.empty[Array[Double]],
       face3 -> List.empty[Array[Double]]
     )
     val vertices = block.calcVertices
@@ -484,8 +485,8 @@ class BlockSpec extends FunSuite {
                        phi=0, cohesion=0, shape=Vector.empty)
     val zPlane = Joint(Array(0.0,0.0,1.0), Array(1.0, 1.0, 1.0), Array(1.0,1.0,1.0),
                        phi=0, cohesion=0, shape=Vector.empty)
-    val xBlocks = twoCube.cut(xPlane, minSize = 0.0, maxAspectRatio = Double.PositiveInfinity)
-    val xzBlocks = xBlocks.flatMap(_.cut(zPlane, minSize = 0.0, maxAspectRatio = Double.PositiveInfinity))
+    val xBlocks = twoCube.cut(xPlane)
+    val xzBlocks = xBlocks.flatMap(_.cut(zPlane))
 
     val nonRedundantBlocks = xzBlocks.map { case block @ Block(center, faces, _) =>
       val nonRedundantFaces = block.nonRedundantFaces
@@ -590,13 +591,13 @@ class BlockSpec extends FunSuite {
   test("Cutting the unit cube at x=0.5 with a minimum inscribable radius of 0.25 should produce two children") {
     val cutJoint = Joint(Array(1.0, 0.0, 0.0), localOrigin=Array(0.0, 0.0, 0.0), center=Array(0.5, 0.0, 0.0),
       phi = 0, cohesion = 0, shape = Vector.empty)
-    assert(unitCube.cut(cutJoint, minSize=0.25, maxAspectRatio = Double.PositiveInfinity).length == 2)
+    assert(unitCube.cut(cutJoint, minSize=0.25).length == 2)
   }
 
   test("Cutting the unit cube at x=0.5 with a minimum inscribable radius of 0.26 should produce no new children") {
     val cutJoint = Joint(Array(1.0, 0.0, 0.0), localOrigin=Array(0.0, 0.0, 0.0), center=Array(0.5, 0.0, 0.0),
       phi = 0, cohesion = 0, shape = Vector.empty)
-    val children = unitCube.cut(cutJoint, minSize=0.26, maxAspectRatio = Double.PositiveInfinity)
+    val children = unitCube.cut(cutJoint, minSize=0.26)
     assert(children.length == 1)
     assert(children.head == unitCube)
   }
@@ -604,13 +605,13 @@ class BlockSpec extends FunSuite {
   test("Cutting non-origin two-cube at z=1 with minimum inscribable radius of 0.5 should produce two new children") {
     val cutJoint = Joint(Array(0.0, 0.0, 1.0), localOrigin=Array(0.0, 0.0, 0.0), center=Array(0.0, 0.0, 1.0),
                          phi=0.0, cohesion=0.0, shape=Vector.empty)
-    assert(twoCubeNonOrigin.cut(cutJoint, minSize=0.5, maxAspectRatio = Double.PositiveInfinity).length == 2)
+    assert(twoCubeNonOrigin.cut(cutJoint, minSize=0.5).length == 2)
   }
 
   test("Cutting non-origin two-cube at z=1 with minimum inscribable radius of 0.6 should produce no new children") {
     val cutJoint = Joint(Array(0.0, 0.0, 1.0), localOrigin=Array(0.0, 0.0, 0.0), center=Array(0.0, 0.0, 1.0),
                          phi=0.0, cohesion=0.0, shape=Vector.empty)
-    val children = twoCubeNonOrigin.cut(cutJoint, minSize=0.6, maxAspectRatio = Double.PositiveInfinity)
+    val children = twoCubeNonOrigin.cut(cutJoint, minSize=0.6)
     assert(children.length == 1)
     assert(children.head == twoCubeNonOrigin)
   }
@@ -618,13 +619,13 @@ class BlockSpec extends FunSuite {
   test("Cutting the unit cube at x=0.5 with maximum aspect ratio of 3 should produce two new children") {
     val cutJoint = Joint(Array(1.0, 0.0, 0.0), localOrigin=Array(0.0, 0.0, 0.0), center=Array(0.5, 0.0, 0.0),
       phi = 0, cohesion = 0, shape = Vector.empty)
-    assert(unitCube.cut(cutJoint, minSize = 0.0, maxAspectRatio=3.0).length == 2)
+    assert(unitCube.cut(cutJoint, maxAspectRatio=3.0).length == 2)
   }
 
   test("Cutting the unit cube at x=0.5 with maximum aspect ratio of 2.9 should produce no new children") {
     val cutJoint = Joint(Array(1.0, 0.0, 0.0), localOrigin=Array(0.0, 0.0, 0.0), center=Array(0.5, 0.0, 0.0),
       phi = 0, cohesion = 0, shape = Vector.empty)
-    val children = unitCube.cut(cutJoint, minSize = 0.0, maxAspectRatio=2.9)
+    val children = unitCube.cut(cutJoint, maxAspectRatio=2.9)
     assert(children.length == 1)
     assert(children.head == unitCube)
   }
@@ -632,13 +633,13 @@ class BlockSpec extends FunSuite {
   test("Cutting non-origin two-cube at z=1 with maximum aspect ratio of 3 should produce two new children") {
     val cutJoint = Joint(Array(0.0, 0.0, 1.0), localOrigin=Array(0.0, 0.0, 0.0), center=Array(0.0, 0.0, 1.0),
       phi=0.0, cohesion=0.0, shape=Vector.empty)
-    assert(twoCubeNonOrigin.cut(cutJoint, minSize = 0.0, maxAspectRatio=3.0).length == 2)
+    assert(twoCubeNonOrigin.cut(cutJoint, maxAspectRatio=3.0).length == 2)
   }
 
   test("Cutting non-origin two-cube at z=1 with maximum aspect ratio of 2.9 should produce no new children") {
     val cutJoint = Joint(Array(0.0, 0.0, 1.0), localOrigin=Array(0.0, 0.0, 0.0), center=Array(0.0, 0.0, 1.0),
       phi=0.0, cohesion=0.0, shape=Vector.empty)
-    val children = twoCubeNonOrigin.cut(cutJoint, minSize = 0.0, maxAspectRatio=2.9)
+    val children = twoCubeNonOrigin.cut(cutJoint, maxAspectRatio=2.9)
     assert(children.length == 1)
     assert(children.head == twoCubeNonOrigin)
   }
