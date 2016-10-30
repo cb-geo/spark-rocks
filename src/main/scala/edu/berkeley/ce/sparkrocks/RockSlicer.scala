@@ -68,17 +68,18 @@ object RockSlicer {
       broadcastJoints.value.zipWithIndex.foldLeft(Seq(seedBlock)) { case (currentBlocks, (joint, idx)) =>
         if (idx % REDUNDANT_ELIM_PERIOD == 0) {
           // When idx is a multiple of REDUNDANT_ELIM_PERIOD, check for geometrically redundant faces
-          currentBlocks.flatMap(_.cut(joint, generation=idx)).map { case block @ Block(center, _, generation) =>
-            if (generation > idx - REDUNDANT_ELIM_PERIOD) {
-              // We only perform the check if the block has been newly added since the last round of checks
-              Block(center, block.nonRedundantFaces, generation)
-            } else {
-              block
-            }
+          currentBlocks.flatMap(_.cut(joint, arguments.minRadius, arguments.maxAspectRatio, generation=idx)).map {
+            case block @ Block(center, _, generation) =>
+              if (generation > idx - REDUNDANT_ELIM_PERIOD) {
+                // We only perform the check if the block has been newly added since the last round of checks
+                Block(center, block.nonRedundantFaces, generation)
+              } else {
+                block
+              }
           }
         } else {
           // Otherwise, just cut new blocks without checking for redundant faces
-          currentBlocks.flatMap(_.cut(joint, generation=idx))
+          currentBlocks.flatMap(_.cut(joint, arguments.minRadius, arguments.maxAspectRatio, generation=idx))
         }
       }
     }

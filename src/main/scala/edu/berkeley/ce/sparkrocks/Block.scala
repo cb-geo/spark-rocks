@@ -105,6 +105,8 @@ case class Face(normalVec: Array[Double], distance: Double, phi: Double, cohesio
 }
 
 object Block {
+  val REDUNDANCY_TOLERANCE = 1.0e-7
+
   /**
     * Calculates the rotation matrix to rotate the input plane (specified by its normal)
     * to the desired orientation (specified by the desired normal)
@@ -280,8 +282,8 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
       val linProg = new LinearProgram(3)
       linProg.setObjFun(v, LinearProgram.MAX)
       faces foreach { face =>
-        val coeffs = Array[Double](face.a, face.b, face.c).map(NumericUtils.applyTolerance)
-        val rhs = NumericUtils.applyTolerance(face.d)
+        val coeffs = Array[Double](face.a, face.b, face.c)
+        val rhs = face.d
         linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
       }
       val results = linProg.solve().get._1
@@ -297,8 +299,8 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
       val linProg = new LinearProgram(3)
       linProg.setObjFun(v, LinearProgram.MAX)
       faces foreach { face =>
-        val coeffs = Array(face.a, face.b, face.c).map(NumericUtils.applyTolerance)
-        val rhs = NumericUtils.applyTolerance(face.d)
+        val coeffs = Array(face.a, face.b, face.c)
+        val rhs = face.d
         linProg.addConstraint(coeffs, LinearProgram.LE, rhs)
       }
       val results = linProg.solve().get._1
@@ -328,8 +330,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     linProg.setObjFun(Array(0.0, 0.0, 0.0, 1.0), LinearProgram.MAX)
     faces foreach { face =>
       val coeffs = Array(face.a, face.b, face.c, 1.0)
-      linProg.addConstraint(NumericUtils.applyTolerance(coeffs), LinearProgram.LE,
-                            NumericUtils.applyTolerance(face.d))
+      linProg.addConstraint(coeffs, LinearProgram.LE, face.d)
     }
     linProg.solve().get._2
   }
@@ -363,15 +364,14 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     linProg.setObjFun(Array(0.0, 0.0, 0.0, 1.0), LinearProgram.MIN)
 
     // Restrict our attention to plane of joint
-    val coeffs = Array(joint.a, joint.b, joint.c, 0.0).
-                    map(NumericUtils.applyTolerance)
-    val rhs = NumericUtils.applyTolerance(joint.d)
+    val coeffs = Array(joint.a, joint.b, joint.c, 0.0)
+    val rhs = joint.d
     linProg.addConstraint(coeffs, LinearProgram.EQ, rhs)
 
     // Require s to be within planes defined by faces of block
     faces.foreach { face =>
-      val faceCoeffs = NumericUtils.applyTolerance(Array(face.a, face.b, face.c, -1.0))
-      val rhs = NumericUtils.applyTolerance(face.d)
+      val faceCoeffs = Array(face.a, face.b, face.c, -1.0)
+      val rhs = face.d
       linProg.addConstraint(faceCoeffs, LinearProgram.LE, rhs)
     }
 
@@ -380,8 +380,8 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
       val a = normal(0)
       val b = normal(1)
       val c = normal(2)
-      val jointCoeffs = NumericUtils.applyTolerance(Array(a, b, c, -1.0))
-      val rhs = NumericUtils.applyTolerance(d)
+      val jointCoeffs = Array(a, b, c, -1.0)
+      val rhs = d
       linProg.addConstraint(jointCoeffs, LinearProgram.LE, rhs)
     }
 
@@ -408,7 +408,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     * or aspect ratio are met. Otherwise, returns a one-item Seq containing
     * only this block.
     */
-  def cut(joint: Joint, minSize: Double=0.0, maxAspectRatio: Double=Double.PositiveInfinity,
+  def cut(joint: Joint, minSize: Double = 0.0, maxAspectRatio: Double = Double.PositiveInfinity,
           generation: Int=0): Seq[Block] = {
     val translatedJoint = joint.updateJoint(Array(centerX, centerY, centerZ))
     this.intersects(translatedJoint) match {
@@ -466,7 +466,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
     * geometrically redundant.
     */
   def nonRedundantFaces: Seq[Face] =
-    faces.map(_.applyTolerance).distinct.filter { face =>
+    faces.distinct.filter { face =>
       val linProg = new LinearProgram(3)
       val objCoeffs = Array(face.a, face.b, face.c)
       linProg.setObjFun(objCoeffs, LinearProgram.MAX)
@@ -476,7 +476,7 @@ case class Block(center: Array[Double], faces: Seq[Face], generation: Int=0) ext
         linProg.addConstraint(faceCoeffs, LinearProgram.LE, rhs)
       }
       val s = linProg.solve().get._2
-      math.abs(s - face.d) <= NumericUtils.EPSILON
+      math.abs(s - face.d) < Block.REDUNDANCY_TOLERANCE
     }
 
   /**
