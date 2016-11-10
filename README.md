@@ -18,11 +18,13 @@ cloud and on any operating system.
 
 # Usage
 
-`SparkRocks` is run on Apache Spark by submitting the `SparkRocks`
-`sparkRocks-assembly-1.0.jar` to Spark. Spark manages the execution and
-deployment of SparkRocks so the user does not need to do any additional work to
-scale analyses to larger scale problems. Documentation on how to deploy Spark
-locally or on the cloud are provided at [Submitting
+Before running `SparkRocks`, Apache Spark needs to be installed on your
+system. Apache Spark can be downloaded from
+[here](http://spark.apache.org/downloads.html). Once Apache Spark is installed,
+`SparkRocks` is run by submitting `sparkrocks-assembly-1.0.jar` to Spark. Spark
+manages the execution and deployment of SparkRocks so the user does not need to
+do any additional work to scale analyses to larger scale problems. Documentation
+on how to deploy Spark locally or on the cloud are provided at [Submitting
 Applications](http://spark.apache.org/docs/latest/submitting-applications.html).
 The examples that follow assume SparkRocks is being run on Amazon EMR.
 
@@ -89,22 +91,30 @@ input should be given as 100.0. Given these parameters, a full set of joints is
 generated within the bounds delineated by the bounding box. This set of joints
 is then used to cut the blocks in the input rock volume.
 
-The following is a simple example of what an input file should look like:
+The following is a simple example of what an input file should look like. (Note:
+the comments in parentheses are not part of the actual input file and are only
+included for clarity):
 
 ```
-0.0 0.0 0.0
--2.0 -2.0 -2.0 2.0 2.0 2.0
-0.0 90.0 0.0 -1.0 0.0 30.0 0.0
-0.0 90.0 0.0 1.0.0 0.0 30.0 0.0
-90.0 90.0 -1.0 0.0 0.0 30.0 0.0
-90.0 90.0 1.0 0.0 0.0 30.0 0.0
-0.0 0.0 0.0 0.0 -1.0 30.0 0.0
-0.0 0.0 0.0 0.0 1.0 30.0 0.0
-
-34.0 23.0 1.0 100.0 30.0 0.0
-192.0 47.0 0.7 100.0 30.0 0.0
-321.0 62.0 0.4 100.0 30.0 0.0
+0.0 0.0 0.0 (Global Origin)
+-2.0 -2.0 -2.0 (Minimum Extent) 2.0 2.0 2.0 (Maximum Extent)
+0.0 90.0 0.0 -1.0 0.0 30.0 0.0 (Bounding face, strike of 0 and dip of 90 degrees)
+0.0 90.0 0.0 1.0.0 0.0 30.0 0.0 (Bounding face, strike of 0 and dip of 90 degrees)
+90.0 90.0 -1.0 0.0 0.0 30.0 0.0 (Bounding face, strike of 90 and dip of 90 degrees)
+90.0 90.0 1.0 0.0 0.0 30.0 0.0 (Bounding face, strike of 90 and dip of 90 degrees)
+0.0 0.0 0.0 0.0 -1.0 30.0 0.0 (Bounding face, strike of 0 and dip of 0 degrees)
+0.0 0.0 0.0 0.0 1.0 30.0 0.0 (Bounding face, strike of 0 and dip of 0 degrees)
+(This line should be left blank to show transition to joint input data)
+34.0 23.0 1.0 100.0 30.0 0.0 (First joint set, strike of 34 and dip of 23 degrees, spacing of 1.0m)
+192.0 47.0 0.7 100.0 30.0 0.0 (Second joint set, strike of 192 and dip of 47 degrees, spacing of 0.7m)
+321.0 62.0 0.4 100.0 30.0 0.0 (Third joint set, strike of 321 and dip of 62 degrees, spacing of 0.4m)
 ```
+
+For the faces that bound the volume, notice that the point located within the
+face is specified after the dip, followed by the friction angle and
+cohesion. Notice that for all faces and joints, the friction angle and cohesion
+are specified as 30.0 degrees and 0.0 force/area. As mentioned previously, all
+joints are specified as 100% persistent.
 
 ## Output
 
