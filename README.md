@@ -24,7 +24,7 @@ system. Apache Spark can be downloaded from
 `SparkRocks` is run by submitting `sparkrocks-assembly-1.0.jar` to Spark. Spark
 manages the execution and deployment of SparkRocks so the user does not need to
 do any additional work to scale analyses to larger scale problems. Documentation
-on how to deploy Spark locally or on the cloud are provided at [Submitting
+on how to deploy Spark locally or on the cloud is provided at [Submitting
 Applications](http://spark.apache.org/docs/latest/submitting-applications.html).
 The examples that follow assume SparkRocks is being run on Amazon EMR.
 
