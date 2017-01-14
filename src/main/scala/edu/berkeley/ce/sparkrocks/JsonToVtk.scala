@@ -24,22 +24,6 @@ object JsonToVtk {
     ))
   }
 
-  private implicit object BlockFormat extends Format[Block] {
-    def reads(jsonVal: JsValue) = JsSuccess(Block(
-      Array((jsonVal \ "centerX").as[Double], (jsonVal \ "centerY").as[Double], (jsonVal \ "centerZ").as[Double]),
-      (jsonVal \ "faces").as[List[Face]]
-    ))
-
-    def writes(block: Block) = {
-      JsObject(Seq(
-        "centerX" -> JsNumber(block.centerX),
-        "centerY" -> JsNumber(block.centerY),
-        "centerZ" -> JsNumber(block.centerZ),
-        "faces" -> PlayJson.toJson(block.faces)
-      ))
-    }
-  }
-
   private implicit object BlockVtkFormat extends Format[BlockVTK] {
     def reads(jsonVal: JsValue) = JsSuccess(BlockVTK(Block(
       Array((jsonVal  \ "centerX").as[Double], (jsonVal \ "centerY").as[Double], (jsonVal \ "centerZ").as[Double]),
