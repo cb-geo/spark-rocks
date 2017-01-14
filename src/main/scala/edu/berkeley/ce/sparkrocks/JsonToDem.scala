@@ -62,13 +62,13 @@ object JsonToDem {
       ))
     }
   }
-  
+
   /**
     * Converts a rock block to human-readable JSON.
     * @param blockDem A rock block in format that can be used in a DEM analysis.
     * @return A human-readable JSON representation of the block as a string.
     */
-  def blockVtkToReadableJson(blockDem: BlockDem): String =
+  def blockDemToReadableJson(blockDem: BlockDem): String =
   PlayJson.prettyPrint(PlayJson.toJson(blockDem))
 
   /**
@@ -76,7 +76,7 @@ object JsonToDem {
     * @param blockDem A rock block in format that can be used in a DEM analysis.
     * @return A minimal JSON representation of the block, as a string.
     */
-  def blockVtkToMinimalJson(blockDem: BlockDem): String =
+  def blockDemToMinimalJson(blockDem: BlockDem): String =
   PlayJson.stringify(PlayJson.toJson(blockDem))
 
   /**
@@ -84,14 +84,14 @@ object JsonToDem {
     * @param blocksDem A list of BlockDem objects.
     * @return A human-readable JSON representation of the blocks, as a string.
     */
-  def blockVtkSeqToReadableJson(blocksDem: Seq[BlockDem]): String =
+  def blockDemSeqToReadableJson(blocksDem: Seq[BlockDem]): String =
   PlayJson.prettyPrint(PlayJson.toJson(blocksDem))
 
   /**
     * Converts a list of rock blocks to human-readable JSON.
-    * @param blocksVTK A list of BlockDem objects.
+    * @param blocksDem A list of BlockDem objects.
     * @return A minimal JSON representation of the blocks, as a string.
     */
-  def blockVTKSeqToMinimalJson(blocksDem: Seq[BlockDem]): String =
+  def blockDemSeqToMinimalJson(blocksDem: Seq[BlockDem]): String =
   PlayJson.stringify(PlayJson.toJson(blocksDem))
 }

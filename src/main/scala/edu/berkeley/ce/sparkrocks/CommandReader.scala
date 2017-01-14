@@ -11,6 +11,7 @@ object CommandReader {
     maxAspectRatio: Double = Double.PositiveInfinity,
     vtkOut: String = "",
     jsonOut: String = "",
+    demOut: String = "",
     forcePartition: Boolean = false
   )
 
@@ -48,6 +49,10 @@ object CommandReader {
       c.copy(jsonOut = x)
     } text "Output file for block JSON data"
 
+    opt[String]("demOut") action { (x, c) =>
+      c.copy(demOut = x)
+    } text "Output file for block DEM data"
+
     opt[Unit]('f', "forcePartition") action { (_, c) =>
       c.copy(forcePartition = true)
     } text "Flag to force analysis to continue if specified number of partitions is not found"
@@ -55,7 +60,8 @@ object CommandReader {
     help("help") text "Prints this usage text"
 
     checkConfig { c =>
-      if (c.vtkOut == "" && c.jsonOut == "") failure("Must specify at least one of vtkOut or jsonOut") else success
+      if (c.vtkOut == "" && c.jsonOut == "" && c.demOut == "")
+        failure("Must specify at least one of vtkOut or jsonOut") else success
     }
   }
 
