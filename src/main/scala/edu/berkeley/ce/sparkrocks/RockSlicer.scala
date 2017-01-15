@@ -125,7 +125,7 @@ object RockSlicer {
       jsonVtkBlocks.saveAsTextFile(arguments.vtkOut)
     }
 
-    if (arguments.jsonOut != "") {
+    if (arguments.demOut != "") {
       // Convert the list of rock blocks to JSON format appropriate for DEM analysis and
       // save this to a file
       val demBlocks = squeakyClean.map(BlockDem(_))
