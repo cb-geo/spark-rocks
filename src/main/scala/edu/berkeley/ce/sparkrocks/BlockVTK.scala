@@ -9,7 +9,7 @@ object BlockVTK {
     * @return A mapping from each face of the block to a Seq of integers that represent
     *         the indices of the vertices in the global vertex list
     */
-  private def connectivity(faceOrientedVerts: Map[Face, Seq[Array[Double]]],
+  def connectivity(faceOrientedVerts: Map[Face, Seq[Array[Double]]],
                            vertices: Seq[Array[Double]]): Map[Face, Seq[Int]] = {
     faceOrientedVerts map { case (face, orientedVertices) =>
       (face, orientedVertices map { vertex => vertices.indexWhere(v => v sameElements vertex) })
@@ -50,7 +50,7 @@ object BlockVTK {
     offsetIterator(offsets, localOffsets.toSeq)
   }
 
-  private def distinctArrays(vertices: Seq[Array[Double]], previous: Seq[Array[Double]]=Nil): Seq[Array[Double]] = {
+  def distinctArrays(vertices: Seq[Array[Double]], previous: Seq[Array[Double]]=Nil): Seq[Array[Double]] = {
     // Use a naive n^2 algorithm to avoid boxing. We may need to revisit this later.
     vertices match {
       case Nil => previous

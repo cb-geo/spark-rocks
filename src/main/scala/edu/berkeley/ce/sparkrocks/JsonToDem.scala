@@ -58,6 +58,8 @@ object JsonToDem {
         "sphereCenterY" -> JsNumber(block.sphereCenterY),
         "sphereCenterZ" -> JsNumber(block.sphereCenterZ),
         "sphereRadius" -> JsNumber(block.sphereRadius),
+        "vertices" -> PlayJson.toJson(block.vertices),
+        "connectivity" -> PlayJson.toJson(block.connectivity),
         "faces" -> PlayJson.toJson(block.faces)
       ))
     }
