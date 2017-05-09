@@ -5,7 +5,7 @@
 [![Scaladoc](http://javadoc-badge.appspot.com/com.github.nscala-time/nscala-time_2.11.svg?label=scaladoc)](https://cb-geo.github.io/spark-rocks)
 [![](https://img.shields.io/github/issues-raw/cb-geo/spark-rocks.svg)](https://github.com/cb-geo/spark-rocks/issues)
 [![Build status](https://api.travis-ci.org/cb-geo/spark-rocks.svg)](https://travis-ci.org/cb-geo/spark-rocks/builds)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.166103.svg)](https://doi.org/10.5281/zenodo.166103)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.166103.svg)](https://doi.org/10.1016/j.compgeo.2017.05.001)
 
 Please post any general questions about using the code to the [DEM Forum](https://forum.cb-geo.com/c/dem)
 
