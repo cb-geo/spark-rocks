@@ -17,7 +17,7 @@ programming optimization as described in *A new rock slicing method based on
 linear programming* by Boon et al. (2015). It can be run both locally or on the
 cloud and on any operating system. A complete description of the parallel block cutting
 implementation within `SparkRocks` is given in [*Parallel and scalable block
-system generation](https://doi.org/10.1016/j.compgeo.2017.05.001).
+system generation*](https://doi.org/10.1016/j.compgeo.2017.05.001).
 
 
 # Usage
