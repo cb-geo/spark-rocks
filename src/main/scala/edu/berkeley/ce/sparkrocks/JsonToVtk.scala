@@ -71,6 +71,6 @@ object JsonToVtk {
     * @param blocksVTK A list of BlockVTK objects.
     * @return A minimal JSON representation of the blocks, as a string.
     */
-  def blockVTKSeqToMinimalJson(blocksVTK: Seq[BlockVTK]): String =
+  def blockVtkSeqToMinimalJson(blocksVTK: Seq[BlockVTK]): String =
     PlayJson.stringify(PlayJson.toJson(blocksVTK))
 }

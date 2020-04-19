@@ -4,6 +4,9 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.io.Source
 
+import java.nio.file.{Paths, Files}
+import java.nio.charset.StandardCharsets
+
 object RockSlicer {
   val REDUNDANT_ELIM_PERIOD = 200
 
@@ -12,7 +15,8 @@ object RockSlicer {
       // Use Kryo serialization
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       // Require all classes to be registered
-      .set("spark.kryo.registrationRequired", "true")
+      // .set("spark.kryo.registrationRequired", "true")
+      .set("spark.kryo.registrationRequired", "false")    
       // Register classes with Kryo using ClassRegistrator
       .set("spark.kryo.registrator", "edu.berkeley.ce.sparkrocks.ClassRegistrator")
 
@@ -121,16 +125,20 @@ object RockSlicer {
       // Convert the list of rock blocks to JSON with vertices, normals and connectivity in
       // format easily converted to vtk by rockProcessor module
       val vtkBlocks = squeakyClean.map(BlockVTK(_))
-      val jsonVtkBlocks = vtkBlocks.map(JsonToVtk.blockVtkToMinimalJson)
-      jsonVtkBlocks.saveAsTextFile(arguments.vtkOut)
+      val jsonVtkBlocks = JsonToVtk.blockVtkSeqToMinimalJson(vtkBlocks.collect())
+      Files.write(Paths.get(arguments.demOut), jsonVtkBlocks.getBytes(StandardCharsets.UTF_8))      
+      // val jsonVtkBlocks = vtkBlocks.map(JsonToVtk.blockVtkToMinimalJson)
+      // jsonVtkBlocks.saveAsTextFile(arguments.vtkOut)
     }
 
     if (arguments.demOut != "") {
       // Convert the list of rock blocks to JSON format appropriate for DEM analysis and
       // save this to a file
       val demBlocks = squeakyClean.map(BlockDem(_))
-      val jsonDemBlocks = demBlocks.map(JsonToDem.blockDemToMinimalJson)
-      jsonDemBlocks.saveAsTextFile(arguments.demOut)
+      val jsonDemBlocks = JsonToDem.blockDemSeqToMinimalJson(demBlocks.collect())
+      Files.write(Paths.get(arguments.demOut), jsonDemBlocks.getBytes(StandardCharsets.UTF_8))
+      // val jsonDemBlocks = demBlocks.map(JsonToDem.blockDemToMinimalJson)
+      // jsonDemBlocks.saveAsTextFile(arguments.demOut)
     }
 
     sc.stop()
