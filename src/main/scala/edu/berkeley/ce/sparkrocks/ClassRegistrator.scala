@@ -14,11 +14,18 @@ class ClassRegistrator extends KryoRegistrator {
     kryo.register(Some.getClass, new SingletonSerializer[AnyRef](Some))
     kryo.register(classOf[scala.collection.mutable.WrappedArray$ofRef])
     kryo.register(classOf[scala.collection.immutable.$colon$colon[_]])
-    // kryo.register(classOf[scala.collection.immutable.Stream$Cons]);
-    // kryo.register(classOf[scala.collection.Iterator$$anonfun$toStream$1])
-    // kryo.register(classOf[scala.collection.MapLike$$anon$2])
-    // kryo.register(classOf[scala.collection.immutable.HashMap$HashTrieMap$$anon$1])
-    // kryo.register(classOf[Array[scala.collection.immutable.HashMap]])
+    kryo.register(classOf[scala.collection.immutable.Stream$Cons]);
+    kryo.register(classOf[scala.collection.Iterator$$anonfun$toStream$1])
+    kryo.register(classOf[scala.collection.MapLike$$anon$2])
+    kryo.register(classOf[scala.collection.immutable.HashMap$HashTrieMap$$anon$1])
+    kryo.register(classOf[scala.collection.immutable.Map$Map1])
+    kryo.register(classOf[scala.collection.immutable.HashMap$HashMap1])
+    kryo.register(classOf[Array[scala.collection.immutable.HashMap$HashMap1]])
+    kryo.register(classOf[Array[scala.collection.immutable.HashMap[_,_]]])
+    kryo.register(classOf[Array[Array[scala.collection.immutable.Iterable[_]]]])
+    kryo.register(classOf[Array[scala.collection.immutable.Iterable[_]]])
+    kryo.register(classOf[Array[scala.Int]])
+    kryo.register(classOf[scala.collection.IndexedSeqLike$Elements])
     kryo.register(classOf[Array[scala.Double]])
     kryo.register(classOf[Joint])
     kryo.register(classOf[Block])
@@ -27,7 +34,8 @@ class ClassRegistrator extends KryoRegistrator {
     kryo.register(classOf[Face])
     kryo.register(classOf[BlockDem])
     kryo.register(classOf[Array[BlockDem]])
+    kryo.register(classOf[FaceDem])
     kryo.register(classOf[BlockVTK])
-    kryo.register(classOf[Array[BlockVTK]])        
+    kryo.register(classOf[Array[BlockVTK]])
   }
 }
