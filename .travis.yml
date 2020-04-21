@@ -1,3 +1,4 @@
+dist: bionic
 language: scala
 
 # disable the default submodule logic
