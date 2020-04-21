@@ -125,9 +125,7 @@ object RockSlicer {
       // format easily converted to vtk by rockProcessor module
       val vtkBlocks = squeakyClean.map(BlockVTK(_))
       val jsonVtkBlocks = JsonToVtk.blockVtkSeqToMinimalJson(vtkBlocks.collect())
-      Files.write(Paths.get(arguments.demOut), jsonVtkBlocks.getBytes(StandardCharsets.UTF_8))      
-      // val jsonVtkBlocks = vtkBlocks.map(JsonToVtk.blockVtkToMinimalJson)
-      // jsonVtkBlocks.saveAsTextFile(arguments.vtkOut)
+      Files.write(Paths.get(arguments.demOut), jsonVtkBlocks.getBytes(StandardCharsets.UTF_8))
     }
 
     if (arguments.demOut != "") {
@@ -136,8 +134,6 @@ object RockSlicer {
       val demBlocks = squeakyClean.map(BlockDem(_))
       val jsonDemBlocks = JsonToDem.blockDemSeqToMinimalJson(demBlocks.collect())
       Files.write(Paths.get(arguments.demOut), jsonDemBlocks.getBytes(StandardCharsets.UTF_8))
-      // val jsonDemBlocks = demBlocks.map(JsonToDem.blockDemToMinimalJson)
-      // jsonDemBlocks.saveAsTextFile(arguments.demOut)
     }
 
     sc.stop()
