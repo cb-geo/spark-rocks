@@ -1,5 +1,14 @@
 language: scala
 
+# disable the default submodule logic
+git:
+  submodules: false
+  
+# use sed to replace the SSH URL with the public URL, then init and update submodules
+before_install:
+ - sed -i 's/git@github.com:/git:\/\/github.com\//' .gitmodules
+ - git submodule update --init --recursive
+ 
 #scala:
 #   - 2.11.8
 
