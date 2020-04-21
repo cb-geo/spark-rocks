@@ -1,7 +1,7 @@
 os: linux
 dist: bionic
 language: scala
-jdk: oraclejdk8
+jdk: oraclejdk11
 
 # disable the default submodule logic
 git:
