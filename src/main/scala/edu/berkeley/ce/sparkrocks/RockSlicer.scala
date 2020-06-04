@@ -124,16 +124,16 @@ object RockSlicer {
       // Convert the list of rock blocks to JSON with vertices, normals and connectivity in
       // format easily converted to vtk by rockProcessor module
       val vtkBlocks = squeakyClean.map(BlockVTK(_))
-      val jsonVtkBlocks = JsonToVtk.blockVtkSeqToMinimalJson(vtkBlocks.collect())
-      Files.write(Paths.get(arguments.demOut), jsonVtkBlocks.getBytes(StandardCharsets.UTF_8))
+      val jsonVtkBlocks = vtkBlocks.map(JsonToVtk.blockVtkToMinimalJson)
+      jsonVtkBlocks.saveAsTextFile(arguments.vtkOut)
     }
 
     if (arguments.demOut != "") {
       // Convert the list of rock blocks to JSON format appropriate for DEM analysis and
       // save this to a file
       val demBlocks = squeakyClean.map(BlockDem(_))
-      val jsonDemBlocks = JsonToDem.blockDemSeqToMinimalJson(demBlocks.collect())
-      Files.write(Paths.get(arguments.demOut), jsonDemBlocks.getBytes(StandardCharsets.UTF_8))
+      val jsonDemBlocks = demBlocks.map(JsonToDem.blockDemToMinimalJson)
+      jsonDemBlocks.saveAsTextFile(arguments.demOut)
     }
 
     sc.stop()
