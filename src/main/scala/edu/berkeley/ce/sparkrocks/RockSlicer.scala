@@ -4,6 +4,9 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.io.Source
 
+import java.nio.file.{Paths, Files}
+import java.nio.charset.StandardCharsets
+
 object RockSlicer {
   val REDUNDANT_ELIM_PERIOD = 200
 
